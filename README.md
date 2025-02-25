@@ -2,8 +2,10 @@
 
 `git clone https://github.com/dheovanwa/Serenity.git`
 
-cd client
-npm install
+`cd client`
 
-cd ../server
-npm install
+`npm install`
+
+`cd ../server`
+
+`npm install`
