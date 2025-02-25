@@ -1,0 +1,25 @@
+{
+  "name": "serenity-api",
+  "version": "1.0.0",
+  "description": "Backend of Serenity website",
+  "main": "server.js",
+  "scripts": {
+    "test": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dheovanwa/Serenity.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dheovanwa/Serenity/issues"
+  },
+  "homepage": "https://github.com/dheovanwa/Serenity#readme",
+  "devDependencies": {
+    "nodemon": "^3.1.9"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
