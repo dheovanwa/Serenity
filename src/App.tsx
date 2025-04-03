@@ -1,8 +1,9 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Register from "./Pages/Register";
 import Login from "./Pages/Login";
-import Verif from "./components/verifemail";
+import Verif from "./components/verifyEmail";
 import ForgotPassword from "./Pages/forgotPassword";
+import UserSurvey from "./Pages/SurveyPage";
 
 const App: React.FC = () => {
   return (
@@ -12,6 +13,7 @@ const App: React.FC = () => {
         <Route path="/signup" element={<Register />}></Route>
         <Route path="/verify-email" element={<Verif />}></Route>
         <Route path="/forgot-password/*" element={<ForgotPassword />}></Route>
+        <Route path="/user-survey" element={<UserSurvey />}></Route>
       </Routes>
     </Router>
   );

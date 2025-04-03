@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@shadcn/ui": "^0.0.4",
     "@tailwindcss/vite": "^4.0.9",
     "firebase": "^11.4.0",
     "firebase-tools": "^13.32.0",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AuthLayout from "../components/AuthLayout";
+import AuthLayout from "./BackgroundLayout";
 import { auth } from "../config/firebase";
 import { sendPasswordResetEmail } from "firebase/auth";
 import { useNavigate } from "react-router-dom";

@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import AuthLayout from "../components/AuthLayout";
+import AuthLayout from "./BackgroundLayout";
 
 const EmailSent = () => {
   const navigate = useNavigate();

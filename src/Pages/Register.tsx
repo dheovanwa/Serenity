@@ -1,5 +1,5 @@
 import { useState } from "react";
-import AuthLayout from "../components/AuthLayout";
+import AuthLayout from "../components/BackgroundLayout";
 import InputField from "../components/inputField";
 import { auth, db } from "../config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";

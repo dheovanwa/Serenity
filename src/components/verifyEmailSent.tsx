@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import AuthLayout from "./AuthLayout";
+import AuthLayout from "./BackgroundLayout";
 import { motion } from "framer-motion";
 import mailClosed from "../assets/mailClosed.png";
 import mailOpen from "../assets/mailOpen.png";
@@ -11,11 +11,11 @@ const VerifyEmail = () => {
   useEffect(() => {
     const rotationTimer = setTimeout(() => {
       setStartBounce(true);
-    }, 1600); // Start bouncing after rotation ends
+    }, 1600);
 
     const finalTimer = setTimeout(() => {
       setIsMailOpened(false);
-    }, 2600); // Change to mailClosed after full animation
+    }, 2600);
 
     return () => {
       clearTimeout(rotationTimer);
@@ -44,14 +44,12 @@ const VerifyEmail = () => {
           className="mt-8"
           initial={{ rotate: 0, y: 0 }}
           animate={
-            startBounce
-              ? { y: [0, 10, -20, 0] } // Single bounce (down 10px, up 20px)
-              : { rotate: [0, -45, 45, 0] } // Rotation first
+            startBounce ? { y: [0, 10, -20, 0] } : { rotate: [0, -45, 45, 0] }
           }
           transition={{
-            duration: startBounce ? 1.2 : 1.6, // Adjusted bounce timing
+            duration: startBounce ? 1.2 : 1.6,
             ease: "easeInOut",
-            times: [0, 0.3, 0.6, 1], // Controlled smooth bounce
+            times: [0, 0.3, 0.6, 1],
           }}
           style={{ width: "5rem", height: "5rem" }}
         />

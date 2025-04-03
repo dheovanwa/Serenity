@@ -7,7 +7,7 @@ interface AuthLayoutProps {
 
 const AuthLayout = ({ children }: AuthLayoutProps) => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-300 to-blue-50">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-300 to-sky-50">
       {children}
       <div className="absolute bottom-0 left-0 w-full max-h-full">
         <img

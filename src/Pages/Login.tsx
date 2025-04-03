@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import InputField from "../components/Login/InputField";
 import Button from "../components/Login/Button";
-import AuthLayout from "../components/AuthLayout";
+import AuthLayout from "../components/BackgroundLayout";
 
 const Login = () => {
   const [email, setEmail] = useState("");

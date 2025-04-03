@@ -1,4 +1,4 @@
-import VerifPage from "./verif";
+import VerifPage from "./verifyEmailSent";
 
 const Verif = () => {
   return <VerifPage />;

@@ -1,7 +1,7 @@
 import { Routes, Route } from "react-router-dom";
 import ForgotPasswordForm from "../components/ForgotPasswordForm";
 import EmailSent from "../components/EmailSent";
-import NewPass from "../components/NewPass";
+import NewPass from "../components/NewPassword";
 
 const ForgotPassword = () => {
   return (
