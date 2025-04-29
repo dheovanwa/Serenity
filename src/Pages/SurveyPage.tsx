@@ -178,7 +178,7 @@ export default function UserSurvey() {
               Your responses have been successfully submitted. We appreciate your participation.
               </p>
               <p className="text-2xl text-white font-medium">
-              Your survey result was: good af
+              Your percentage stress: 80% Good af
               </p>
               <Link
                 to="/"
