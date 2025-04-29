@@ -70,6 +70,66 @@ const questions = [
       "Excellent",
     ],
   },
+  {
+    text: "The past week brought out feelings of anger and frustration in you how many times?",
+    scale: [1, 2, 3, 4, 5, 6],
+    scaleLabels: [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Most of the time",
+      "Always",
+    ],
+  },
+  {
+    text: "The past week brought out feelings of anger and frustration in you how many times?",
+    scale: [1, 2, 3, 4, 5, 6],
+    scaleLabels: [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Most of the time",
+      "Always",
+    ],
+  },
+  {
+    text: "Does anxiousness or excessive worry affect you frequently throughout the last week?",
+    scale: [1, 2, 3, 4, 5, 6],
+    scaleLabels: [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Most of the time",
+      "Always",
+    ],
+  },
+  {
+    text: "What level of satisfaction do you have with the way you interact with others at this moment?",
+    scale: [1, 2, 3, 4, 5, 6],
+    scaleLabels: [
+      "Very dissatisfied",
+      "Dissatisfied",
+      "Somewhat dissatisfied",
+      "Somewhat satisfied",
+      "Satisfied",
+      "Very satisfied",
+    ],
+  },
+  {
+    text: "Have you maintained a state of peacefulness during any instances within the previous week?",
+    scale: [1, 2, 3, 4, 5, 6],
+    scaleLabels: [
+      "Never",
+      "Rarely",
+      "Sometimes",
+      "Often",
+      "Most of the time",
+      "Always",
+    ],
+  },
 ];
 
 export default function UserSurvey() {
