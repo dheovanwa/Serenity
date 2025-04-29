@@ -136,12 +136,29 @@ export default function UserSurvey() {
   const [selected, setSelected] = useState<number | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
 
+  const pointsScale = [5, 4, 2, 1];
+
+  // points
+  const [points, setPoints] = useState(0);
+
   const handleNext = () => {
     if (questionIndex < questions.length - 1) {
-      setQuestionIndex(questionIndex + 1);
+      setPoints(
+        (prevPoints) =>
+          prevPoints +
+          (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1)
+      );
+      setQuestionIndex((prevIndex) => prevIndex + 1);
       setSelected(null);
+      console.log(points);
     } else {
       alert("Survey Completed!");
+      setPoints(
+        (prevPoints) =>
+          prevPoints +
+          (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1)
+      );
+      console.log(points);
     }
   };
 
