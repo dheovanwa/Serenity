@@ -155,10 +155,15 @@ export default function UserSurvey() {
   const handleNext = async () => {
     if (questionIndex < questions.length - 1) {
       setQuestionIndex((prevIndex) => prevIndex + 1);
+      setPoints(
+        points + (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1)
+      );
+      console.log(points);
     } else {
-      const finalPoints =
-        points + (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1);
-      const stressPercentage = (finalPoints / 60) * 100;
+      // const finalPoints =
+      // points + (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1);
+      const stressPercentage = (points / 60) * 100;
+      console.log(points);
 
       try {
         const documentId = localStorage.getItem("documentId");
