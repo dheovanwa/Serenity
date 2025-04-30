@@ -167,6 +167,7 @@ export default function UserSurvey() {
 
       try {
         const documentId = localStorage.getItem("documentId");
+        // check if documentId is not null
         if (documentId) {
           const userDocRef = doc(db, "users", documentId);
           const historyCollectionRef = collection(userDocRef, "history_stress");
