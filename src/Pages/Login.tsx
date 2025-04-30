@@ -2,6 +2,10 @@ import React, { useState } from "react";
 import InputField from "../components/Login/InputField";
 import Button from "../components/Login/Button";
 import AuthLayout from "../components/BackgroundLayout";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { auth, db } from "../config/firebase";
+import { query, where, getDocs, collection } from "firebase/firestore";
+import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -9,14 +13,15 @@ const Login = () => {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>(
     {}
   );
+  const navigate = useNavigate();
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors: { email?: string; password?: string } = {};
 
     if (!email.trim()) {
-      newErrors.email = "Username is required";
+      newErrors.email = "Email is required";
     }
     if (!password.trim()) {
       newErrors.password = "Password is required";
@@ -29,12 +34,45 @@ const Login = () => {
 
     setErrors({});
 
-    if (email !== "admin@example.com" || password !== "password123") {
-      setErrors({ email: "Invalid username or password" });
-      return;
-    }
+    try {
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const userId = userCredential.user.uid;
 
-    console.log("Login successful!");
+      // Query Firestore to find the document with the matching uid
+      const userQuery = query(
+        collection(db, "users"),
+        where("uid", "==", userId)
+      );
+      const querySnapshot = await getDocs(userQuery);
+
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0]; // Get the first matching document
+        const userData = userDoc.data();
+
+        localStorage.setItem("documentId", userDoc.id); // Store Firestore document ID
+
+        if (userData.dailySurveyCompleted === false) {
+          navigate("/user-survey");
+        } else {
+          alert("Login successful!");
+        }
+      } else {
+        console.error("User document not found");
+      }
+    } catch (error: any) {
+      if (
+        error.code === "auth/user-not-found" ||
+        error.code === "auth/wrong-password"
+      ) {
+        setErrors({ email: "Invalid email or password" });
+      } else {
+        console.error("Login error:", error);
+      }
+    }
   };
 
   return (
@@ -46,7 +84,7 @@ const Login = () => {
         <form className="space-y-4 w-full" onSubmit={handleLogin}>
           <div>
             <label className="block font-bold text-white text-[20px] mb-1 text-left">
-              Username
+              Email
             </label>
             <InputField
               type="email"

@@ -1,7 +1,8 @@
-import { useState } from "react";
-// import { Button } from "../components/Button";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
+import { auth, db } from "../config/firebase";
 import AuthLayout from "../components/BackgroundLayout";
-import { Link } from "react-router-dom";
 
 const questions = [
   {
@@ -135,13 +136,21 @@ const questions = [
 export default function UserSurvey() {
   const [selected, setSelected] = useState<number | null>(null);
   const [questionIndex, setQuestionIndex] = useState(0);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const isAuthorized = Boolean(localStorage.getItem("documentId")); // Check document ID
+    if (!isAuthorized) {
+      navigate("/signin");
+    }
+  }, [navigate]);
 
   const pointsScale = [5, 4, 2, 1];
 
   // points
   const [points, setPoints] = useState(0);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (questionIndex < questions.length - 1) {
       setPoints(
         (prevPoints) =>
@@ -150,15 +159,31 @@ export default function UserSurvey() {
       );
       setQuestionIndex((prevIndex) => prevIndex + 1);
       setSelected(null);
-      console.log(points);
     } else {
+      const finalPoints =
+        points + (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1);
+      const stressPercentage = (finalPoints / 60) * 100;
+
+      try {
+        const documentId = localStorage.getItem("documentId");
+        if (documentId) {
+          const userDocRef = doc(db, "users", documentId);
+          const historyCollectionRef = collection(userDocRef, "history_stress");
+
+          await addDoc(historyCollectionRef, {
+            stressPercentage,
+            time: new Date(),
+          });
+
+          // Optionally update the user's dailySurveyCompleted status
+          await updateDoc(userDocRef, { dailySurveyCompleted: true });
+        }
+      } catch (error) {
+        console.error("Error saving survey result:", error);
+      }
+
       alert("Survey Completed!");
-      setPoints(
-        (prevPoints) =>
-          prevPoints +
-          (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1)
-      );
-      console.log(points);
+      console.log("Stress Percentage:", stressPercentage);
     }
   };
 

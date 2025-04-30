@@ -33,7 +33,7 @@ const Register = () => {
 
   const navigate = useNavigate();
 
-  const signIn = async () => {
+  const registration = async () => {
     try {
       const userCredential = await createUserWithEmailAndPassword(
         auth,
@@ -53,8 +53,10 @@ const Register = () => {
         emailPromo: formData.emailPromo,
         isUser: true,
         age: 0,
+        dailySurveyCompleted: false,
       });
-      navigate("/verify-email");
+      // navigate("/verify-email");
+      navigate("/signin");
     } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {
         setErrors((prevErrors) => ({
@@ -112,7 +114,7 @@ const Register = () => {
     if (!validateForm()) return; // Don't proceed if there are errors
 
     setIsSubmitting(true); // Disable button
-    await signIn(); // Proceed with registration
+    await registration(); // Proceed with registration
 
     setTimeout(() => setIsSubmitting(false), 3000); // Enable button after 3 sec
   };
