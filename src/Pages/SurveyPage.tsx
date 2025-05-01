@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 import AuthLayout from "../components/BackgroundLayout";
@@ -151,6 +151,7 @@ export default function UserSurvey() {
   const selected = answers[questionIndex];
   const pointsScale = [5, 4, 2, 1];
   const [points, setPoints] = useState(0);
+  const [stressPercentage, setStressPercentage] = useState(0);
 
   const handleNext = async () => {
     if (questionIndex < questions.length - 1) {
@@ -160,20 +161,19 @@ export default function UserSurvey() {
       );
       console.log(points);
     } else {
-      // const finalPoints =
-      // points + (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1);
-      const stressPercentage = (points / 60) * 100;
-      console.log(points);
+      const calculatedStressPercentage = parseFloat(
+        ((points / 60) * 100).toFixed(2)
+      ); // Calculate and round to 2 decimal places
+      setStressPercentage(calculatedStressPercentage); // Set stress percentage
 
       try {
         const documentId = localStorage.getItem("documentId");
-        // check if documentId is not null
         if (documentId) {
           const userDocRef = doc(db, "users", documentId);
           const historyCollectionRef = collection(userDocRef, "history_stress");
 
           await addDoc(historyCollectionRef, {
-            stressPercentage,
+            stressPercentage: calculatedStressPercentage,
             time: new Date(),
           });
 
@@ -184,8 +184,8 @@ export default function UserSurvey() {
         console.error("Error saving survey result:", error);
       }
 
-      alert("Survey Completed!");
-      console.log("Stress Percentage:", stressPercentage);
+      console.log("Stress Percentage:", calculatedStressPercentage);
+      setIsFinished(true); // Set finished state after everything is done
     }
   };
 
@@ -212,7 +212,9 @@ export default function UserSurvey() {
               <p className="text-2xl text-white mb-2 font-medium">
                 your calculated stress percentage:
               </p>
-              <h2 className="text-6xl font-bold text-white mb-4">80%</h2>
+              <h2 className="text-6xl font-bold text-white mb-4">
+                {stressPercentage}%
+              </h2>
               <p className="text-2xl text-white font-medium">
                 Your responses have been successfully submitted. We appreciate
                 your participation.
