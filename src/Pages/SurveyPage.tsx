@@ -1,12 +1,7 @@
-<<<<<<< HEAD
-import { useState } from "react";
-// import { Button } from "../components/Button";
-=======
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
->>>>>>> parent of d504af5 (Recalculated the final stress percentage by inversing it. Also fixed the results of stress percentage not showing up)
 import AuthLayout from "../components/BackgroundLayout";
 import { Link } from "react-router-dom";
 
@@ -51,7 +46,7 @@ export default function UserSurvey() {
   const pointsScale = [5, 4, 2, 1];
   const [points, setPoints] = useState(0);
 
-  const handleNext = () => {
+  const handleNext = async () => {
     const selected = answers[questionIndex];
     if (selected === null) return;
 
@@ -62,9 +57,7 @@ export default function UserSurvey() {
     if (questionIndex < questions.length - 1) {
       setQuestionIndex((prevIndex) => prevIndex + 1);
     } else {
-<<<<<<< HEAD
       setIsFinished(true);
-=======
       // const finalPoints =
       // points + (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1);
       const stressPercentage = (points / 60) * 100;
@@ -91,7 +84,6 @@ export default function UserSurvey() {
 
       alert("Survey Completed!");
       console.log("Stress Percentage:", stressPercentage);
->>>>>>> parent of d504af5 (Recalculated the final stress percentage by inversing it. Also fixed the results of stress percentage not showing up)
     }
   };
 
