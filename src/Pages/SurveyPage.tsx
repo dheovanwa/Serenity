@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { collection, doc, addDoc, updateDoc } from "firebase/firestore";
+import { collection, doc, addDoc, updateDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../config/firebase";
 import AuthLayout from "../components/BackgroundLayout";
 
@@ -31,7 +31,7 @@ const questions = [
   },
   {
     text: "Do you have the tendency to end your life during the day?",
-    options: ["All the time", "Often", "Rarely", "Never"],
+    options: ["Never", "Rarely", "Often", "All the time"],
   },
 ];
 
@@ -40,10 +40,26 @@ export default function UserSurvey() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const isAuthorized = Boolean(localStorage.getItem("documentId")); // Check document ID
-    if (!isAuthorized) {
-      navigate("/signin");
-    }
+    const checkAuthorization = async () => {
+      const documentId = localStorage.getItem("documentId");
+      if (!documentId) {
+        navigate("/signin");
+        return;
+      }
+
+      try {
+        const userDocRef = doc(db, "users", documentId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists() && userDoc.data().dailySurveyCompleted) {
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Error checking user authorization:", error);
+      }
+    };
+
+    checkAuthorization();
   }, [navigate]);
 
   const [isFinished, setIsFinished] = useState(false);
@@ -51,7 +67,7 @@ export default function UserSurvey() {
     Array(questions.length).fill(null)
   );
   const selected = answers[questionIndex];
-  const pointsScale = [5, 4, 2, 1];
+  const pointsScale = [3, 2, 1, 0];
   const [points, setPoints] = useState(0);
   const [stressPercentage, setStressPercentage] = useState(0);
 
@@ -64,7 +80,7 @@ export default function UserSurvey() {
       console.log(points);
     } else {
       const calculatedStressPercentage = parseFloat(
-        ((points / 60) * 100).toFixed(2)
+        ((points / 21) * 100).toFixed(2)
       ); // Calculate and round to 2 decimal places
       setStressPercentage(calculatedStressPercentage); // Set stress percentage
 
@@ -74,9 +90,16 @@ export default function UserSurvey() {
           const userDocRef = doc(db, "users", documentId);
           const historyCollectionRef = collection(userDocRef, "history_stress");
 
+          // Prepare data to save
+          const timestamp = Date.now();
+          const responsesScore = answers.map((answer) =>
+            answer !== null ? answer : 0
+          );
+
           await addDoc(historyCollectionRef, {
-            stressPercentage: calculatedStressPercentage,
-            time: new Date(),
+            timestamp,
+            responses_score: responsesScore,
+            stress_level: calculatedStressPercentage,
           });
 
           // Optionally update the user's dailySurveyCompleted status
