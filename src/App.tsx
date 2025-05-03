@@ -4,6 +4,7 @@ import Login from "./Pages/Login";
 import Verif from "./components/verifyEmail";
 import ForgotPassword from "./Pages/forgotPassword";
 import UserSurvey from "./Pages/SurveyPage";
+import Homepage from "./Pages/Homepage";
 
 const App: React.FC = () => {
   return (
@@ -14,6 +15,7 @@ const App: React.FC = () => {
         <Route path="/verify-email" element={<Verif />}></Route>
         <Route path="/forgot-password/*" element={<ForgotPassword />}></Route>
         <Route path="/user-survey" element={<UserSurvey />}></Route>
+        <Route path="/" element={<Homepage />}></Route>
       </Routes>
     </Router>
   );
