@@ -15,7 +15,7 @@ const App: React.FC = () => {
         <Route path="/verify-email" element={<Verif />}></Route>
         <Route path="/forgot-password/*" element={<ForgotPassword />}></Route>
         <Route path="/user-survey" element={<UserSurvey />}></Route>
-        <Route path="/UserProfileContent" element={<UserProfile />}></Route>
+        <Route path="/profile" element={<UserProfile />}></Route>
       </Routes>
     </Router>
   );
