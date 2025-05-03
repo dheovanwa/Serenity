@@ -14,6 +14,7 @@ const InputField: React.FC<InputFieldProps> = ({
   value,
   onChange,
   placeholder,
+  readOnly = false,
 }) => {
   return (
     <div className="mb-0.5 relative">
@@ -24,6 +25,7 @@ const InputField: React.FC<InputFieldProps> = ({
         value={value}
         onChange={onChange}
         placeholder={placeholder}
+        readOnly={readOnly}
         className="w-full p-3 rounded-lg focus:outline-none bg-white placeholder-gray-300 placeholder-opacity-90"
       />
     </div>
