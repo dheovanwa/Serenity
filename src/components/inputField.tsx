@@ -5,6 +5,7 @@ interface InputFieldProps {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholder?: string;
+  className?: string;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -15,6 +16,7 @@ const InputField: React.FC<InputFieldProps> = ({
   onChange,
   placeholder,
   readOnly = false,
+  className = "",
 }) => {
   return (
     <div className="mb-0.5 relative">

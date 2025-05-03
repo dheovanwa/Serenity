@@ -7,6 +7,9 @@ import { db } from "../config/firebase"; // Import Firestore instance
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const [errorFirstName, setErrorFirstName] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(true);
+
   const [formData, setFormData] = useState({
     firstName: "Elon",
     lastName: "Musk",
@@ -18,7 +21,17 @@ const UserProfile = () => {
     country: "Indonesia",
     city: "Jakarta",
   });
-
+  const [initialFormData, setInitialFormData] = useState({
+    firstName: "",
+    lastName: "",
+    address: "",
+    sex: "",
+    education: "",
+    email: "",
+    phoneNumber: "",
+    country: "",
+    city: "",
+  });
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -46,6 +59,8 @@ const UserProfile = () => {
             country: userData.country || "",
             city: userData.city || "",
           });
+          setInitialFormData(userData);
+          checkFormValidity(); 
           console.log("User data fetched:", userData);
         }
       } catch (error) {
@@ -56,8 +71,14 @@ const UserProfile = () => {
     fetchUserData();
   }, [navigate]);
 
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setFormData(initialFormData); 
+  };
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
     if (
       (name === "firstName" ||
         name === "lastName" ||
@@ -67,6 +88,7 @@ const UserProfile = () => {
     ) {
       return;
     }
+
     if (name === "nationalCode") {
       if (/[^0-9]/.test(value) || value.length > 16) {
         return;
@@ -79,10 +101,24 @@ const UserProfile = () => {
       }
     }
 
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => {
+      const updatedData = { ...prev, [name]: value };
+      return updatedData;
+    });
+    checkFormValidity();
   };
-
+  const checkFormValidity = () => {
+    const isFirstNameValid = formData.firstName.trim() !== ""; 
+    setIsFormValid(isFirstNameValid); 
+    setErrorFirstName(!isFirstNameValid); 
+  };
   const handleSave = async () => {
+    if (!formData.firstName.trim()) {
+      setErrorFirstName(true); 
+      return;
+    }
+
+    setErrorFirstName(false);
     const documentId = localStorage.getItem("documentId");
     if (!documentId) {
       console.error("No document ID found in localStorage.");
@@ -130,9 +166,14 @@ const UserProfile = () => {
             </p>
 
             <button
-              onClick={() => setIsEditing((prev) => !prev)}
-              className="mt-4 bg-[#32481F] text-white py-2 px-6 rounded-md hover:bg-[#1f3019] transition font-semibold"
-            >
+              onClick={() => {
+                if (isEditing) {
+                  handleCancelEdit(); 
+                } else {
+                  setIsEditing(true); 
+                }
+              }}
+              className="mt-4 bg-[#32481F] text-white py-2 px-6 rounded-md hover:bg-[#1f3019] transition font-semibold">
               {isEditing ? "Cancel Edit" : "Edit Profile"}
             </button>
           </div>
@@ -155,7 +196,9 @@ const UserProfile = () => {
                     value={formData.firstName}
                     onChange={handleChange}
                     readOnly={!isEditing}
+                    className={errorFirstName ? "border-red-500" : "border-gray-300"}
                   />
+                  {errorFirstName && (<p className="text-red-500 text-sm mt-2">First Name cannot be empty</p>)}
                 </div>
                 <div>
                   <InputField
@@ -260,7 +303,9 @@ const UserProfile = () => {
             <div className="flex justify-center">
               <button
                 onClick={handleSave}
-                className="bg-[#32481F] text-white py-4 px-20 rounded-md hover:bg-[#1f3019] transition font-bold text-xl"
+                className={`bg-[#32481F] text-white py-4 px-20 rounded-md hover:bg-[#1f3019] transition font-bold text-xl ${
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : "" }`}
+                disabled={!isFormValid}
               >
                 Save
               </button>
