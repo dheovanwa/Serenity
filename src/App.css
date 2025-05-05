@@ -3,6 +3,8 @@
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  /* height: 100%;
+  width: 100%; */
 }
 
 .logo {
@@ -16,6 +18,24 @@
 }
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+html,
+body {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+:root {
+  --color-desktop: #4c9aff; /* Pastikan warna ini sesuai */
 }
 
 @keyframes logo-spin {
