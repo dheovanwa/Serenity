@@ -94,9 +94,9 @@ const Homepage: React.FC = () => {
       </div>
 
       {/* Statistics */}
+      <h1 className="font-bold text-4xl text-center leading-snug text-black pt-110">Radar Chart</h1>
+      <div className="flex justify-center items-center text-white pt-10">
       
-      <div className="flex justify-center items-center text-white pt-100">
-      <h1 className="font-bold text-center leading-snug text-white ">Radar Chart</h1>
       <RadarChart
         data={radarData}
         dataKey="Level"
@@ -117,7 +117,7 @@ const Homepage: React.FC = () => {
             <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
               Daily Stress Level
             </h1>
-            <div className="w-100 h-200">
+            <div className="w-100 h-150">
               <LineCharts />
             </div>
           </div>
@@ -125,7 +125,7 @@ const Homepage: React.FC = () => {
             <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
               Latest Stress Level
             </h1>
-            <div className="w-100 h-200">
+            <div className="w-100 h-150">
               <LineCharts />
             </div>
           </div>
@@ -137,7 +137,7 @@ const Homepage: React.FC = () => {
         <h1 className="text-5xl text-white font-semibold drop-shadow-md mb-5">
           Recommended Psychiatrists
         </h1>
-        <div className="flex justify-center items-center mb-20">
+        <div className="flex justify-center items-center mb-10">
           <CarouselDemo />
         </div>
       </div>
