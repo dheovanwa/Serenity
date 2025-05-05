@@ -48,7 +48,7 @@ const Homepage: React.FC = () => {
 
   return (
     <div
-      className="h-full w-full bg-cover flex flex-col"
+      className="min-h-screen w-full bg-cover flex flex-col"
       style={{ backgroundImage: `url(${background})` }}
     >
       <header className="bg-black/20 flex items-center justify-between px-4 py-2 shadow-md relative">
@@ -94,20 +94,21 @@ const Homepage: React.FC = () => {
       </div>
 
       {/* Statistics */}
-      <h1 className="text-6xl font-bold text-center leading-snug text-white pt-300">Radar Chart</h1>
-      <div className="flex justify-center items-center text-white">
       
+      <div className="flex justify-center items-center text-white pt-100">
+      <h1 className="font-bold text-center leading-snug text-white ">Radar Chart</h1>
       <RadarChart
         data={radarData}
         dataKey="Level"
         labelKey="Health"
         strokeColor="black"          
         fillColor="white"              
-        width={1200}
+        width="100%"
         height={750}
+        marginTop={100}
       />
     </div>
-      <div className="mt-100 ml-30">
+      <div className="mt-5 ml-30">
         <h1 className="text-7xl text-white font-semibold drop-shadow-md mb-10">
           Statistics
         </h1>
@@ -133,7 +134,7 @@ const Homepage: React.FC = () => {
 
       {/* Recommended Psychiatrists */}
       <div className="ml-30">
-        <h1 className="text-5xl text-white font-semibold drop-shadow-md mb-10">
+        <h1 className="text-5xl text-white font-semibold drop-shadow-md mb-5">
           Recommended Psychiatrists
         </h1>
         <div className="flex justify-center items-center mb-20">
