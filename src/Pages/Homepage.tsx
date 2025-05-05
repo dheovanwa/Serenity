@@ -12,28 +12,30 @@ import { CarouselDemo } from "../components/RecommendedPsychiatrist";
 // import { RecommendedPsychiatrists } from "../components/RecommendedPsychiatrist";
 // import { ChartContainer, ChartTooltipContent } from "../components/ui/chart";
 // import CardSlider from "../components/RecommendedPsychiatrist";
+import { Link } from "react-router-dom";
 
 const Homepage: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const profileRef = useRef<HTMLDivElement>(null); // Referensi untuk profile
+  const profileRef = useRef<HTMLDivElement>(null);
 
   const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
+    setTimeout(() => setIsMenuOpen(!isMenuOpen));
   };
 
-  // Menangani klik di luar dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (
         profileRef.current &&
         !profileRef.current.contains(event.target as Node)
       ) {
-        setIsMenuOpen(false); // Menutup dropdown jika klik di luar area profile
+        setIsMenuOpen(false);
       }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   return (
@@ -119,10 +121,15 @@ const Homepage: React.FC = () => {
       </div>
 
       {isMenuOpen && (
-        <div className="absolute top-16 right-4 bg-white p-4 rounded-lg shadow-lg w-40 z-20">
-          <div className="text-blue-300 font-semibold cursor-pointer">
-            Profile
-          </div>
+        <div
+          className="absolute top-16 right-4 bg-white p-4 rounded-lg shadow-lg w-40 z-20"
+          ref={profileRef}
+        >
+          <Link to="/profile">
+            <div className="text-blue-300 font-semibold cursor-pointer">
+              Profile
+            </div>
+          </Link>
           <hr className="my-2" />
           <div className="text-blue-300 font-semibold cursor-pointer">
             Sign Out
@@ -137,10 +144,9 @@ const Homepage: React.FC = () => {
               <h2 className="text-5xl font-bold mb-6">Serenity</h2>
               <ul className="flex flex-col space-y-6">
                 {" "}
-                {/* Flex kolom, dengan jarak vertikal */}
                 <li className="flex items-center space-x-4">
                   <img src={Instagram} alt="Instagram" className="w-10 h-10" />
-                  <span>@mentalhealth.id</span> {/* Teks di samping gambar */}
+                  <span>@mentalhealth.id</span>
                 </li>
                 <li className="flex items-center space-x-4">
                   <img src={Whatsapp} alt="Whatsapp" className="w-10 h-10" />

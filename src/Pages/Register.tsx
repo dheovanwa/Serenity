@@ -3,7 +3,7 @@ import AuthLayout from "../components/BackgroundLayout";
 import InputField from "../components/inputField";
 import { auth, db } from "../config/firebase";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, doc, setDoc } from "firebase/firestore";
 import showPassIcon from "../assets/showPass.svg";
 import hidePassIcon from "../assets/hidePass.svg";
 import { useNavigate } from "react-router-dom";
@@ -45,7 +45,10 @@ const Register = () => {
         email: "",
       }));
 
-      await addDoc(collection(db, "users"), {
+      const userDocRef = doc(db, "users", userCredential.user.uid);
+
+      // Add user data with additional fields
+      await setDoc(userDocRef, {
         uid: userCredential.user.uid,
         email: formData.email,
         firstName: formData.firstName,
@@ -54,8 +57,18 @@ const Register = () => {
         isUser: true,
         age: 0,
         dailySurveyCompleted: false,
+        sex: "",
+        address: "",
+        phoneNumber: "",
+        country: "",
+        city: "",
+        educationLevel: "",
       });
-      // navigate("/verify-email");
+
+      // Create an empty "history_stress" collection
+      const historyCollectionRef = collection(userDocRef, "history_stress");
+      await addDoc(historyCollectionRef, {}); // Add an empty document to initialize the collection
+
       navigate("/signin");
     } catch (error: any) {
       if (error.code === "auth/email-already-in-use") {

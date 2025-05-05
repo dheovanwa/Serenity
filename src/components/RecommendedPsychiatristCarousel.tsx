@@ -6,32 +6,32 @@ export function RecommendedPsychiatrists() {
     {
       name: "Titin Sulaiman",
       job: "Anxiety & Depression Specialist",
-      image: { psychiatristPhoto }, // Gantilah dengan path gambar psikiater
+      image: psychiatristPhoto,
     },
     {
       name: "John Doe",
       job: "Mental Health Specialist",
-      image: { psychiatristPhoto }, // Gantilah dengan path gambar psikiater
+      image: psychiatristPhoto,
     },
     {
       name: "Jane Smith",
       job: "Therapist",
-      image: { psychiatristPhoto }, // Gantilah dengan path gambar psikiater
+      image: psychiatristPhoto,
     },
     {
       name: "Titin Sulaiman",
       job: "Anxiety & Depression Specialist",
-      image: { psychiatristPhoto }, // Gantilah dengan path gambar psikiater
+      image: psychiatristPhoto,
     },
     {
       name: "John Doe",
       job: "Mental Health Specialist",
-      image: { psychiatristPhoto }, // Gantilah dengan path gambar psikiater
+      image: psychiatristPhoto,
     },
     {
       name: "Jane Smith",
       job: "Therapist",
-      image: { psychiatristPhoto }, // Gantilah dengan path gambar psikiater
+      image: psychiatristPhoto,
     },
   ];
 
@@ -44,7 +44,7 @@ export function RecommendedPsychiatrists() {
             className="w-64 h-96 bg-white rounded-lg shadow-lg p-4 flex-shrink-0"
           >
             <img
-              src={psychiatristPhoto}
+              src={psychiatrist.image}
               alt={psychiatrist.name}
               className="w-32 h-32 rounded-full object-cover mb-4 mx-auto"
             />
