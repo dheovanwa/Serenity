@@ -239,7 +239,7 @@ const Homepage: React.FC = () => {
         {/* Bottom Section: Copyright */}
         <div className="mt-16 text-center bg-[#525252] py-2">
           <p className="text-sm font-bold">
-            © 2024 - 2025 Mental Health J&D Sp. co.
+            Â© 2024 - 2025 Mental Health J&D Sp. co.
           </p>
         </div>
       </footer>
