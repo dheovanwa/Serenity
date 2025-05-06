@@ -6,32 +6,56 @@ import AuthLayout from "../components/BackgroundLayout";
 
 const questions = [
   {
-    text: "How often did you feel overwhelmed by your responsibilities today?",
-    options: ["Never", "Rarely", "Often", "All the time"],
+    text: "I felt cheerful and in a good mood.",
+    options: ["Never", "Rarely", 'Occasionally',"Often", "All the time"],
   },
   {
-    text: "How would you describe your energy level on a typical day?",
-    options: ["Very high", "Moderate", "Low", "Very low"],
+    text: "I wake up feeling refreshed and with enough energy to get through the day.",
+    options: ["Never", "Rarely", 'Occasionally',"Often", "All the time"],
   },
   {
-    text: "How often do you feel isolated or disconnected from others during the day?",
-    options: ["Never", "Rarely", "Sometimes", "Frequently"],
+    text: "I feel interested and motivated to engage in my daily activities.",
+    options: ["Never", "Rarely", 'Occasionally',"Often", "All the time"],
   },
   {
-    text: "How often did you feel in control of your emotions today?",
-    options: ["All the time", "Often", "Rarely", "Never"],
+    text: "I have felt calm, relaxed, and at ease.",
+    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
   },
   {
-    text: "How often did you feel a lack of motivation or interest in your activities today?",
-    options: ["Never", "Rarely", "Often", "All the time"],
+    text: "I have been able to manage my worries effectively.",
+    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
   },
   {
-    text: "How often did you feel supported by your friends or family today?",
-    options: ["All the time", "Often", "Rarely", "Never"],
+    text: "Negative thoughts do not interfere with my daily activities.",
+    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
   },
   {
-    text: "Do you have the tendency to end your life during the day?",
-    options: ["Never", "Rarely", "Often", "All the time"],
+    text: "I have felt emotionally balanced and hopeful.",
+    options: ["Never", "Occasionally", "More than Half the Time", "Almost Every Day", "All the time"],
+  },
+  {
+    text: "I have felt that my life is meaningful and full of hope.",
+    options: ["Never", "Occasionally", "More than Half the Time", "Almost Every Day", "All the time"],
+  },
+  {
+    text: "I have someone to talk to when I feel stressed.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+  },
+  {
+    text: "I feel supported by my friends or family.",
+    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+  },
+  {
+    text: "When stressed, I seek solutions or talk to someone I trust.",
+    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
+  },
+  {
+    text: "When faced with difficulties, I actively face the issue and seek solutions.",
+    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
+  },
+  {
+    text: "Have you had thoughts of harming yourself or that you would be better off dead in the past 7 days?",
+    options: ["Never", 'Sometimes',"Often", "Frequently and hard to control"],
   },
 ];
 
