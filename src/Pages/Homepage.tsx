@@ -1,29 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
-import background from "../assets/Master Background2.png";
+import React, { useState, useRef } from "react";
 import logo from "../assets/LogoIconWhite.png";
 import searchLogo from "../assets/MagnifyingGlass.png";
-import avatar from "../assets/avatar.png";
-// import Footer from "../components/Footer";
+// import avatar from "../assets/avatar.png";
 import Instagram from "../assets/instagram.png";
 import Whatsapp from "../assets/whatsapp.png";
 import email from "../assets/email.png";
 import { LineCharts } from "../components/Chart";
 import { CarouselDemo } from "../components/RecommendedPsychiatrist";
 import RadarChart from "../components/RadarChart";
-
-// import { RecommendedPsychiatrists } from "../components/RecommendedPsychiatrist";
-// import { ChartContainer, ChartTooltipContent } from "../components/ui/chart";
-// import CardSlider from "../components/RecommendedPsychiatrist";
+import { ChevronDown } from "lucide-react";
+import { Link } from "react-router-dom";
+import backgroundImage from "../assets/Master Background11.png";
 
 const Homepage: React.FC = () => {
-  const [isMenuOpen, setIsMenuOpen] = useState<boolean>(false);
-  const profileRef = useRef<HTMLDivElement>(null); // Referensi untuk profile
-
-  const toggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-
-    
-  };
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const radarData = [
     { Health: "Mood & Energy", Level: 1 },
     { Health: "Anxiety & Worry", Level: 2 },
@@ -31,25 +21,11 @@ const Homepage: React.FC = () => {
     { Health: "Social Support", Level: 2 },
     { Health: "Coping Mechanisms", Level: 1 },
   ];
-  // Menangani klik di luar dropdown
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        profileRef.current &&
-        !profileRef.current.contains(event.target as Node)
-      ) {
-        setIsMenuOpen(false); // Menutup dropdown jika klik di luar area profile
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   return (
     <div
-      className="min-h-screen w-full bg-cover flex flex-col"
-      style={{ backgroundImage: `url(${background})` }}
+      className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden"
+      style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <header className="bg-black/20 flex items-center justify-between px-4 py-2 shadow-md relative">
         {/* Logo Kiri */}
@@ -73,19 +49,31 @@ const Homepage: React.FC = () => {
             </button>
           </div>
         </div>
-        <div className="flex items-center space-x-4" ref={profileRef}>
-          <div className="flex items-center space-x-2">
-            <img
-              src={avatar}
-              alt="avatar"
-              className="h-10 w-10 rounded-full object-cover"
-            />
-          </div>
-          <div className="text-white cursor-pointer" onClick={toggleMenu}>
-            <span className="font-bold text-xl">Elon Musk</span>
-          </div>
+
+        {/* Profile dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
+            className="flex items-center gap-2 font-semibold text-xl text-white"
+          >
+            Elon Musk
+            <ChevronDown className="w-6 h-6 text-white" />
+          </button>
+          {dropdownOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded-md shadow-lg z-10">
+              <ul>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-md">
+                  <Link to="/profile">Profile</Link>
+                </li>
+                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-md">
+                  Logout
+                </li>
+              </ul>
+            </div>
+          )}
         </div>
       </header>
+
       <div className="flex justify-center items-center mt-60 font-krub">
         <h1 className="text-white text-8xl font-bold text-center leading-snug">
           Welcome to
@@ -93,39 +81,77 @@ const Homepage: React.FC = () => {
         </h1>
       </div>
 
-      {/* Statistics */}
-      <h1 className="font-bold text-4xl text-center leading-snug text-black pt-110">Radar Chart</h1>
+      {/* Radar Chart */}
+      <h1 className="mt-20 font-bold text-4xl text-center leading-snug text-black pt-110">
+        Radar Chart
+      </h1>
       <div className="flex justify-center items-center text-white pt-10">
-      
-      <RadarChart
-        data={radarData}
-        dataKey="Level"
-        labelKey="Health"
-        strokeColor="black"          
-        fillColor="white"              
-        width="100%"
-        height={750}
-        marginTop={100}
-      />
-    </div>
-      <div className="mt-5 ml-30">
+        <RadarChart
+          data={radarData}
+          dataKey="Level"
+          labelKey="Health"
+          strokeColor="black"
+          fillColor="white"
+          width="100%"
+          height={750}
+          marginTop={100}
+        />
+      </div>
+
+      {/* Statistics */}
+      <div className="mt-5 ml-15">
         <h1 className="text-7xl text-white font-semibold drop-shadow-md mb-10">
           Statistics
         </h1>
-        <div className="items-center grid grid-cols-1 md:grid-cols-2 gap-185">
-          <div>
+        <div className="grid md:grid-cols-3 gap-15 mr-20">
+          {/* Mood & Energy */}
+          <div className="flex flex-col items-center">
             <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
-              Daily Stress Level
+              Mood & Energy
             </h1>
-            <div className="w-100 h-150">
+            <div className="w-full h-150">
               <LineCharts />
             </div>
           </div>
-          <div>
+
+          {/* Anxiety & Worry */}
+          <div className="flex flex-col items-center">
             <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
-              Latest Stress Level
+              Anxiety & Worry
             </h1>
-            <div className="w-100 h-150">
+            <div className="w-full h-150">
+              <LineCharts />
+            </div>
+          </div>
+
+          {/* Depression Symptoms */}
+          <div className="flex flex-col items-center">
+            <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
+              Depression Symptoms
+            </h1>
+            <div className="w-full h-150">
+              <LineCharts />
+            </div>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-15 mr-20 mb-25">
+          {/* Mood & Energy */}
+          <div className="flex flex-col items-center">
+            <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
+              Social Support
+            </h1>
+            <div className="w-3/4 h-150">
+              <LineCharts />
+            </div>
+          </div>
+
+          {/* Anxiety & Worry */}
+          <div className="flex flex-col items-center">
+            <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
+              Coping Mechanisms
+            </h1>
+            <div className="w-3/4 h-150">
               <LineCharts />
             </div>
           </div>
@@ -133,26 +159,18 @@ const Homepage: React.FC = () => {
       </div>
 
       {/* Recommended Psychiatrists */}
-      <div className="ml-30">
+      <div className="mt-20 ml-6 sm:ml-15">
         <h1 className="text-5xl text-white font-semibold drop-shadow-md mb-5">
           Recommended Psychiatrists
         </h1>
         <div className="flex justify-center items-center mb-10">
-          <CarouselDemo />
+          {/* Ensure the carousel container is responsive */}
+          <div className="w-full max-w-4xl px-4">
+            <CarouselDemo />
+          </div>
         </div>
       </div>
 
-      {isMenuOpen && (
-        <div className="absolute top-16 right-4 bg-white p-4 rounded-lg shadow-lg w-40 z-20">
-          <div className="text-blue-300 font-semibold cursor-pointer">
-            Profile
-          </div>
-          <hr className="my-2" />
-          <div className="text-blue-300 font-semibold cursor-pointer">
-            Sign Out
-          </div>
-        </div>
-      )}
       <footer className="bg-[#453A2F] text-white pt-5">
         <div className="mx-auto ml-20 mr-20 mt-10">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
@@ -160,11 +178,9 @@ const Homepage: React.FC = () => {
             <div className="text-left">
               <h2 className="text-5xl font-bold mb-6">Serenity</h2>
               <ul className="flex flex-col space-y-6">
-                {" "}
-                {/* Flex kolom, dengan jarak vertikal */}
                 <li className="flex items-center space-x-4">
                   <img src={Instagram} alt="Instagram" className="w-10 h-10" />
-                  <span>@mentalhealth.id</span> {/* Teks di samping gambar */}
+                  <span>@mentalhealth.id</span>
                 </li>
                 <li className="flex items-center space-x-4">
                   <img src={Whatsapp} alt="Whatsapp" className="w-10 h-10" />
