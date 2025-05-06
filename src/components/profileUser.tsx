@@ -3,7 +3,7 @@ import InputField from "../components/inputField";
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../config/firebase"; // Import Firestore instance
+import { db } from "../config/firebase"; 
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -152,10 +152,22 @@ const UserProfile = () => {
 
       <div className="w-full px-6 py-15 bg-[#FFFFDB]">
         <div className="flex items-center gap-6 flex-col sm:flex-row">
-          <div className="relative w-24 h-24 sm:w-45 sm:h-45 bg-[#ccd6aa] rounded-full flex items-center justify-center">
-            <span className="text-3xl sm:text-5xl">P</span>
-            <div className="absolute bottom-1.5 right-1 bg-[#9cb67b] rounded-full p-4 sm:p-7"></div>
+        <div className="relative w-24 h-24 sm:w-45 sm:h-45 rounded-full overflow-hidden group">
+          <div
+            className={`w-full h-full flex items-center justify-center transition duration-300 ${
+              isEditing ? "bg-[#ccd6aa] group-hover:bg-neutral-700 group-hover:bg-opacity-40 cursor-pointer" : "bg-[#ccd6aa]"
+            }`}
+            onClick={() => {
+              if (isEditing) {
+                alert("ganti pp lu nigga")
+              }
+            }}
+          >
+            <span className="text-3xl sm:text-5xl text-white">MK</span>
           </div>
+        </div>
+
+
 
           <div className="text-center sm:text-left">
             <h1 className="text-3xl sm:text-5xl font-extrabold mb-2">
