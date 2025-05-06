@@ -4,6 +4,9 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase"; 
+import cameraIcon from "../assets/83574.png";
+import ProfilePic from "../assets/Logo.jpg";
+
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -149,24 +152,31 @@ const UserProfile = () => {
   return (
     <div className="min-h-screen bg-[#f2f3d9] text-[#2a3d23] flex flex-col">
       <Navbar />
-
+  
       <div className="w-full px-6 py-15 bg-[#FFFFDB]">
         <div className="flex items-center gap-6 flex-col sm:flex-row">
-        <div className="relative w-24 h-24 sm:w-45 sm:h-45 rounded-full overflow-hidden group">
-          <div
-            className={`w-full h-full flex items-center justify-center transition duration-300 ${
-              isEditing ? "bg-[#ccd6aa] group-hover:bg-neutral-700 group-hover:bg-opacity-40 cursor-pointer" : "bg-[#ccd6aa]"
-            }`}
-            onClick={() => {
-              if (isEditing) {
-                alert("ganti pp lu nigga")
-              }
-            }}
-          >
-            <span className="text-3xl sm:text-5xl text-white">MK</span>
+         <div className="relative w-24 h-24 sm:w-45 sm:h-45 rounded-full overflow-hidden group">
+      
+            <img src={ProfilePic} 
+              alt="Profile" 
+                className={`w-full h-full object-cover transition duration-300 
+                  ${ isEditing ? "opacity-70 group-hover:opacity-50" : ""
+              }`}
+            />
+           
+            {isEditing && (
+              <div
+                onClick={() => alert("Ganti foto lu nigga")}
+                className="absolute inset-0 flex items-center justify-center transition duration-300 cursor-pointer"
+              >
+                <img
+                  src={cameraIcon}
+                  alt="Camera Icon"
+                  className="w-10 h-10 opacity-80 group-hover:opacity-100"
+                />
+              </div>
+            )}
           </div>
-        </div>
-
 
 
           <div className="text-center sm:text-left">
