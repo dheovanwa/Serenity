@@ -159,13 +159,13 @@ const Homepage: React.FC = () => {
       </div>
 
       {/* Recommended Psychiatrists */}
-      <div className="mt-20 ml-6 sm:ml-15">
-        <h1 className="text-5xl text-white font-semibold drop-shadow-md mb-5">
+      <div className="mt-30 ml-6 sm:ml-15">
+        <h1 className="text-5xl text-white font-semibold drop-shadow-md mb-10">
           Recommended Psychiatrists
         </h1>
         <div className="flex justify-center items-center mb-10">
           {/* Ensure the carousel container is responsive */}
-          <div className="w-full max-w-4xl px-4">
+          <div className="w-full" style={{ maxWidth: "1200px" }}>
             <CarouselDemo />
           </div>
         </div>

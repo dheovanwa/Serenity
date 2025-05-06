@@ -14,24 +14,33 @@ const psychiatrists = [
   {
     name: "Titin Sulaiman",
     job: "Anxiety & Depression Specialist",
-    image: { PsychiatristPhoto }, // Gantilah dengan path gambar psikiater
+    image: { PsychiatristPhoto },
   },
   {
-    name: "John Doe",
-    job: "Mental Health Specialist",
-    image: { PsychiatristPhoto }, // Gantilah dengan path gambar psikiater
+    name: "Yohanes Wenanta",
+    job: "Rapist",
+    image: { PsychiatristPhoto },
   },
   {
     name: "Jane Smith",
     job: "Therapist",
-    image: { PsychiatristPhoto }, // Gantilah dengan path gambar psikiater
+    image: { PsychiatristPhoto },
   },
-  // Tambahkan lebih banyak data sesuai kebutuhan
+  {
+    name: "Dheo Smith",
+    job: "Therapist",
+    image: { PsychiatristPhoto },
+  },
+  {
+    name: "Jefferson Wenanta",
+    job: "Therapist",
+    image: { PsychiatristPhoto },
+  },
 ];
 
 export function CarouselDemo() {
   return (
-    <Carousel className="w-full max-w-md mx-auto">
+    <Carousel className="w-full max-w-7xl mx-auto">
       <CarouselContent>
         {psychiatrists.map((psychiatrist, index) => (
           <CarouselItem key={index}>

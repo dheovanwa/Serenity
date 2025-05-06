@@ -53,9 +53,11 @@ function Carousel({
     {
       ...opts,
       axis: orientation === "horizontal" ? "x" : "y",
+      slidesToScroll: 1,
     },
     plugins
   );
+
   const [canScrollPrev, setCanScrollPrev] = React.useState(false);
   const [canScrollNext, setCanScrollNext] = React.useState(false);
 
@@ -118,7 +120,7 @@ function Carousel({
     >
       <div
         onKeyDownCapture={handleKeyDown}
-        className={cn("relative", className)}
+        className={cn("relative", "w-full max-w-screen-xl", className)} // Adjust max-width here
         role="region"
         aria-roledescription="carousel"
         data-slot="carousel"
@@ -129,7 +131,6 @@ function Carousel({
     </CarouselContext.Provider>
   );
 }
-
 function CarouselContent({ className, ...props }: React.ComponentProps<"div">) {
   const { carouselRef, orientation } = useCarousel();
 
@@ -162,6 +163,8 @@ function CarouselItem({ className, ...props }: React.ComponentProps<"div">) {
       className={cn(
         "min-w-0 shrink-0 grow-0 basis-full",
         orientation === "horizontal" ? "pl-4" : "pt-4",
+        "sm:basis-1/3", // Show 3 items on large screens
+        "xs:basis-full", // Show 1 item on smaller screens
         className
       )}
       {...props}
