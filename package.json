@@ -12,6 +12,7 @@
   "dependencies": {
     "@shadcn/ui": "^0.0.4",
     "@tailwindcss/vite": "^4.0.9",
+    "compressorjs": "^1.2.1",
     "firebase": "^11.4.0",
     "firebase-tools": "^13.32.0",
     "framer-motion": "^12.5.0",

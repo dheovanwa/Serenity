@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
-const Navbar = () => {
+const Navbar = ({ userFullName }: { userFullName: string }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   return (
@@ -23,14 +23,18 @@ const Navbar = () => {
           onClick={() => setDropdownOpen(!dropdownOpen)}
           className="flex items-center gap-2 font-medium"
         >
-          Elon Musk
+          {userFullName}
           <ChevronDown className="w-4 h-4" />
         </button>
         {dropdownOpen && (
           <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded-md shadow-lg z-10">
             <ul>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Profile</li>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">Logout</li>
+              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                Profile
+              </li>
+              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                Logout
+              </li>
             </ul>
           </div>
         )}

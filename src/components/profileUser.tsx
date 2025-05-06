@@ -1,17 +1,20 @@
 import Navbar from "../components/Navbar";
 import InputField from "../components/inputField";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../config/firebase"; 
+import { db } from "../config/firebase";
 import cameraIcon from "../assets/83574.png";
 import ProfilePic from "../assets/Logo.jpg";
-
+import Compressor from "compressorjs";
 
 const UserProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Loading state
   const [errorFirstName, setErrorFirstName] = useState(false);
   const [isFormValid, setIsFormValid] = useState(true);
+  const [profilePic, setProfilePic] = useState(ProfilePic); // State for profile picture
+  const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref for file input
 
   const [formData, setFormData] = useState({
     firstName: "Elon",
@@ -56,18 +59,26 @@ const UserProfile = () => {
             lastName: userData.lastName || "",
             address: userData.address || "",
             sex: userData.sex || "",
-            education: userData.education || "", // Corrected key
+            education: userData.education || "",
             email: userData.email || "",
             phoneNumber: userData.phoneNumber || "",
             country: userData.country || "",
             city: userData.city || "",
           });
           setInitialFormData(userData);
-          checkFormValidity(); 
+
+          // Load profile picture from Firestore
+          if (userData.profilePicture) {
+            setProfilePic(userData.profilePicture);
+          }
+
+          checkFormValidity();
           console.log("User data fetched:", userData);
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false); // Stop loading
       }
     };
 
@@ -76,9 +87,9 @@ const UserProfile = () => {
 
   const handleCancelEdit = () => {
     setIsEditing(false);
-    setFormData(initialFormData); 
+    setFormData(initialFormData);
   };
-  
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
@@ -111,13 +122,13 @@ const UserProfile = () => {
     checkFormValidity();
   };
   const checkFormValidity = () => {
-    const isFirstNameValid = formData.firstName.trim() !== ""; 
-    setIsFormValid(isFirstNameValid); 
-    setErrorFirstName(!isFirstNameValid); 
+    const isFirstNameValid = formData.firstName.trim() !== "";
+    setIsFormValid(isFirstNameValid);
+    setErrorFirstName(!isFirstNameValid);
   };
   const handleSave = async () => {
     if (!formData.firstName.trim()) {
-      setErrorFirstName(true); 
+      setErrorFirstName(true);
       return;
     }
 
@@ -149,24 +160,87 @@ const UserProfile = () => {
     }
   };
 
+  const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Compress the image
+      new Compressor(file, {
+        quality: 0.6, // Adjust compression quality
+        success: (compressedFile) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const base64Image = reader.result as string;
+            setProfilePic(base64Image); // Update profile picture locally
+            saveProfilePictureToFirestore(base64Image); // Save to Firestore
+          };
+          reader.readAsDataURL(compressedFile);
+        },
+        error: (err) => {
+          console.error("Error compressing image:", err);
+        },
+      });
+    }
+  };
+
+  const saveProfilePictureToFirestore = async (base64Image: string) => {
+    const documentId = localStorage.getItem("documentId");
+    if (!documentId) {
+      console.error("No document ID found in localStorage.");
+      return;
+    }
+
+    try {
+      const userDocRef = doc(db, "users", documentId);
+      await updateDoc(userDocRef, { profilePicture: base64Image });
+      console.log("Profile picture updated successfully in Firestore.");
+    } catch (error) {
+      console.error("Error updating profile picture in Firestore:", error);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click(); // Trigger file input click
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#f2f3d9] text-[#2a3d23]">
+        <div className="w-1/2 h-2 bg-gray-300 rounded-full overflow-hidden">
+          <div className="h-full bg-[#32481F] animate-loading-bar"></div>
+        </div>
+        <style>
+          {`
+            @keyframes loading-bar {
+              0% { transform: translateX(-100%); }
+              50% { transform: translateX(0); }
+              100% { transform: translateX(100%); }
+            }
+            .animate-loading-bar {
+              animation: loading-bar 1.5s infinite;
+            }
+          `}
+        </style>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#f2f3d9] text-[#2a3d23] flex flex-col">
-      <Navbar />
-  
+      <Navbar userFullName={`${formData.firstName} ${formData.lastName}`} />
+
       <div className="w-full px-6 py-15 bg-[#FFFFDB]">
         <div className="flex items-center gap-6 flex-col sm:flex-row">
-         <div className="relative w-24 h-24 sm:w-45 sm:h-45 rounded-full overflow-hidden group">
-      
-            <img src={ProfilePic} 
-              alt="Profile" 
-                className={`w-full h-full object-cover transition duration-300 
-                  ${ isEditing ? "opacity-70 group-hover:opacity-50" : ""
-              }`}
+          <div className="relative w-24 h-24 sm:w-45 sm:h-45 rounded-full overflow-hidden group">
+            <img
+              src={profilePic}
+              alt="Profile"
+              className={`w-full h-full object-cover transition duration-300 
+                  ${isEditing ? "opacity-70 group-hover:opacity-50" : ""}`}
             />
-           
+
             {isEditing && (
               <div
-                onClick={() => alert("Ganti foto lu nigga")}
+                onClick={triggerFileInput}
                 className="absolute inset-0 flex items-center justify-center transition duration-300 cursor-pointer"
               >
                 <img
@@ -176,8 +250,14 @@ const UserProfile = () => {
                 />
               </div>
             )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleProfilePicChange}
+            />
           </div>
-
 
           <div className="text-center sm:text-left">
             <h1 className="text-3xl sm:text-5xl font-extrabold mb-2">
@@ -190,12 +270,13 @@ const UserProfile = () => {
             <button
               onClick={() => {
                 if (isEditing) {
-                  handleCancelEdit(); 
+                  handleCancelEdit();
                 } else {
-                  setIsEditing(true); 
+                  setIsEditing(true);
                 }
               }}
-              className="mt-4 bg-[#32481F] text-white py-2 px-6 rounded-md hover:bg-[#1f3019] transition font-semibold">
+              className="mt-4 bg-[#32481F] text-white py-2 px-6 rounded-md hover:bg-[#1f3019] transition font-semibold"
+            >
               {isEditing ? "Cancel Edit" : "Edit Profile"}
             </button>
           </div>
@@ -218,9 +299,15 @@ const UserProfile = () => {
                     value={formData.firstName}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    className={errorFirstName ? "border-red-500" : "border-gray-300"}
+                    className={
+                      errorFirstName ? "border-red-500" : "border-gray-300"
+                    }
                   />
-                  {errorFirstName && (<p className="text-red-500 text-sm mt-2">First Name cannot be empty</p>)}
+                  {errorFirstName && (
+                    <p className="text-red-500 text-sm mt-2">
+                      First Name cannot be empty
+                    </p>
+                  )}
                 </div>
                 <div>
                   <InputField
@@ -326,7 +413,8 @@ const UserProfile = () => {
               <button
                 onClick={handleSave}
                 className={`bg-[#32481F] text-white py-4 px-20 rounded-md hover:bg-[#1f3019] transition font-bold text-xl ${
-                  !isFormValid ? "opacity-50 cursor-not-allowed" : "" }`}
+                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 disabled={!isFormValid}
               >
                 Save
