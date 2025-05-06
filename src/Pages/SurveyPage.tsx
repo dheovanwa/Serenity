@@ -7,55 +7,85 @@ import AuthLayout from "../components/BackgroundLayout";
 const questions = [
   {
     text: "I felt cheerful and in a good mood.",
-    options: ["Never", "Rarely", 'Occasionally',"Often", "All the time"],
+    options: ["All the time", "Often", "Occasionally", "Rarely", "Never"],
   },
   {
     text: "I wake up feeling refreshed and with enough energy to get through the day.",
-    options: ["Never", "Rarely", 'Occasionally',"Often", "All the time"],
+    options: ["All the time", "Often", "Occasionally", "Rarely", "Never"],
   },
   {
     text: "I feel interested and motivated to engage in my daily activities.",
-    options: ["Never", "Rarely", 'Occasionally',"Often", "All the time"],
+    options: ["All the time", "Often", "Occasionally", "Rarely", "Never"],
   },
   {
     text: "I have felt calm, relaxed, and at ease.",
-    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
   },
   {
     text: "I have been able to manage my worries effectively.",
-    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
   },
   {
     text: "Negative thoughts do not interfere with my daily activities.",
-    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
   },
   {
     text: "I have felt emotionally balanced and hopeful.",
-    options: ["Never", "Occasionally", "More than Half the Time", "Almost Every Day", "All the time"],
+    options: [
+      "All the time",
+      "Almost Every Day",
+      "More than Half the Time",
+      "Occasionally",
+      "Never",
+    ],
   },
   {
     text: "I have felt that my life is meaningful and full of hope.",
-    options: ["Never", "Occasionally", "More than Half the Time", "Almost Every Day", "All the time"],
+    options: [
+      "All the time",
+      "Almost Every Day",
+      "More than Half the Time",
+      "Occasionally",
+      "Never",
+    ],
   },
   {
     text: "I have someone to talk to when I feel stressed.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    options: [
+      "Strongly Agree",
+      "Agree",
+      "Neutral",
+      "Disagree",
+      "Strongly Disagree",
+    ],
   },
   {
     text: "I feel supported by my friends or family.",
-    options: ["Strongly Disagree", "Disagree", "Neutral", "Agree", "Strongly Agree"],
+    options: [
+      "Strongly Agree",
+      "Agree",
+      "Neutral",
+      "Disagree",
+      "Strongly Disagree",
+    ],
   },
   {
     text: "When stressed, I seek solutions or talk to someone I trust.",
-    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
   },
   {
     text: "When faced with difficulties, I actively face the issue and seek solutions.",
-    options: ["Never", "Rarely", 'Sometimes',"Often", "All the time"],
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
   },
   {
-    text: "Have you had thoughts of harming yourself or that you would be better off dead in the past 7 days?",
-    options: ["Never", 'Sometimes',"Often", "Frequently and hard to control"],
+    text: "Have you had thoughts of harming yourself or that you would be better off dead today?",
+    options: [
+      "Never",
+      "Sometimes",
+      "Often",
+      "Frequently and hard to control",
+      "Always",
+    ],
   },
 ];
 
@@ -91,22 +121,53 @@ export default function UserSurvey() {
     Array(questions.length).fill(null)
   );
   const selected = answers[questionIndex];
-  const pointsScale = [3, 2, 1, 0];
-  const [points, setPoints] = useState(0);
-  const [stressPercentage, setStressPercentage] = useState(0);
+  const pointsScale = [4, 3, 2, 1, 0];
+  const [points, setPoints] = useState({
+    who5: 0,
+    gad7: 0,
+    phq9: 0,
+    mspss: 0,
+    cope: 0,
+    highRisk: 0,
+  });
 
   const handleNext = async () => {
+    const updatedPoints = { ...points };
+
     if (questionIndex < questions.length - 1) {
       setQuestionIndex((prevIndex) => prevIndex + 1);
-      setPoints(
-        points + (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1)
-      );
-      console.log(points);
+
+      if (questionIndex <= 2) updatedPoints.who5 += pointsScale[selected!];
+      else if (questionIndex <= 5) updatedPoints.gad7 += pointsScale[selected!];
+      else if (questionIndex <= 7) updatedPoints.phq9 += pointsScale[selected!];
+      else if (questionIndex <= 9)
+        updatedPoints.mspss += pointsScale[selected!];
+      else if (questionIndex <= 11)
+        updatedPoints.cope += pointsScale[selected!];
+
+      setPoints(updatedPoints);
+      console.log("Updated Points:", updatedPoints);
+      console.log(questionIndex);
     } else {
-      const calculatedStressPercentage = parseFloat(
-        ((points / 21) * 100).toFixed(2)
-      ); // Calculate and round to 2 decimal places
-      setStressPercentage(calculatedStressPercentage); // Set stress percentage
+      if (questionIndex === 12) {
+        // Ensure this condition is met only for the last question
+        const reversedScale = [...pointsScale].reverse();
+        if (selected !== null) {
+          updatedPoints.highRisk += reversedScale[selected];
+        }
+        console.log("High Risk Points:", updatedPoints.highRisk);
+      }
+
+      const calculatedPercentages = {
+        who5: parseFloat(((((points.who5 / 15) * 100) / 80) * 100).toFixed(2)),
+        gad7: parseFloat(((((points.gad7 / 15) * 100) / 80) * 100).toFixed(2)),
+        phq9: parseFloat(((((points.phq9 / 10) * 100) / 80) * 100).toFixed(2)),
+        mspss: parseFloat(
+          ((((points.mspss / 10) * 100) / 80) * 100).toFixed(2)
+        ),
+        cope: parseFloat(((((points.cope / 10) * 100) / 80) * 100).toFixed(2)),
+        highRisk: updatedPoints.highRisk,
+      };
 
       try {
         const documentId = localStorage.getItem("documentId");
@@ -116,24 +177,20 @@ export default function UserSurvey() {
 
           // Prepare data to save
           const timestamp = Date.now();
-          const responsesScore = answers.map((answer) =>
-            answer !== null ? answer : 0
-          );
 
           await addDoc(historyCollectionRef, {
             timestamp,
-            responses_score: responsesScore,
-            stress_level: calculatedStressPercentage,
+            ...calculatedPercentages,
           });
 
           // Optionally update the user's dailySurveyCompleted status
-          await updateDoc(userDocRef, { dailySurveyCompleted: true });
+          await updateDoc(userDocRef, { dailySurveyCompleted: false });
         }
       } catch (error) {
         console.error("Error saving survey result:", error);
       }
 
-      console.log("Stress Percentage:", calculatedStressPercentage);
+      console.log("Calculated Percentages:", calculatedPercentages);
       setIsFinished(true); // Set finished state after everything is done
     }
   };
@@ -162,7 +219,7 @@ export default function UserSurvey() {
                 your calculated stress percentage:
               </p>
               <h2 className="text-6xl font-bold text-white mb-4">
-                {stressPercentage}%
+                {points.who5}%
               </h2>
               <p className="text-2xl text-white font-medium">
                 Your responses have been successfully submitted. We appreciate
