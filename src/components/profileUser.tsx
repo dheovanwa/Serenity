@@ -255,8 +255,16 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#f2f3d9] text-[#2a3d23] flex flex-col">
+    <div className="min-h-screen bg-[#FFFFDB] text-[#2a3d23] flex flex-col">
       <TopBar userName={userName} onLogout={handleLogout} />
+      <div className="w-full px-6 py-4">
+        <button
+          onClick={() => navigate("/")}
+          className="bg-[#32481F] text-white py-2 px-4 rounded-md hover:bg-[#1f3019] transition font-semibold cursor-pointer"
+        >
+          ← Back to Home
+        </button>
+      </div>
 
       <div className="w-full px-6 py-15 bg-[#FFFFDB]">
         <div className="flex items-center gap-6 flex-col sm:flex-row">
@@ -305,7 +313,7 @@ const UserProfile = () => {
                   setIsEditing(true);
                 }
               }}
-              className="mt-4 bg-[#32481F] text-white py-2 px-6 rounded-md hover:bg-[#1f3019] transition font-semibold"
+              className="mt-4 bg-[#32481F] text-white py-2 px-6 rounded-md hover:bg-[#1f3019] transition font-semibold cursor-pointer"
             >
               {isEditing ? "Cancel Edit" : "Edit Profile"}
             </button>
