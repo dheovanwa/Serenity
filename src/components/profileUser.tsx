@@ -1,4 +1,4 @@
-import Navbar from "../components/Navbar";
+import TopBar from "../components/TopBar";
 import InputField from "../components/inputField";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
@@ -9,6 +9,7 @@ import ProfilePic from "../assets/Logo.jpg";
 import Compressor from "compressorjs";
 
 const UserProfile = () => {
+  const [userName, setUserName] = useState("Loading...");
   const [isEditing, setIsEditing] = useState(false);
   const [isLoading, setIsLoading] = useState(true); // Loading state
   const [errorFirstName, setErrorFirstName] = useState(false);
@@ -84,6 +85,35 @@ const UserProfile = () => {
 
     fetchUserData();
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const documentId = localStorage.getItem("documentId");
+      if (!documentId) return;
+
+      try {
+        const userDocRef = doc(db, "users", documentId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserName(
+            `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching user name:", error);
+        setUserName("User");
+      }
+    };
+
+    fetchUserName();
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("documentId");
+    navigate("/signin");
+  };
 
   const handleCancelEdit = () => {
     setIsEditing(false);
@@ -226,7 +256,7 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen bg-[#f2f3d9] text-[#2a3d23] flex flex-col">
-      <Navbar userFullName={`${formData.firstName} ${formData.lastName}`} />
+      <TopBar userName={userName} onLogout={handleLogout} />
 
       <div className="w-full px-6 py-15 bg-[#FFFFDB]">
         <div className="flex items-center gap-6 flex-col sm:flex-row">
