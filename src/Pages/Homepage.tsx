@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import logo from "../assets/LogoIconWhite.png";
 import searchLogo from "../assets/MagnifyingGlass.png";
 // import avatar from "../assets/avatar.png";
@@ -9,7 +9,7 @@ import { LineCharts } from "../components/Chart";
 import { CarouselDemo } from "../components/RecommendedPsychiatrist";
 import RadarChart from "../components/RadarChart";
 import { ChevronDown } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import backgroundImage from "../assets/Master Background11.png";
 import {
   collection,
@@ -18,11 +18,13 @@ import {
   query,
   orderBy,
   limit,
+  getDoc,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 const Homepage: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [userName, setUserName] = useState("Loading..."); // Default to "Loading..."
   const [radarData, setRadarData] = useState([
     { Health: "Mood & Energy", Percentage: 0 },
     { Health: "Mental Calmness", Percentage: 0 },
@@ -37,6 +39,42 @@ const Homepage: React.FC = () => {
     mspss: [],
     cope: [],
   });
+  const navigate = useNavigate(); // Hook for navigation
+
+  useEffect(() => {
+    const checkAuthentication = () => {
+      const documentId = localStorage.getItem("documentId");
+      if (!documentId) {
+        navigate("/signin"); // Redirect to signin if not logged in
+      }
+    };
+
+    checkAuthentication();
+  }, [navigate]);
+
+  useEffect(() => {
+    const fetchUserName = async () => {
+      const documentId = localStorage.getItem("documentId");
+      if (!documentId) return;
+
+      try {
+        const userDocRef = doc(db, "users", documentId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setUserName(
+            `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
+          );
+        }
+      } catch (error) {
+        console.error("Error fetching user name:", error);
+        setUserName("User"); // Fallback if there's an error
+      }
+    };
+
+    fetchUserName();
+  }, []);
 
   useEffect(() => {
     const fetchLatestData = async () => {
@@ -101,6 +139,11 @@ const Homepage: React.FC = () => {
     fetchLatestData();
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem("documentId"); // Clear user data from localStorage
+    navigate("/signin"); // Redirect to login page
+  };
+
   return (
     <div
       className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden"
@@ -135,7 +178,7 @@ const Homepage: React.FC = () => {
             onClick={() => setDropdownOpen(!dropdownOpen)} // Toggle dropdown
             className="flex items-center gap-2 font-semibold text-xl text-white"
           >
-            Elon Musk
+            {userName}
             <ChevronDown className="w-6 h-6 text-white" />
           </button>
           {dropdownOpen && (
@@ -144,7 +187,10 @@ const Homepage: React.FC = () => {
                 <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-md">
                   <Link to="/profile">Profile</Link>
                 </li>
-                <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-md">
+                <li
+                  className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-md"
+                  onClick={handleLogout} // Call logout function
+                >
                   Logout
                 </li>
               </ul>
