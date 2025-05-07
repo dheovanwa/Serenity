@@ -6,32 +6,86 @@ import AuthLayout from "../components/BackgroundLayout";
 
 const questions = [
   {
-    text: "How often did you feel overwhelmed by your responsibilities today?",
-    options: ["Never", "Rarely", "Often", "All the time"],
+    text: "I felt cheerful and in a good mood.",
+    options: ["All the time", "Often", "Occasionally", "Rarely", "Never"],
   },
   {
-    text: "How would you describe your energy level on a typical day?",
-    options: ["Very high", "Moderate", "Low", "Very low"],
+    text: "I wake up feeling refreshed and with enough energy to get through the day.",
+    options: ["All the time", "Often", "Occasionally", "Rarely", "Never"],
   },
   {
-    text: "How often do you feel isolated or disconnected from others during the day?",
-    options: ["Never", "Rarely", "Sometimes", "Frequently"],
+    text: "I feel interested and motivated to engage in my daily activities.",
+    options: ["All the time", "Often", "Occasionally", "Rarely", "Never"],
   },
   {
-    text: "How often did you feel in control of your emotions today?",
-    options: ["All the time", "Often", "Rarely", "Never"],
+    text: "I have felt calm, relaxed, and at ease.",
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
   },
   {
-    text: "How often did you feel a lack of motivation or interest in your activities today?",
-    options: ["Never", "Rarely", "Often", "All the time"],
+    text: "I have been able to manage my worries effectively.",
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
   },
   {
-    text: "How often did you feel supported by your friends or family today?",
-    options: ["All the time", "Often", "Rarely", "Never"],
+    text: "Negative thoughts do not interfere with my daily activities.",
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
   },
   {
-    text: "Do you have the tendency to end your life during the day?",
-    options: ["Never", "Rarely", "Often", "All the time"],
+    text: "I have felt emotionally balanced and hopeful.",
+    options: [
+      "All the time",
+      "Almost Every Day",
+      "More than Half the Time",
+      "Occasionally",
+      "Never",
+    ],
+  },
+  {
+    text: "I have felt that my life is meaningful and full of hope.",
+    options: [
+      "All the time",
+      "Almost Every Day",
+      "More than Half the Time",
+      "Occasionally",
+      "Never",
+    ],
+  },
+  {
+    text: "I have someone to talk to when I feel stressed.",
+    options: [
+      "Strongly Agree",
+      "Agree",
+      "Neutral",
+      "Disagree",
+      "Strongly Disagree",
+    ],
+  },
+  {
+    text: "I feel supported by my friends or family.",
+    options: [
+      "Strongly Agree",
+      "Agree",
+      "Neutral",
+      "Disagree",
+      "Strongly Disagree",
+    ],
+  },
+  {
+    text: "When stressed, I seek solutions or talk to someone I trust.",
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
+  },
+  {
+    text: "When faced with difficulties, I actively face the issue and seek solutions.",
+    options: ["All the time", "Often", "Sometimes", "Rarely", "Never"],
+  },
+  {
+    text: "Have you had thoughts of harming yourself or that you would be better off dead today?",
+    options: [
+      "Never",
+      "Sometimes",
+      "Often",
+      "Frequently and hard to control",
+      "Always",
+    ],
   },
 ];
 
@@ -51,8 +105,25 @@ export default function UserSurvey() {
         const userDocRef = doc(db, "users", documentId);
         const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists() && userDoc.data().dailySurveyCompleted) {
-          navigate("/");
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const lastSurveyTimestamp = userData.lastSurveyTimestamp || null;
+
+          if (lastSurveyTimestamp) {
+            const lastSurveyDate = new Date(lastSurveyTimestamp).toDateString();
+            const todayDate = new Date().toDateString();
+
+            if (lastSurveyDate !== todayDate) {
+              await updateDoc(userDocRef, { dailySurveyCompleted: false });
+            } else {
+              console.log("User has already completed the survey today.");
+              navigate("/");
+            }
+          }
+
+          // if (userData.dailySurveyCompleted) {
+          //   navigate("/");
+          // }
         }
       } catch (error) {
         console.error("Error checking user authorization:", error);
@@ -67,22 +138,52 @@ export default function UserSurvey() {
     Array(questions.length).fill(null)
   );
   const selected = answers[questionIndex];
-  const pointsScale = [3, 2, 1, 0];
-  const [points, setPoints] = useState(0);
-  const [stressPercentage, setStressPercentage] = useState(0);
+  const pointsScale = [4, 3, 2, 1, 0];
+  const [points, setPoints] = useState({
+    who5: 0,
+    gad7: 0,
+    phq9: 0,
+    mspss: 0,
+    cope: 0,
+    highRisk: 0,
+  });
 
   const handleNext = async () => {
+    const updatedPoints = { ...points };
+
     if (questionIndex < questions.length - 1) {
       setQuestionIndex((prevIndex) => prevIndex + 1);
-      setPoints(
-        points + (questionIndex <= 5 ? pointsScale[selected!] : selected! + 1)
-      );
-      console.log(points);
+
+      if (questionIndex <= 2) updatedPoints.who5 += pointsScale[selected!];
+      else if (questionIndex <= 5) updatedPoints.gad7 += pointsScale[selected!];
+      else if (questionIndex <= 7) updatedPoints.phq9 += pointsScale[selected!];
+      else if (questionIndex <= 9)
+        updatedPoints.mspss += pointsScale[selected!];
+      else if (questionIndex <= 11)
+        updatedPoints.cope += pointsScale[selected!];
+
+      setPoints(updatedPoints);
+      console.log("Updated Points:", updatedPoints);
+      console.log(questionIndex);
     } else {
-      const calculatedStressPercentage = parseFloat(
-        ((points / 21) * 100).toFixed(2)
-      ); // Calculate and round to 2 decimal places
-      setStressPercentage(calculatedStressPercentage); // Set stress percentage
+      if (questionIndex === 12) {
+        const reversedScale = [...pointsScale].reverse();
+        if (selected !== null) {
+          updatedPoints.highRisk += reversedScale[selected];
+        }
+        console.log("High Risk Points:", updatedPoints.highRisk);
+      }
+
+      const calculatedPercentages = {
+        who5: parseFloat(((((points.who5 / 15) * 100) / 80) * 100).toFixed(2)),
+        gad7: parseFloat(((((points.gad7 / 15) * 100) / 80) * 100).toFixed(2)),
+        phq9: parseFloat(((((points.phq9 / 10) * 100) / 80) * 100).toFixed(2)),
+        mspss: parseFloat(
+          ((((points.mspss / 10) * 100) / 80) * 100).toFixed(2)
+        ),
+        cope: parseFloat(((((points.cope / 10) * 100) / 80) * 100).toFixed(2)),
+        highRisk: updatedPoints.highRisk,
+      };
 
       try {
         const documentId = localStorage.getItem("documentId");
@@ -92,24 +193,23 @@ export default function UserSurvey() {
 
           // Prepare data to save
           const timestamp = Date.now();
-          const responsesScore = answers.map((answer) =>
-            answer !== null ? answer : 0
-          );
 
           await addDoc(historyCollectionRef, {
             timestamp,
-            responses_score: responsesScore,
-            stress_level: calculatedStressPercentage,
+            ...calculatedPercentages,
           });
 
           // Optionally update the user's dailySurveyCompleted status
-          await updateDoc(userDocRef, { dailySurveyCompleted: true });
+          await updateDoc(userDocRef, {
+            dailySurveyCompleted: true,
+            lastSurveyTimestamp: timestamp, // Save the timestamp of the latest survey
+          });
         }
       } catch (error) {
         console.error("Error saving survey result:", error);
       }
 
-      console.log("Stress Percentage:", calculatedStressPercentage);
+      console.log("Calculated Percentages:", calculatedPercentages);
       setIsFinished(true); // Set finished state after everything is done
     }
   };
@@ -134,17 +234,10 @@ export default function UserSurvey() {
         {isFinished ? (
           <div className="flex flex-col items-center justify-center h-screen px-6 z-10">
             <div className="text-center">
-              <p className="text-2xl text-white mb-2 font-medium">
-                your calculated stress percentage:
-              </p>
-              <h2 className="text-6xl font-bold text-white mb-4">
-                {stressPercentage}%
-              </h2>
               <p className="text-2xl text-white font-medium">
                 Your responses have been successfully submitted. We appreciate
                 your participation.
               </p>
-
               <Link
                 to="/"
                 className="mt-8 inline-block px-6 py-2 bg-white text-blue-300 font-bold rounded-xl"
