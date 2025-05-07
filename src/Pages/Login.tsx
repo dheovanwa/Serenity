@@ -58,7 +58,7 @@ const Login = () => {
         if (userData.dailySurveyCompleted === false) {
           navigate("/user-survey");
         } else {
-          alert("Login successful!");
+          navigate("/");
         }
       } else {
         console.error("User document not found");

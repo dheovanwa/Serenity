@@ -105,8 +105,25 @@ export default function UserSurvey() {
         const userDocRef = doc(db, "users", documentId);
         const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists() && userDoc.data().dailySurveyCompleted) {
-          navigate("/");
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          const lastSurveyTimestamp = userData.lastSurveyTimestamp || null;
+
+          if (lastSurveyTimestamp) {
+            const lastSurveyDate = new Date(lastSurveyTimestamp).toDateString();
+            const todayDate = new Date().toDateString();
+
+            if (lastSurveyDate !== todayDate) {
+              await updateDoc(userDocRef, { dailySurveyCompleted: false });
+            } else {
+              console.log("User has already completed the survey today.");
+              navigate("/");
+            }
+          }
+
+          // if (userData.dailySurveyCompleted) {
+          //   navigate("/");
+          // }
         }
       } catch (error) {
         console.error("Error checking user authorization:", error);
@@ -170,7 +187,6 @@ export default function UserSurvey() {
         highRisk: updatedPoints.highRisk,
       };
 
-      // Calculate the accumulated stress percentage
       const accumulatedStressValue = parseFloat(
         (
           100 -
@@ -202,7 +218,10 @@ export default function UserSurvey() {
           });
 
           // Optionally update the user's dailySurveyCompleted status
-          await updateDoc(userDocRef, { dailySurveyCompleted: false });
+          await updateDoc(userDocRef, {
+            dailySurveyCompleted: true,
+            lastSurveyTimestamp: timestamp, // Save the timestamp of the latest survey
+          });
         }
       } catch (error) {
         console.error("Error saving survey result:", error);
