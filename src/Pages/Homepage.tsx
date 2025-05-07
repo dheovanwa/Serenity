@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import logo from "../assets/LogoIconWhite.png";
 import searchLogo from "../assets/MagnifyingGlass.png";
 // import avatar from "../assets/avatar.png";
@@ -11,16 +11,95 @@ import RadarChart from "../components/RadarChart";
 import { ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import backgroundImage from "../assets/Master Background11.png";
+import {
+  collection,
+  doc,
+  getDocs,
+  query,
+  orderBy,
+  limit,
+} from "firebase/firestore";
+import { db } from "../config/firebase";
 
 const Homepage: React.FC = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const radarData = [
-    { Health: "Mood & Energy", Level: 1 },
-    { Health: "Anxiety & Worry", Level: 2 },
-    { Health: "Depression Symptoms", Level: 3 },
-    { Health: "Social Support", Level: 2 },
-    { Health: "Coping Mechanisms", Level: 1 },
-  ];
+  const [radarData, setRadarData] = useState([
+    { Health: "Mood & Energy", Percentage: 0 },
+    { Health: "Mental Calmness", Percentage: 0 },
+    { Health: "Emotional Wellbeing", Percentage: 0 },
+    { Health: "Social Support", Percentage: 0 },
+    { Health: "Coping Mechanisms", Percentage: 0 },
+  ]);
+  const [lineChartData, setLineChartData] = useState({
+    who5: [],
+    gad7: [],
+    phq9: [],
+    mspss: [],
+    cope: [],
+  });
+
+  useEffect(() => {
+    const fetchLatestData = async () => {
+      const documentId = localStorage.getItem("documentId");
+      if (!documentId) return;
+
+      try {
+        const userDocRef = doc(db, "users", documentId);
+        const historyCollectionRef = collection(userDocRef, "history_stress");
+        const latestQuery = query(
+          historyCollectionRef,
+          orderBy("timestamp", "desc"),
+          limit(7)
+        );
+        const querySnapshot = await getDocs(latestQuery);
+
+        if (!querySnapshot.empty) {
+          const documents = querySnapshot.docs.map((doc) => ({
+            ...doc.data(),
+            timestamp: new Date(doc.data().timestamp).toLocaleDateString(),
+          }));
+
+          setRadarData([
+            { Health: "Mood & Energy", Percentage: documents[0].who5 || 0 },
+            { Health: "Mental Calmness", Percentage: documents[0].gad7 || 0 },
+            {
+              Health: "Emotional Wellbeing",
+              Percentage: documents[0].phq9 || 0,
+            },
+            { Health: "Social Support", Percentage: documents[0].mspss || 0 },
+            { Health: "Coping Mechanisms", Percentage: documents[0].cope || 0 },
+          ]);
+
+          setLineChartData({
+            who5: documents.map((doc) => ({
+              x: doc.timestamp,
+              y: doc.who5 || 0,
+            })),
+            gad7: documents.map((doc) => ({
+              x: doc.timestamp,
+              y: doc.gad7 || 0,
+            })),
+            phq9: documents.map((doc) => ({
+              x: doc.timestamp,
+              y: doc.phq9 || 0,
+            })),
+            mspss: documents.map((doc) => ({
+              x: doc.timestamp,
+              y: doc.mspss || 0,
+            })),
+            cope: documents.map((doc) => ({
+              x: doc.timestamp,
+              y: doc.cope || 0,
+            })),
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching data from Firestore:", error);
+      }
+    };
+
+    fetchLatestData();
+  }, []);
 
   return (
     <div
@@ -88,7 +167,7 @@ const Homepage: React.FC = () => {
       <div className="flex justify-center items-center text-white pt-10">
         <RadarChart
           data={radarData}
-          dataKey="Level"
+          dataKey="Percentage"
           labelKey="Health"
           strokeColor="black"
           fillColor="white"
@@ -110,27 +189,42 @@ const Homepage: React.FC = () => {
               Mood & Energy
             </h1>
             <div className="w-full h-150">
-              <LineCharts />
+              <LineCharts
+                data={lineChartData.who5}
+                title="Mood & Energy"
+                xKey="x"
+                yKey="y"
+              />
             </div>
           </div>
 
-          {/* Anxiety & Worry */}
+          {/* Mental Calmness */}
           <div className="flex flex-col items-center">
             <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
-              Anxiety & Worry
+              Mental Calmness
             </h1>
             <div className="w-full h-150">
-              <LineCharts />
+              <LineCharts
+                data={lineChartData.gad7}
+                title="Mental Calmness"
+                xKey="x"
+                yKey="y"
+              />
             </div>
           </div>
 
-          {/* Depression Symptoms */}
+          {/* Emotional Wellbeing */}
           <div className="flex flex-col items-center">
             <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
-              Depression Symptoms
+              Emotional Wellbeing
             </h1>
             <div className="w-full h-150">
-              <LineCharts />
+              <LineCharts
+                data={lineChartData.phq9}
+                title="Emotional Wellbeing"
+                xKey="x"
+                yKey="y"
+              />
             </div>
           </div>
         </div>
@@ -142,17 +236,27 @@ const Homepage: React.FC = () => {
               Social Support
             </h1>
             <div className="w-3/4 h-150">
-              <LineCharts />
+              <LineCharts
+                data={lineChartData.mspss}
+                title="Social Support"
+                xKey="x"
+                yKey="y"
+              />
             </div>
           </div>
 
-          {/* Anxiety & Worry */}
+          {/* Coping Mechanisms */}
           <div className="flex flex-col items-center">
             <h1 className="mb-5 text-4xl ml-2 text-white font-semibold drop-shadow-md">
               Coping Mechanisms
             </h1>
             <div className="w-3/4 h-150">
-              <LineCharts />
+              <LineCharts
+                data={lineChartData.cope}
+                title="Coping Mechanisms"
+                xKey="x"
+                yKey="y"
+              />
             </div>
           </div>
         </div>

@@ -7,8 +7,6 @@ import UserSurvey from "./Pages/SurveyPage";
 import UserProfile from "./components/profileUser";
 import Homepage from "./Pages/Homepage";
 
-
-
 const App: React.FC = () => {
   return (
     <Router>
@@ -20,8 +18,6 @@ const App: React.FC = () => {
         <Route path="/user-survey" element={<UserSurvey />}></Route>
         <Route path="/profile" element={<UserProfile />}></Route>
         <Route path="/" element={<Homepage />}></Route>
-        <Route path="/" element={<Homepage />}></Route>
-        <Route path="/profile" element={<UserProfile />}></Route>
       </Routes>
     </Router>
   );

@@ -16,16 +16,6 @@ import {
   ChartTooltipContent,
 } from "./ui/chart";
 
-// Data Grafik
-const chartData = [
-  { month: "January", desktop: 186, mobile: 80 },
-  { month: "February", desktop: 305, mobile: 200 },
-  { month: "March", desktop: 237, mobile: 120 },
-  { month: "April", desktop: 73, mobile: 190 },
-  { month: "May", desktop: 209, mobile: 130 },
-  { month: "June", desktop: 214, mobile: 140 },
-];
-
 // Konfigurasi chart
 const chartConfig = {
   desktop: {
@@ -38,18 +28,24 @@ const chartConfig = {
   },
 };
 
-export function LineCharts() {
+export function LineCharts({
+  data,
+  title,
+}: {
+  data: { x: string; y: number }[];
+  title: string;
+}) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Daily Stress Level</CardTitle>
-        <CardDescription>January - June 2024</CardDescription>
+        <CardTitle>{title}</CardTitle>
+        <CardDescription>Last 7 Days</CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig}>
           <LineChart
             accessibilityLayer
-            data={chartData}
+            data={[...data].reverse()} // Invert the data array
             margin={{
               top: 20,
               right: 30,
@@ -59,18 +55,21 @@ export function LineCharts() {
           >
             <CartesianGrid vertical={false} />
             <XAxis
-              dataKey="month"
+              dataKey="x"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
+              label={{ value: "Date", position: "insideBottom", offset: -10 }}
               tickFormatter={(value) => value.slice(0, 3)}
             />
             <ChartTooltip
               cursor={false}
-              content={<ChartTooltipContent hideLabel />}
+              content={
+                <ChartTooltipContent formatter={(value) => [`${value}%`]} />
+              }
             />
             <Line
-              dataKey="desktop"
+              dataKey="y"
               type="monotone"
               stroke="#4c9aff"
               strokeWidth={3}
@@ -84,10 +83,6 @@ export function LineCharts() {
           </LineChart>
         </ChartContainer>
       </CardContent>
-      <CardFooter className="flex-col items-start gap-2 text-sm">
-        <div className="flex gap-2 font-medium leading-none">Text Bebas</div>
-        <div className="leading-none text-muted-foreground">Ini juga</div>
-      </CardFooter>
     </Card>
   );
 }
