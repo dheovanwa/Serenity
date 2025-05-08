@@ -1,147 +1,68 @@
 import React, { useState, useEffect } from "react";
-import logo from "../assets/LogoIconWhite.png";
-import searchLogo from "../assets/MagnifyingGlass.png";
-// import avatar from "../assets/avatar.png";
+import { useNavigate } from "react-router-dom";
+import { HomeController } from "../controllers/HomeController";
+import backgroundImage from "../assets/Master Background11.png";
 import Instagram from "../assets/instagram.png";
 import Whatsapp from "../assets/whatsapp.png";
 import email from "../assets/email.png";
 import { LineCharts } from "../components/Chart";
 import { CarouselDemo } from "../components/RecommendedPsychiatrist";
 import RadarChart from "../components/RadarChart";
-import { ChevronDown } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import backgroundImage from "../assets/Master Background11.png";
-import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-  getDoc,
-} from "firebase/firestore";
-import { db } from "../config/firebase";
 import TopBar from "../components/TopBar";
+import type { RadarDataPoint, ChartData } from "../models/HomeModel";
 
 const Homepage: React.FC = () => {
-  const [userName, setUserName] = useState("Loading..."); // Default to "Loading..."
-  const [radarData, setRadarData] = useState([
+  const [userName, setUserName] = useState<string>("Loading...");
+  const [radarData, setRadarData] = useState<RadarDataPoint[]>([
     { Health: "Mood & Energy", Percentage: 0 },
     { Health: "Mental Calmness", Percentage: 0 },
     { Health: "Emotional Wellbeing", Percentage: 0 },
     { Health: "Social Support", Percentage: 0 },
     { Health: "Coping Mechanisms", Percentage: 0 },
   ]);
-  const [lineChartData, setLineChartData] = useState({
+  const [lineChartData, setLineChartData] = useState<{
+    who5: ChartData[];
+    gad7: ChartData[];
+    phq9: ChartData[];
+    mspss: ChartData[];
+    cope: ChartData[];
+  }>({
     who5: [],
     gad7: [],
     phq9: [],
     mspss: [],
     cope: [],
   });
-  const navigate = useNavigate(); // Hook for navigation
+
+  const navigate = useNavigate();
+  const controller = new HomeController();
 
   useEffect(() => {
-    const checkAuthentication = () => {
+    const checkAuth = async () => {
       const documentId = localStorage.getItem("documentId");
-      if (!documentId) {
-        navigate("/signin"); // Redirect to signin if not logged in
+      const isAuthenticated = await controller.checkAuthentication(documentId);
+
+      if (!isAuthenticated) {
+        navigate("/signin");
+        return;
       }
+
+      const name = await controller.fetchUserName(documentId);
+      setUserName(name);
+
+      const { radarData: radar, lineChartData: lineData } =
+        await controller.fetchChartData(documentId);
+
+      setRadarData(radar);
+      setLineChartData(lineData);
     };
 
-    checkAuthentication();
+    checkAuth();
   }, [navigate]);
 
-  useEffect(() => {
-    const fetchUserName = async () => {
-      const documentId = localStorage.getItem("documentId");
-      if (!documentId) return;
-
-      try {
-        const userDocRef = doc(db, "users", documentId);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUserName(
-            `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching user name:", error);
-        setUserName("User"); // Fallback if there's an error
-      }
-    };
-
-    fetchUserName();
-  }, []);
-
-  useEffect(() => {
-    const fetchLatestData = async () => {
-      const documentId = localStorage.getItem("documentId");
-      if (!documentId) return;
-
-      try {
-        const userDocRef = doc(db, "users", documentId);
-        const historyCollectionRef = collection(userDocRef, "history_stress");
-        const latestQuery = query(
-          historyCollectionRef,
-          orderBy("timestamp", "desc"),
-          limit(7)
-        );
-        const querySnapshot = await getDocs(latestQuery);
-
-        if (!querySnapshot.empty) {
-          const documents = querySnapshot.docs.map((doc) => ({
-            ...doc.data(),
-            timestamp: new Date(doc.data().timestamp).toLocaleDateString(),
-          }));
-
-          setRadarData([
-            { Health: "Mood & Energy", Percentage: documents[0].who5 || 0 },
-            { Health: "Mental Calmness", Percentage: documents[0].gad7 || 0 },
-            {
-              Health: "Emotional Wellbeing",
-              Percentage: documents[0].phq9 || 0,
-            },
-            { Health: "Social Support", Percentage: documents[0].mspss || 0 },
-            { Health: "Coping Mechanisms", Percentage: documents[0].cope || 0 },
-          ]);
-
-          setLineChartData({
-            who5: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.who5 || 0,
-            })),
-            gad7: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.gad7 || 0,
-            })),
-            phq9: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.phq9 || 0,
-            })),
-            mspss: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.mspss || 0,
-            })),
-            cope: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.cope || 0,
-            })),
-          });
-        }
-      } catch (error) {
-        console.error("Error fetching data from Firestore:", error);
-      }
-    };
-
-    fetchLatestData();
-  }, []);
-
   const handleLogout = () => {
-    localStorage.removeItem("documentId"); // Clear user data from localStorage
-    navigate("/signin"); // Redirect to login page
+    controller.handleLogout();
+    navigate("/signin");
   };
 
   return (
