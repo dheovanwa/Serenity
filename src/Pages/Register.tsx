@@ -1,13 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AuthLayout from "../components/BackgroundLayout";
 import InputField from "../components/inputField";
-import { auth, db } from "../config/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { collection, addDoc, doc, setDoc } from "firebase/firestore";
 import showPassIcon from "../assets/showPass.svg";
 import hidePassIcon from "../assets/hidePass.svg";
-import { useNavigate } from "react-router-dom";
-// import { PageHeader } from "../components/PageHeader";
+import { RegisterController } from "../controllers/RegisterController";
+import type { RegisterErrors } from "../models/RegisterModel";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -20,6 +18,12 @@ const Register = () => {
     emailPromo: false,
   });
 
+  const [errors, setErrors] = useState<RegisterErrors>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+  const controller = new RegisterController();
+
+  // Password visibility toggles remain unchanged
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -31,105 +35,27 @@ const Register = () => {
     setShowConfirmPassword((prev) => !prev);
   };
 
-  const navigate = useNavigate();
-
-  const registration = async () => {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        email: "",
-      }));
-
-      const userDocRef = doc(db, "users", userCredential.user.uid);
-
-      // Add user data with additional fields
-      await setDoc(userDocRef, {
-        uid: userCredential.user.uid,
-        email: formData.email,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        emailPromo: formData.emailPromo,
-        isUser: true,
-        age: 0,
-        dailySurveyCompleted: false,
-        sex: "",
-        address: "",
-        phoneNumber: "",
-        country: "",
-        city: "",
-        educationLevel: "",
-      });
-
-      // Create an empty "history_stress" collection
-      const historyCollectionRef = collection(userDocRef, "history_stress");
-      await addDoc(historyCollectionRef, {}); // Add an empty document to initialize the collection
-
-      navigate("/signin");
-    } catch (error: any) {
-      if (error.code === "auth/email-already-in-use") {
-        setErrors((prevErrors) => ({
-          ...prevErrors,
-          email: "This email is already registered",
-        }));
-      } else {
-        console.error(error);
-      }
-    }
-  };
-  console.log(auth?.currentUser?.email);
-
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
-
-  const validateForm = () => {
-    const newErrors: { [key: string]: string } = {};
-
-    if (!formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
-      newErrors.email = "Invalid email address";
-    }
-
-    if (!formData.firstName.trim()) {
-      newErrors.firstName = "First name is required";
-    }
-
-    if (formData.password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters";
-    }
-
-    if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = "Passwords do not match";
-    }
-
-    if (!formData.termsAccepted) {
-      newErrors.termsAccepted = "You must accept the terms";
-    }
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type, checked } = e.target;
-    setFormData({
-      ...formData,
+    setFormData((prev) => ({
+      ...prev,
       [name]: type === "checkbox" ? checked : value,
-    });
+    }));
   };
-
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!validateForm()) return; // Don't proceed if there are errors
+    setIsSubmitting(true);
 
-    setIsSubmitting(true); // Disable button
-    await registration(); // Proceed with registration
+    const result = await controller.handleRegistration(formData);
 
-    setTimeout(() => setIsSubmitting(false), 3000); // Enable button after 3 sec
+    if (result.success) {
+      navigate("/signin");
+    } else if (result.errors) {
+      setErrors(result.errors);
+    }
+
+    setIsSubmitting(false);
   };
 
   return (
