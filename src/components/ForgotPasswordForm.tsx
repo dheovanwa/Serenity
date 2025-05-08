@@ -1,35 +1,28 @@
 import { useState } from "react";
-import AuthLayout from "./BackgroundLayout";
-import { auth } from "../config/firebase";
-import { sendPasswordResetEmail } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import AuthLayout from "./BackgroundLayout";
+import { ForgotPasswordController } from "../controllers/ForgotPasswordController";
+import type { ResetPasswordErrors } from "../models/ForgotPasswordModel";
 
 const ForgotPasswordForm = () => {
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
+  const [errors, setErrors] = useState<ResetPasswordErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
+  const controller = new ForgotPasswordController();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setEmailError("");
-
-    if (!email) {
-      setEmailError("Email is required");
-      return;
-    }
-    if (!/@\w+\.\w+/.test(email)) {
-      setEmailError("Email must be in the correct format");
-      return;
-    }
-
     setIsSubmitting(true);
-    try {
-      await sendPasswordResetEmail(auth, email);
+
+    const result = await controller.handleSendResetEmail(email);
+
+    if (result.success) {
       navigate("/forgot-password/email-sent");
-    } catch (error) {
-      setEmailError("Email not found. Please sign up.");
+    } else if (result.errors) {
+      setErrors(result.errors);
     }
+
     setIsSubmitting(false);
   };
 
@@ -48,8 +41,8 @@ const ForgotPasswordForm = () => {
             placeholder="youremail@gmail.com"
             className="w-full p-2 rounded-md bg-white text-gray-900"
           />
-          {emailError && (
-            <p className="text-red-500 text-sm mt-1">{emailError}</p>
+          {errors.email && (
+            <p className="text-red-500 text-sm mt-1">{errors.email}</p>
           )}
 
           <button

@@ -1,42 +1,29 @@
 import { useState } from "react";
-import AuthLayout from "./BackgroundLayout";
-import { auth } from "../config/firebase";
-import { confirmPasswordReset } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
+import AuthLayout from "./BackgroundLayout";
+import { ForgotPasswordController } from "../controllers/ForgotPasswordController";
+import type { ResetPasswordErrors } from "../models/ForgotPasswordModel";
 
 const NewPass = () => {
   const [password, setPassword] = useState("");
-  const [newPass, setNewPass] = useState("");
-  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [errors, setErrors] = useState<ResetPasswordErrors>({});
   const navigate = useNavigate();
+  const controller = new ForgotPasswordController();
 
   const handleResetPassword = async () => {
-    let validationErrors: { [key: string]: string } = {};
+    const oobCode = new URLSearchParams(window.location.search).get("oobCode");
 
-    if (!password) validationErrors.password = "Password is required.";
-    else if (password.length < 8)
-      validationErrors.password = "Password must be at least 8 characters.";
+    const result = await controller.handleResetPassword({
+      password,
+      confirmPassword,
+      oobCode: oobCode || "",
+    });
 
-    if (!newPass) validationErrors.newPass = "Confirm password is required.";
-    else if (newPass !== password)
-      validationErrors.newPass = "Passwords do not match.";
-
-    setErrors(validationErrors);
-
-    if (Object.keys(validationErrors).length === 0) {
-      try {
-        const oobCode = new URLSearchParams(window.location.search).get(
-          "oobCode"
-        );
-        if (oobCode) {
-          await confirmPasswordReset(auth, oobCode, password);
-          navigate("/signin");
-        }
-      } catch (error) {
-        setErrors({
-          password: "Invalid reset link. Please request a new one.",
-        });
-      }
+    if (result.success) {
+      navigate("/signin");
+    } else if (result.errors) {
+      setErrors(result.errors);
     }
   };
 
@@ -66,13 +53,15 @@ const NewPass = () => {
           </label>
           <input
             type="password"
-            value={newPass}
-            onChange={(e) => setNewPass(e.target.value)}
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Confirm your password"
             className="w-full p-2 rounded-md bg-white text-gray-900"
           />
-          {errors.newPass && (
-            <p className="text-red-500 text-sm mt-1">{errors.newPass}</p>
+          {errors.confirmPassword && (
+            <p className="text-red-500 text-sm mt-1">
+              {errors.confirmPassword}
+            </p>
           )}
         </div>
 
