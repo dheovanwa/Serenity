@@ -2,76 +2,26 @@ import React, { useState } from "react";
 import InputField from "../components/Login/InputField";
 import Button from "../components/Login/Button";
 import AuthLayout from "../components/BackgroundLayout";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth, db } from "../config/firebase";
-import { query, where, getDocs, collection } from "firebase/firestore";
 import { useNavigate } from "react-router-dom";
+import { LoginController } from "../controllers/LoginController";
+import { LoginErrors } from "../models/LoginModel";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
-    {}
-  );
+  const [errors, setErrors] = useState<LoginErrors>({});
   const navigate = useNavigate();
+  const controller = new LoginController();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const newErrors: { email?: string; password?: string } = {};
+    const result = await controller.handleLogin({ email, password });
 
-    if (!email.trim()) {
-      newErrors.email = "Email is required";
-    }
-    if (!password.trim()) {
-      newErrors.password = "Password is required";
-    }
-
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      return;
-    }
-
-    setErrors({});
-
-    try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
-      const userId = userCredential.user.uid;
-
-      // Query Firestore to find the document with the matching uid
-      const userQuery = query(
-        collection(db, "users"),
-        where("uid", "==", userId)
-      );
-      const querySnapshot = await getDocs(userQuery);
-
-      if (!querySnapshot.empty) {
-        const userDoc = querySnapshot.docs[0]; // Get the first matching document
-        const userData = userDoc.data();
-
-        localStorage.setItem("documentId", userDoc.id); // Store Firestore document ID
-
-        if (userData.dailySurveyCompleted === false) {
-          navigate("/user-survey");
-        } else {
-          navigate("/");
-        }
-      } else {
-        console.error("User document not found");
-      }
-    } catch (error: any) {
-      if (
-        error.code === "auth/user-not-found" ||
-        error.code === "auth/wrong-password"
-      ) {
-        setErrors({ email: "Invalid email or password" });
-      } else {
-        console.error("Login error:", error);
-      }
+    if (result.success && result.redirectTo) {
+      navigate(result.redirectTo);
+    } else if (result.errors) {
+      setErrors(result.errors);
     }
   };
 
