@@ -6,33 +6,33 @@ import starIcon from '../assets/star.png';
 
 const SearchPskiater: React.FC = () => {
   const [searchText, setSearchText] = useState('');
-  const [selectedSort, setSelectedSort] = useState(''); // Sort type (Rating, Popularity, Fee)
-  const [isSortOpen, setIsSortOpen] = useState(false); // For opening Sort By dropdown
-  const [sortOrder, setSortOrder] = useState('ascending'); // For Ascending/Descending
-  const [isOrderOpen, setIsOrderOpen] = useState(false); // For opening Ascending/Descending dropdown
+  const [selectedSort, setSelectedSort] = useState(''); 
+  const [isSortOpen, setIsSortOpen] = useState(false); 
+  const [sortOrder, setSortOrder] = useState('ascending'); 
+  const [isOrderOpen, setIsOrderOpen] = useState(false); 
 
   const handleClear = () => {
     setSearchText('');
     setSelectedSort('');
-    setSortOrder('ascending'); // Reset sorting order to default
+    setSortOrder('ascending'); 
   };
 
   const toggleSortDropdown = () => {
-    setIsSortOpen(!isSortOpen); // Toggle Sort By dropdown
+    setIsSortOpen(!isSortOpen); 
   };
 
   const toggleOrderDropdown = () => {
-    setIsOrderOpen(!isOrderOpen); // Toggle Ascending/Descending dropdown
+    setIsOrderOpen(!isOrderOpen);
   };
 
   const handleSelectSort = (sortOption: string) => {
     setSelectedSort(sortOption);
-    setIsSortOpen(false); // Close dropdown after selecting option
+    setIsSortOpen(false); 
   };
 
   const handleSortOrderChange = (order: string) => {
-    setSortOrder(order); // Change the sorting order (ascending or descending)
-    setIsOrderOpen(false); // Close dropdown after selecting order
+    setSortOrder(order); 
+    setIsOrderOpen(false); 
   };
 
   const psychiatrists = [
@@ -56,7 +56,7 @@ const SearchPskiater: React.FC = () => {
       )
     : psychiatrists;
 
-  // Sorting function based on selected sort option and order (ascending/descending)
+  
   const sortPsychiatrists = (list: any[], option: string, order: string) => {
     const sortedList = [...list];
     switch (option) {
@@ -160,7 +160,7 @@ const SearchPskiater: React.FC = () => {
                 onClick={toggleOrderDropdown}
                 className="p-2 rounded-md bg-white text-[#187DA8] font-bold text-[16px] sm:text-[18px] md:text-[20px] w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300"
               >
-                <span>{sortOrder === 'ascending' ? 'Ascending' : 'Descending'}</span>
+                <span >{sortOrder === 'ascending' ? 'Ascending' : 'Descending'}</span>
                 <img
                   src={chevronDownIcon}
                   alt="Dropdown Icon"
@@ -174,13 +174,13 @@ const SearchPskiater: React.FC = () => {
                 <ul className="space-y-2">
                   <li
                     onClick={() => handleSortOrderChange('ascending')}
-                    className="text-[#358DB3] text-center font-bold text-[16px] sm:text-[18px] md:text-[20px] p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    className="text-[#358DB3] text-left font-bold text-[16px] sm:text-[18px] md:text-[20px] p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
                   >
                     Ascending
                   </li>
                   <li
                     onClick={() => handleSortOrderChange('descending')}
-                    className="text-[#358DB3] text-center font-bold text-[16px] sm:text-[18px] md:text-[20px] p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    className="text-[#358DB3] text-left font-bold text-[16px] sm:text-[18px] md:text-[20px] p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
                   >
                     Descending
                   </li>
@@ -192,7 +192,7 @@ const SearchPskiater: React.FC = () => {
 
         {/* Display All Psychiatrists or Filtered Results */}
         <div className="bg-white w-full max-w-full h-[618px] overflow-auto mx-auto p-4 rounded-lg mt-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-4">
             {sortedPsychiatrists.map((psychiatrist, index) => (
               <div 
                 key={index} 
