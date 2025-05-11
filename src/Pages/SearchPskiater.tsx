@@ -213,7 +213,7 @@ const SearchPskiater: React.FC = () => {
       }}
     >
       <div className="pt-8 px-4">
-        <h1 className="text-white text-2xl text-center sm:text-3xl mb-8">
+        <h1 className="text-white text-2xl text-center sm:text-3xl mb-16">
           Your mind deserves care,
           <br />
           let us help you find the right psychiatrist
