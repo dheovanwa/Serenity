@@ -7,6 +7,7 @@ import UserSurvey from "./Pages/SurveyPage";
 import UserProfile from "./components/profileUser";
 import Homepage from "./Pages/Homepage";
 import LandingPage from "./Pages/LandingPage";
+import SearchPskiater from "./Pages/SearchPskiater";
 
 const App: React.FC = () => {
   return (
@@ -20,6 +21,7 @@ const App: React.FC = () => {
         <Route path="/profile" element={<UserProfile />}></Route>
         <Route path="/" element={<Homepage />}></Route>
         <Route path="/welcome" element={<LandingPage />}></Route>
+        <Route path="/Search" element={<SearchPskiater />}></Route>
       </Routes>
     </Router>
   );
