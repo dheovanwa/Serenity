@@ -182,7 +182,10 @@ const Homepage: React.FC = () => {
 
       {/* Recommended Psychiatrists */}
       <div className="mt-30 ml-6 sm:ml-15">
-        <h1 className="text-5xl text-white font-semibold drop-shadow-md mb-10">
+        <h1
+          className="text-5xl text-white font-semibold mb-10"
+          style={{ textShadow: "0px 2px 2px rgba(0, 0, 0, 0.25)" }}
+        >
           Recommended Psychiatrists
         </h1>
         <div className="flex justify-center items-center mb-10">
