@@ -8,6 +8,7 @@ import UserProfile from "./components/profileUser";
 import Homepage from "./Pages/Homepage";
 import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";
+import ManageApt from "./components/ManageAppointmentContent";
 
 const App: React.FC = () => {
   return (
@@ -20,8 +21,12 @@ const App: React.FC = () => {
         <Route path="/user-survey" element={<UserSurvey />}></Route>
         <Route path="/profile" element={<UserProfile />}></Route>
         <Route path="/" element={<Homepage />}></Route>
+        <Route path="/Search-psi" element={<SearchPskiater />}></Route>
+        <Route
+          path="/schedule-appointment/:id?"
+          element={<ManageApt />}
+        ></Route>
         <Route path="/welcome" element={<LandingPage />}></Route>
-        <Route path="/Search" element={<SearchPskiater />}></Route>
       </Routes>
     </Router>
   );
