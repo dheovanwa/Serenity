@@ -6,6 +6,7 @@ import ForgotPassword from "./Pages/forgotPassword";
 import UserSurvey from "./Pages/SurveyPage";
 import UserProfile from "./components/profileUser";
 import Homepage from "./Pages/Homepage";
+import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";
 import ManageApt from "./components/ManageAppointmentContent";
 
@@ -25,6 +26,7 @@ const App: React.FC = () => {
           path="/schedule-appointment/:id?"
           element={<ManageApt />}
         ></Route>
+        <Route path="/welcome" element={<LandingPage />}></Route>
       </Routes>
     </Router>
   );

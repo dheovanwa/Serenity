@@ -1,4 +1,3 @@
-import * as React from "react";
 import PsychiatristPhoto from "../assets/psychiatristPhoto.png";
 import { Card, CardContent } from "./ui/card";
 import {
@@ -17,8 +16,8 @@ const psychiatrists = [
     image: { PsychiatristPhoto },
   },
   {
-    name: "Yohanes Wenanta",
-    job: "Rapist",
+    name: "Yohanes Smith",
+    job: "Therapist",
     image: { PsychiatristPhoto },
   },
   {
