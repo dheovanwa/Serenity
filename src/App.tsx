@@ -21,7 +21,10 @@ const App: React.FC = () => {
         <Route path="/profile" element={<UserProfile />}></Route>
         <Route path="/" element={<Homepage />}></Route>
         <Route path="/Search-psi" element={<SearchPskiater />}></Route>
-        <Route path="/Apt" element={<ManageApt />}></Route>
+        <Route
+          path="/schedule-appointment/:id?"
+          element={<ManageApt />}
+        ></Route>
       </Routes>
     </Router>
   );

@@ -7,6 +7,7 @@ import { db } from "../config/firebase";
 import PsychiatristSearchProfile from "../components/PsychiatristSearchProfile";
 
 interface Psychiatrist {
+  id: string; // Add this
   name: string;
   specialty: string;
   price: string;
@@ -249,28 +250,41 @@ const SearchPskiater: React.FC = () => {
         {/* Display All Psychiatrists or Filtered Results */}
         <div className="bg-white w-[90%] max-w-full h-[700px] overflow-auto mx-auto p-16 rounded-lg mt-4 mb-8 shadow-lg">
           {isLoading ? (
-            <div className="h-full flex items-center justify-center">
-              <div className="w-1/2 h-2 bg-gray-300 rounded-full overflow-hidden">
-                <div className="h-full bg-[#32481F] animate-loading-bar"></div>
-              </div>
-              <style>
-                {`
-                  @keyframes loading-bar {
-                    0% { transform: translateX(-100%); }
-                    50% { transform: translateX(0); }
-                    100% { transform: translateX(100%); }
-                  }
-                  .animate-loading-bar {
-                    animation: loading-bar 1.5s infinite;
-                  }
-                `}
-              </style>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-10">
+              {[1, 2, 3, 4, 5, 6].map((i) => (
+                <div
+                  key={i}
+                  className="flex flex-col items-center bg-white p-4 rounded-lg shadow-xl hover:shadow-lg transition-all duration-300"
+                >
+                  {/* Image skeleton - exact match to psychiatrist card image */}
+                  <div className="w-full max-w-[213px] h-[320px] bg-gray-200 rounded-lg animate-pulse"></div>
+
+                  {/* Name skeleton - match text size */}
+                  <div className="w-36 h-6 bg-gray-200 rounded mt-2 animate-pulse"></div>
+
+                  {/* Specialty skeleton - match text size */}
+                  <div className="w-44 h-4 bg-gray-200 rounded mt-2 animate-pulse"></div>
+
+                  {/* Price and sessions skeleton - match layout */}
+                  <div className="flex items-center mt-2 space-x-2">
+                    <div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-20 h-6 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+
+                  {/* Rating stars skeleton - match star size */}
+                  <div className="w-[160px] h-9 bg-gray-200 rounded-[10px] mt-4 animate-pulse"></div>
+
+                  {/* Button skeleton - match button dimensions */}
+                  <button className="w-[173px] h-9 bg-gray-200 rounded-[10px] mt-4 animate-pulse"></button>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-10">
-              {sortedPsychiatrists.map((psychiatrist, index) => (
+              {sortedPsychiatrists.map((psychiatrist) => (
                 <PsychiatristSearchProfile
-                  key={index}
+                  key={psychiatrist.id}
+                  id={psychiatrist.id}
                   name={psychiatrist.name}
                   specialty={psychiatrist.specialty}
                   price={psychiatrist.price}
