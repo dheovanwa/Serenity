@@ -228,15 +228,11 @@ const profilePsychiatrist = () => {
     }
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click(); // Trigger file input click
-  };
-
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f2f3d9] text-[#2a3d23]">
-        <div className="w-1/2 h-2 bg-gray-300 rounded-full overflow-hidden">
-          <div className="h-full bg-[#32481F] animate-loading-bar"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#b5e9ff] text-white">
+        <div className="w-1/2 h-2 bg-white rounded-full overflow-hidden">
+          <div className="h-full bg-[#6ec2fa] animate-loading-bar"></div>
         </div>
         <style>
           {`
@@ -255,52 +251,44 @@ const profilePsychiatrist = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFFDB] text-[#2a3d23] flex flex-col">
+    <div className="min-h-screen bg-[#95cefd] text-white flex flex-col">
       <TopBar userName={userName} onLogout={handleLogout} />
       <div className="w-full px-6 py-4">
         <button
           onClick={() => navigate("/")}
-          className="bg-[#32481F] text-white py-2 px-4 rounded-md hover:bg-[#1f3019] transition font-semibold cursor-pointer"
+          className="bg-[#41729b] text-white py-2 px-4 rounded-md hover:bg-[#48657c] transition font-semibold cursor-pointer"
         >
           ← Back to Home
         </button>
       </div>
 
-      <div className="w-full px-6 py-15 bg-[#FFFFDB]">
+      <div className="w-full px-6 py-15 bg-[#6cbdff]">
         <div className="flex items-center gap-6 flex-col sm:flex-row">
           <div className="relative w-24 h-24 sm:w-45 sm:h-45 rounded-full overflow-hidden group">
             <img
               src={profilePic}
               alt="Profile"
-              className={`w-full h-full object-cover transition duration-300 
-                  ${isEditing ? "opacity-70 group-hover:opacity-50" : ""}`}
-            />
-
-            {isEditing && (
-              <div
-                onClick={triggerFileInput}
-                className="absolute inset-0 flex items-center justify-center transition duration-300 cursor-pointer"
-              >
-                <img
-                  src={cameraIcon}
-                  alt="Camera Icon"
-                  className="w-10 h-10 opacity-80 group-hover:opacity-100"
-                />
-              </div>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept="image/*"
-              className="hidden"
-              onChange={handleProfilePicChange}
+              className="w-full h-full object-cover transition duration-300"
             />
           </div>
 
           <div className="text-center sm:text-left max-w-7xl">
-            <h1 className="text-3xl sm:text-5xl font-extrabold mb-2">
-              dr. {formData.firstName} {formData.lastName}
-            </h1>
+            <div className="flex items-center gap-4">
+              <h1 className="text-3xl sm:text-5xl font-extrabold mb-2">
+                dr. {formData.firstName} {formData.lastName}
+              </h1>
+
+              {/* Box with stars and experience */}
+              <div className="flex items-center gap-3">
+                <div className="flex items-center">
+                  {/* Star Rating */}
+                  <span className="text-yellow-500">★★★★★</span>
+                </div>
+                <div className="bg-transparent border-2 text-white font-semibold rounded-sm px-3 py-1">
+                  2 Years Experience in Serenity
+                </div>
+              </div>
+            </div>
             <p className="text-lg sm:text-2xl font-bold">
               I’m dr. Coolit Heytame, a psychiatrist with years of experience in
               treating a variety of mental health conditions. I focus on
@@ -317,7 +305,7 @@ const profilePsychiatrist = () => {
                   setIsEditing(true);
                 }
               }}
-              className="mt-4 bg-[#32481F] text-white py-2 px-6 rounded-md hover:bg-[#1f3019] transition font-semibold cursor-pointer"
+              className="mt-4 bg-[#41729b] text-white py-2 px-6 rounded-md hover:bg-[#48657c] transition font-semibold cursor-pointer"
             >
               {isEditing ? "Cancel Edit" : "Edit Profile"}
             </button>
@@ -325,7 +313,7 @@ const profilePsychiatrist = () => {
         </div>
       </div>
 
-      <div className="bg-[#688F5E] flex-1">
+      <div className="bg-[#4b80ac] flex-1">
         <div className="max-w-6xl mx-auto pt-10 py-10 px-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
             <div>
@@ -374,24 +362,24 @@ const profilePsychiatrist = () => {
                 </div>
                 <div className="md:col-span-2">
                   <InputField
-                    label="Address"
+                    label="Work Address"
                     type="text"
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    placeholder="Your address"
+                    placeholder="Your work address"
                   />
                 </div>
                 <div className="md:col-span-2">
                   <InputField
-                    label="Education Level"
+                    label="Graduate of"
                     type="text"
                     name="education" // Corrected key
                     value={formData.education} // Corrected key
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    placeholder="Bachelor, Master, etc"
+                    placeholder="University, City, Year"
                   />
                 </div>
               </div>
@@ -454,7 +442,7 @@ const profilePsychiatrist = () => {
             <div className="flex justify-center">
               <button
                 onClick={handleSave}
-                className={`bg-[#32481F] text-white py-4 px-20 rounded-md hover:bg-[#1f3019] transition font-bold text-xl ${
+                className={`bg-[#41729b] text-white py-4 px-20 border-2 rounded-md hover:bg-[#48657c] transition font-bold text-xl ${
                   !isFormValid ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 disabled={!isFormValid}

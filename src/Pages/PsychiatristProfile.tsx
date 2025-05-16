@@ -28,11 +28,6 @@ const PsychiatristProfile: React.FC = () => {
       const documentId = localStorage.getItem("documentId");
       return await controller.saveUserData(documentId, data);
     },
-
-    updateProfilePicture: async (file: File) => {
-      const documentId = localStorage.getItem("documentId");
-      return await controller.handleProfilePicture(file, documentId);
-    },
   };
 
   return (
