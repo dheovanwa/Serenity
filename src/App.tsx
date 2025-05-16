@@ -8,7 +8,9 @@ import UserProfile from "./components/profileUser";
 import Homepage from "./Pages/Homepage";
 import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";
-import ManageApt from "./components/ManageAppointmentContent";
+import PsychiatristProfile from "./Pages/PsychiatristProfile";
+
+// import ManageApt from "./components/ManageAppointmentContent";
 
 const App: React.FC = () => {
   return (
@@ -23,9 +25,13 @@ const App: React.FC = () => {
         <Route path="/" element={<Homepage />}></Route>
         <Route path="/Search-psi" element={<SearchPskiater />}></Route>
         <Route
+          path="/psychiatrist-coolit-heytame"
+          element={<PsychiatristProfile />}
+        ></Route>
+        {/* <Route
           path="/schedule-appointment/:id?"
           element={<ManageApt />}
-        ></Route>
+        ></Route> */}
         <Route path="/welcome" element={<LandingPage />}></Route>
       </Routes>
     </Router>
