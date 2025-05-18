@@ -9,6 +9,7 @@ import Homepage from "./Pages/Homepage";
 import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";
 import PsychiatristProfile from "./Pages/PsychiatristProfile";
+import Dashboardpsychiatrist from "./Pages/Dashboardpsychiatrist";
 
 // import ManageApt from "./components/ManageAppointmentContent";
 
@@ -24,6 +25,7 @@ const App: React.FC = () => {
         <Route path="/profile" element={<UserProfile />}></Route>
         <Route path="/" element={<Homepage />}></Route>
         <Route path="/Search-psi" element={<SearchPskiater />}></Route>
+        <Route path="/psychiatrist" element={<Dashboardpsychiatrist />}></Route>
         <Route
           path="/psychiatrist-coolit-heytame"
           element={<PsychiatristProfile />}
