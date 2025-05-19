@@ -34,6 +34,7 @@ const App: React.FC = () => {
           element={<ManageApt />}
         ></Route>
         <Route path="/welcome" element={<LandingPage />}></Route>
+        <Route path="/dp" element={<Dashboardpsychiatrist />}></Route>
       </Routes>
     </Router>
   );
