@@ -7,6 +7,7 @@ import eyes from "../assets/eyes.png";
 
 
 
+
 export function InputWithLabelNamefirst({ firstName,  onFirstNameChange }: InputProps) {
   return (
     <div className="grid w-full items-center mt-10 text-black gap-4">
@@ -126,6 +127,7 @@ export function InputWithLabelAddress({ value, onChange }: InputProps) {
 
 
 export function InputWithLabel() {
+
   return (
     <div className="grid w-full max-w-sm items-center gap-1.5 text-black mt-10">
       <Label htmlFor="email">Email</Label>
@@ -134,20 +136,28 @@ export function InputWithLabel() {
           type="email"
           id="email"
           placeholder="contoh@gmail.com"
-          className="border-1 border-black" 
+          className={`border-1 ${error ? "border-red-500" : "border-black"}`}
           style={{
             backgroundImage: `url(${mail})`,
-            backgroundPosition: '98% center',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: '20px 20px', 
+            backgroundPosition: "98% center",
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "20px 20px",
           }}
+          value={value}
+          onChange={onChange}
+          name={name}
         />
       </div>
     </div>
   );
 }
 
-export function InputWithLabelPass() {
+export function InputWithLabelPass({
+  value,
+  onChange,
+  name,
+  error,
+}: InputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -162,7 +172,12 @@ export function InputWithLabelPass() {
           type={isPasswordVisible ? "text" : "password"}
           id="password"
           placeholder="•••••••"
-          className="border-1 border-black pr-10" 
+          className={`border-1 pr-10 ${
+            error ? "border-red-500" : "border-black"
+          }`} // tambahkan padding kanan
+          value={value}
+          onChange={onChange}
+          name={name}
         />
         <button
           type="button"
@@ -180,7 +195,12 @@ export function InputWithLabelPass() {
   );
 }
 
-export function InputWithLabelPassConfirm() {
+export function InputWithLabelPassConfirm({
+  value,
+  onChange,
+  name,
+  error,
+}: InputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
   const togglePasswordVisibility = () => {
@@ -195,7 +215,10 @@ export function InputWithLabelPassConfirm() {
           type={isPasswordVisible ? "text" : "password"}
           id="password"
           placeholder="•••••••"
-          className="border-1 border-black pr-10" 
+          className="border-1 border-black pr-10"
+          value={value}
+          onChange={onChange}
+          name={name}
         />
         <button
           type="button"
@@ -208,6 +231,33 @@ export function InputWithLabelPassConfirm() {
             className="w-5 h-5"
           />
         </button>
+      </div>
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
+}
+
+export function InputWithLabelName() {
+  return (
+    <div className="grid w-full max-w-sm gap-6 text-black mt-10">
+      <div className="grid items-center gap-1.5">
+        <Label htmlFor="firstname">Nama Depan</Label>
+        <Input
+          type="text"
+          id="firstname"
+          placeholder="Masukkan nama depan"
+          className="border border-black"
+        />
+      </div>
+
+      <div className="grid items-center gap-1.5">
+        <Label htmlFor="lastname">Nama Belakang</Label>
+        <Input
+          type="text"
+          id="lastname"
+          placeholder="Masukkan nama belakang"
+          className="border border-black"
+        />
       </div>
     </div>
   );
