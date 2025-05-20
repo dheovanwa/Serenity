@@ -1,16 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import backgroundImage from "../assets/Searchpsi.png";
 import searchIcon from "../assets/search1.png";
 import chevronDownIcon from "../assets/con1.png";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../config/firebase";
 import PsychiatristSearchProfile from "../components/PsychiatristSearchProfile";
-import awan1 from "../assets/awan1.png";
-import awan2 from "../assets/awan2.png";
-import gunung from "../assets/gunung.png";
+
 
 interface Psychiatrist {
-  id: string; // Add this
+  id: string; 
   name: string;
   specialty: string;
   price: string;
@@ -29,7 +26,7 @@ const SearchPskiater: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const sortDropdownRef = useRef<HTMLDivElement>(null);
-  const orderDropdownRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     const fetchPsychiatrists = async () => {
@@ -95,6 +92,11 @@ const SearchPskiater: React.FC = () => {
           const priceB = parseFloat(b.price.slice(1));
           return order === "ascending" ? priceA - priceB : priceB - priceA;
         });
+        case "Tahunpengalaman":
+        return sortedList.sort((a, b) =>
+          order === "descending" ? b.tahunPengalaman - a.tahunPengalaman 
+          : a.tahunPengalaman - b.tahunPengalaman
+        );
       default:
         return sortedList;
     }
@@ -108,39 +110,8 @@ const SearchPskiater: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden"
-      style={{
-        backgroundImage: `url(${backgroundImage})`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        position: "relative",
-        height: "100vh",
-        zIndex: "0",
-      }}
-    >
-      {/* Cloud Images */}
-      <div
-        className="absolute top-0 left-0 w-full flex justify-between items-center"
-        style={{ zIndex: -1 }}
-      >
-        <img
-          src={awan1}
-          alt="awan1"
-          className="absolute top-[-45px] left-[-60px]"
-        />
-        <img
-          src={awan2}
-          alt="awan2"
-          className="absolute top-[-8px] right-[-120px]"
-        />
-      </div>
-
-      <div className="pt-6 px-2 sm:px-4 md:px-6 lg:px-8 ">
-        <h1 className="text-[#0a5372] font-semibold text-xl sm:text-2xl md:text-3xl lg:text-4xl text-center mb-8 sm:mb-12 md:mb-16 leading-tight ">
-          Your mind deserves care,
-          <br />
-          let us help you find the right psychiatrist
-        </h1>
+      className="min-h-screen w-full bg-[#F2EDE2] flex flex-col overflow-x-hidden">
+      <div className="mt-50 pt-6 px-2 sm:px-4 md:px-6 lg:px-8 ">
 
         {/* Search & Controls Section */}
         <div className="w-full sm:w-[90%] lg:w-[80%] mx-auto flex flex-col gap-3 sm:flex-row sm:justify-between">
@@ -152,7 +123,7 @@ const SearchPskiater: React.FC = () => {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Search for a Psychiatrist..."
-                className="bg-white text-[#187DA8] p-2 rounded-md w-full sm:w-[60%] lg:w-[100%] h-[45px] pl-10 sm:pl-12 md:pl-14 text-sm sm:text-base"
+                className="bg-transparent border-1 border-black text-[#161F36] p-2 rounded-md w-full sm:w-[60%] lg:w-[100%] h-[45px] pl-10 sm:pl-12 md:pl-14 text-sm sm:text-base"
               />
               <img
                 src={searchIcon}
@@ -163,93 +134,57 @@ const SearchPskiater: React.FC = () => {
 
             <button
               onClick={handleClear}
-              className="bg-white text-[#187DA8] font-semibold rounded-md h-[45px] px-5 min-w-[80px]"
+              className="bg-[#BACBD8]  text-[#161F36] font-semibold rounded-md h-[45px] px-5 min-w-[120px]"
             >
-              Clear
+              Hapus
             </button>
           </div>
 
           {/* Second row: Sort By and Sorting Order dropdowns */}
-          <div className="flex gap-3 w-full sm:w-auto">
+          <div className="flex gap-3 w-full sm:w-auto z-11">
             <div
-              className="relative sm:w-[180px] w-full"
+              className="relative sm:w-[280px] w-full"
               ref={sortDropdownRef}
             >
               <button
                 onClick={toggleSortDropdown}
-                className="p-2 rounded-md bg-white text-[#187DA8] font-bold text-sm sm:text-base md:text-lg w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300"
+                className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold text-sm sm:text-base md:text-lg w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300"
               >
-                <span className="truncate" style={{ maxWidth: "70%" }}>
-                  {selectedSort ? selectedSort : "Sort By"}
+                <span className="truncate" style={{ maxWidth: "100%" }}>
+                  {selectedSort ? selectedSort : "Urut berdasarkan"}
                 </span>
                 <img
                   src={chevronDownIcon}
                   alt="Dropdown Icon"
-                  className={`w-5 h-5 max-w-[24px] max-h-[24px] object-contain ${
+                  className={`w-4 h-4 mr-1 max-w-[24px] max-h-[24px] object-contain ${
                     isSortOpen ? "transform rotate-180" : ""
                   } transition-transform duration-300`}
                 />
               </button>
 
               <div
-                className={`absolute w-full mt-1 bg-white rounded-md shadow-lg transition-opacity duration-300 ${
+                className={`absolute w-full mt-1 bg-[#BACBD8] rounded-md shadow-lg transition-opacity duration-300 ${
                   isSortOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
               >
                 <ul className="space-y-2">
                   <li
                     onClick={() => handleSelectSort("Rating")}
-                    className="text-[#358DB3] text-left font-bold text-sm sm:text-base md:text-lg p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    className="text-[#161F36] text-left font-bold text-sm sm:text-base md:text-lg p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
                   >
                     Rating
                   </li>
                   <li
-                    onClick={() => handleSelectSort("Fee")}
-                    className="text-[#358DB3] text-left font-bold text-sm sm:text-base md:text-lg p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    onClick={() => handleSelectSort("Harga")}
+                    className="text-[#161F36] text-left font-bold text-sm sm:text-base md:text-lg p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
                   >
                     Fee
                   </li>
-                </ul>
-              </div>
-            </div>
-
-            <div
-              className="relative sm:w-[180px] w-full"
-              ref={orderDropdownRef}
-            >
-              <button
-                onClick={toggleOrderDropdown}
-                className="p-2 rounded-md bg-white text-[#187DA8] font-bold text-sm sm:text-base md:text-lg w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300"
-              >
-                <span>
-                  {sortOrder === "ascending" ? "Ascending" : "Descending"}
-                </span>
-                <img
-                  src={chevronDownIcon}
-                  alt="Dropdown Icon"
-                  className={`w-5 h-5 max-w-[24px] max-h-[24px] object-contain ${
-                    isOrderOpen ? "transform rotate-180" : ""
-                  } transition-transform duration-300`}
-                />
-              </button>
-
-              <div
-                className={`absolute w-full mt-1 bg-white rounded-md shadow-lg transition-opacity duration-300 ${
-                  isOrderOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-                }`}
-              >
-                <ul className="space-y-2">
                   <li
-                    onClick={() => handleSortOrderChange("ascending")}
-                    className="text-[#358DB3] text-left font-bold text-sm sm:text-base md:text-lg p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    onClick={() => handleSelectSort("TahunPengalaman")}
+                    className="text-[#161F36] text-left font-bold text-sm sm:text-base md:text-lg p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
                   >
-                    Ascending
-                  </li>
-                  <li
-                    onClick={() => handleSortOrderChange("descending")}
-                    className="text-[#358DB3] text-left font-bold text-sm sm:text-base md:text-lg p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
-                  >
-                    Descending
+                    Tahun Pengalaman
                   </li>
                 </ul>
               </div>
@@ -258,13 +193,22 @@ const SearchPskiater: React.FC = () => {
         </div>
 
         {/* Display All Psychiatrists or Filtered Results */}
-        <div className="bg-white w-[95%] max-w-full max-h-[600px] sm:w-[90%] md:w-[85%] lg:w-[80%] h-auto sm:h-[600px] overflow-auto mx-auto p-4 sm:p-8 lg:p-12 rounded-lg mt-4 mb-8 shadow-lg">
+        <div className="bg-transparent w-[95%] max-w-full max-h-[600px] sm:w-[90%] md:w-[85%] lg:w-[80%] h-auto sm:h-[600px] overflow-auto mx-auto p-4 sm:p-8 lg:p-12  mt-4 mb-8 "
+        style={{
+        width: "80%",
+        height: "auto",
+        overflowY: "auto",
+        scrollbarWidth: "thin", 
+        scrollbarColor: "#888 transparent", 
+      }}
+        >
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-10">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="flex flex-col items-center bg-white p-4 rounded-lg shadow-xl hover:shadow-lg transition-all duration-300"
+                  className="flex flex-col items-center bg-[#F8F0E0] p-4 rounded-lg shadow-xl hover:shadow-lg transition-all duration-300"
+
                 >
                   {/* Image skeleton - exact match to psychiatrist card image */}
                   <div className="w-full max-w-[213px] h-[320px] bg-gray-200 rounded-lg animate-pulse"></div>
@@ -307,22 +251,6 @@ const SearchPskiater: React.FC = () => {
           )}
         </div>
       </div>
-
-      {/* Mountain Image */}
-      <img
-        src={gunung}
-        alt="Gunung"
-        style={{
-          position: "fixed",
-          bottom: 0,
-          left: 0,
-          width: "100%",
-          height: "auto",
-          maxHeight: "100vh",
-          objectFit: "contain",
-          zIndex: -1,
-        }}
-      />
     </div>
   );
 };
