@@ -57,7 +57,7 @@ const Login = () => {
         Selamat datang kembali!
         <p className="font-semibold mt-2 text-2xl sm:text-4xl">Masuk ke Serenity</p>
       </h2>
-      <form className="space-y-4" onSubmit={handleLogin}>
+      <form className="space-y-0.5" onSubmit={handleLogin}>
         <div>
           <InputWithLabel />
           {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
@@ -66,12 +66,12 @@ const Login = () => {
           <InputWithLabelPass />
           {errors.password && <p className="text-red-500 text-sm">{errors.password}</p>}
         </div>
-        <div className="text-right text-sm w-full max-w-sm">
-          <a href="/forgot-password" className="font-thin text-[#8DAABF]">
+        <div className="text-right text-sm w-full max-w-sm ">
+          <a href="/forgot-password" className="font-thin  text-[#8DAABF]">
             Lupa dengan kata sandi?
           </a>
         </div>
-        <Button variant="outline" type="submit" className={`w-full h-12 max-w-sm rounded-sm bg-[#BACBD8] text-black hover:bg-[#bad2e5] ${isClicked ? 'bg-white' : ''}`} // Menambahkan kelas bg-white saat diklik
+        <Button variant="outline" type="submit" className={`w-full h-12 mt-6 max-w-sm rounded-sm bg-[#BACBD8] text-black hover:bg-[#bad2e5] ${isClicked ? 'bg-white' : ''}`} // Menambahkan kelas bg-white saat diklik
       onClick={handleClick}>
           Masuk
         </Button>

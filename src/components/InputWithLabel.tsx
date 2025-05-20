@@ -7,7 +7,7 @@ import eyes from "../assets/eyes.png";
 
 export function InputWithLabel() {
   return (
-    <div className="grid w-full max-w-sm items-center gap-1.5 text-black">
+    <div className="grid w-full max-w-sm items-center gap-1.5 text-black mt-10">
       <Label htmlFor="email">Email</Label>
       <div className="relative">
         <Input
@@ -35,7 +35,7 @@ export function InputWithLabelPass() {
   };
 
   return (
-    <div className="grid w-full max-w-sm items-center gap-1.5 text-black ">
+    <div className="grid w-full max-w-sm items-center mt-10 text-black">
       <Label htmlFor="password">Kata Sandi</Label>
       <div className="relative">
         <Input
