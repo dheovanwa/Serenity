@@ -10,6 +10,7 @@ import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";
 import PsychiatristProfile from "./Pages/PsychiatristProfile";
 import Dashboardpsychiatrist from "./Pages/Dashboardpsychiatrist";
+import SignUpComplete from "./Pages/CompleteSignUp";
 // import ManageApt from "./components/ManageAppointmentContent";
 
 const App: React.FC = () => {
@@ -18,6 +19,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/signin" element={<Login />}></Route>
         <Route path="/signup" element={<Register />}></Route>
+        <Route path="/fullsignup" element={<SignUpComplete />}></Route>
         <Route path="/verify-email" element={<Verif />}></Route>
         <Route path="/forgot-password/*" element={<ForgotPassword />}></Route>
         <Route path="/user-survey" element={<UserSurvey />}></Route>

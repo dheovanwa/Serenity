@@ -39,18 +39,80 @@ export function InputWithLabelPass() {
       <Label htmlFor="password">Kata Sandi</Label>
       <div className="relative">
         <Input
-          type={isPasswordVisible ? "text" : "password"}  
+          type={isPasswordVisible ? "text" : "password"}
           id="password"
           placeholder="•••••••"
-          className="border-1 border-black" 
-          style={{
-            backgroundImage: `url(${isPasswordVisible ? eyes : eyesN})`,  
-            backgroundPosition: '98% center',
-            backgroundRepeat: 'no-repeat',
-            backgroundSize: '20px 20px',
-            cursor: 'pointer',
-          }}
-          onClick={togglePasswordVisibility} 
+          className="border-1 border-black pr-10" // tambahkan padding kanan
+        />
+        <button
+          type="button"
+          onClick={togglePasswordVisibility}
+          className="absolute right-3 top-1/2 -translate-y-1/2"
+        >
+          <img
+            src={isPasswordVisible ? eyes : eyesN}
+            alt="Toggle visibility"
+            className="w-5 h-5"
+          />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function InputWithLabelPassConfirm() {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible((prevState) => !prevState);
+  };
+
+  return (
+    <div className="grid w-full max-w-sm items-center mt-10 text-black">
+      <Label htmlFor="password">Konfirmasi Kata Sandi</Label>
+      <div className="relative">
+        <Input
+          type={isPasswordVisible ? "text" : "password"}
+          id="password"
+          placeholder="•••••••"
+          className="border-1 border-black pr-10" 
+        />
+        <button
+          type="button"
+          onClick={togglePasswordVisibility}
+          className="absolute right-3 top-1/2 -translate-y-1/2"
+        >
+          <img
+            src={isPasswordVisible ? eyes : eyesN}
+            alt="Toggle visibility"
+            className="w-5 h-5"
+          />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export function InputWithLabelName() {
+  return (
+    <div className="grid w-full max-w-sm gap-6 text-black mt-10">
+      <div className="grid items-center gap-1.5">
+        <Label htmlFor="firstname">Nama Depan</Label>
+        <Input
+          type="text"
+          id="firstname"
+          placeholder="Masukkan nama depan"
+          className="border border-black"
+        />
+      </div>
+
+      <div className="grid items-center gap-1.5">
+        <Label htmlFor="lastname">Nama Belakang</Label>
+        <Input
+          type="text"
+          id="lastname"
+          placeholder="Masukkan nama belakang"
+          className="border border-black"
         />
       </div>
     </div>
