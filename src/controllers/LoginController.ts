@@ -75,4 +75,18 @@ export class LoginController {
       };
     }
   }
+
+  async handleGoogleSignIn() {
+    try {
+      const result = await this.model.handleGoogleSignIn();
+      if (result.docId) {
+        localStorage.setItem("documentId", result.docId);
+        return { success: true };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      return { success: false };
+    }
+  }
 }

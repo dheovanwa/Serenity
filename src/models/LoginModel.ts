@@ -1,5 +1,9 @@
 import { auth, db } from "../config/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+} from "firebase/auth";
 import {
   query,
   where,
@@ -7,6 +11,7 @@ import {
   collection,
   doc,
   updateDoc,
+  addDoc,
 } from "firebase/firestore";
 
 export interface LoginCredentials {
@@ -64,5 +69,38 @@ export class LoginModel {
     await updateDoc(userDocRef, {
       dailySurveyCompleted: status,
     });
+  }
+
+  async handleGoogleSignIn() {
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user exists in Firestore
+      const userQuery = query(
+        collection(db, "users"),
+        where("uid", "==", user.uid)
+      );
+      const querySnapshot = await getDocs(userQuery);
+
+      if (querySnapshot.empty) {
+        // Create new user document if doesn't exist
+        const userDocRef = await addDoc(collection(db, "users"), {
+          uid: user.uid,
+          email: user.email,
+          firstName: user.displayName?.split(" ")[0] || "",
+          lastName: user.displayName?.split(" ")[1] || "",
+          isUser: true,
+          dailySurveyCompleted: false,
+        });
+        return { docId: userDocRef.id };
+      }
+
+      return { docId: querySnapshot.docs[0].id };
+    } catch (error) {
+      console.error("Google sign in error:", error);
+      throw error;
+    }
   }
 }
