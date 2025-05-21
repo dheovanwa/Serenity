@@ -6,6 +6,8 @@ import ForgotPassword from "./Pages/forgotPassword";
 import UserSurvey from "./Pages/SurveyPage";
 import UserProfile from "./components/profileUser";
 import Homepage from "./Pages/Homepage";
+import ManageAppointment from "./components/ManageAppointment";
+
 
 const App: React.FC = () => {
   return (
@@ -18,6 +20,7 @@ const App: React.FC = () => {
         <Route path="/user-survey" element={<UserSurvey />}></Route>
         <Route path="/profile" element={<UserProfile />}></Route>
         <Route path="/" element={<Homepage />}></Route>
+        <Route path="/apt" element={<ManageAppointment />}></Route>
       </Routes>
     </Router>
   );

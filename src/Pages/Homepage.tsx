@@ -146,7 +146,7 @@ const Homepage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden"
+      className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden "
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
       <TopBar userName={userName} onLogout={handleLogout} />
