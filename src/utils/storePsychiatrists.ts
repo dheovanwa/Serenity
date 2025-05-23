@@ -3,115 +3,246 @@ import { db } from "../config/firebase";
 import Compressor from "compressorjs";
 
 // Import all doctor images
-import doctor1 from "../assets/D1.png";
-import doctor2 from "../assets/D2.png";
-import doctor3 from "../assets/D3.png";
-import doctor4 from "../assets/D4.png";
-import doctor5 from "../assets/D5.png";
-import doctor6 from "../assets/D6.png";
-import doctor7 from "../assets/D7.png";
-import doctor8 from "../assets/D8.png";
-import doctor9 from "../assets/D9.png";
+import doctor1 from "../assets/D10.png";
+import doctor2 from "../assets/D10.png";
+import doctor3 from "../assets/D10.png";
+import doctor4 from "../assets/D10.png";
+import doctor5 from "../assets/D10.png";
+import doctor6 from "../assets/D10.png";
+import doctor7 from "../assets/D10.png";
+import doctor8 from "../assets/D10.png";
+import doctor9 from "../assets/D10.png";
 import doctor10 from "../assets/D10.png";
-import doctor11 from "../assets/D11.png";
-import doctor12 from "../assets/D12.png";
+import doctor11 from "../assets/D10.png";
+import doctor12 from "../assets/D10.png";
 
-const psychiatristsData = [
+export interface TimeRange {
+  start: number; // 24-hour format in minutes from midnight
+  end: number;
+}
+
+const specialties = [
+  "Psikolog Klinis",
+  "Psikolog Anak & Remaja",
+  "Psikolog Industri dan Organisasi",
+  "Psikolog Pendidikan",
+  "Konselor Pernikahan dan Keluarga",
+  "Konselor Adiksi",
+  "Terapis / Konselor Umum",
+];
+
+export const psychiatristsData = [
   {
-    name: "Titin Sulaiman",
-    specialty: "Anxiety & Depression Specialist",
-    price: "$24.99",
+    name: "Anita Wijaya",
+    specialty: "Psikolog Klinis",
+    price: 25000.0,
     rating: 5,
-    sessions: 7,
+    tahunPengalaman: 4,
     imageSrc: doctor1,
+    jadwal: {
+      senin: { start: 540, end: 960 }, // 09:00-16:00 in minutes
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: null, // Libur
+    },
   },
   {
-    name: "Martin Luther",
-    specialty: "PTSD & Trauma Specialist",
-    price: "$25.99",
-    rating: 3,
-    sessions: 7,
-    imageSrc: doctor2,
-  },
-  {
-    name: "Virle Syahroks",
-    specialty: "Bipolar Disorder Specialist",
-    price: "$28.99",
+    name: "Budi Santoso",
+    specialty: "Psikolog Klinis",
+    price: 27500.0,
     rating: 4,
-    sessions: 7,
-    imageSrc: doctor3,
+    tahunPengalaman: 6,
+    imageSrc: doctor2,
+    jadwal: {
+      senin: { start: 540, end: 960 },
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: null, // Libur
+      sabtu: { start: 540, end: 960 },
+      minggu: null, // Libur
+    },
   },
   {
-    name: "Yorkiv Gizlkenzix",
-    specialty: "Personality Disorders Specialist",
-    price: "$34.99",
+    name: "Dewi Kusuma",
+    specialty: "Psikolog Anak & Remaja",
+    price: 22500.0,
     rating: 5,
-    sessions: 7,
+    tahunPengalaman: 8,
+    imageSrc: doctor3,
+    jadwal: {
+      senin: { start: 540, end: 960 },
+      selasa: { start: 540, end: 960 },
+      rabu: null, // Libur
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: { start: 540, end: 960 },
+      minggu: null, // Libur
+    },
+  },
+  {
+    name: "Hendra Gunawan",
+    specialty: "Psikolog Industri dan Organisasi",
+    price: 30000.0,
+    rating: 5,
+    tahunPengalaman: 5,
     imageSrc: doctor4,
+    jadwal: {
+      senin: null, // Libur
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
   {
     name: "Robert Ukerliznes",
-    specialty: "Sleep Disorders Psychiatrist",
-    price: "$27.99",
+    specialty: "Psikolog Pendidikan",
+    price: 20000,
     rating: 5,
+    tahunPengalaman: 2,
     sessions: 7,
     imageSrc: doctor5,
+    jadwal: {
+      senin: { start: 540, end: 960 }, // Libur
+      selasa: null,
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
   {
     name: "Tariots Survfig",
-    specialty: "Eating Disorders Psychiatrist",
-    price: "$29.90",
+    specialty: "Konselor Pernikahan dan Keluarga",
+    price: 24000,
     rating: 5,
     sessions: 7,
+    tahunPengalaman: 5,
     imageSrc: doctor6,
+    jadwal: {
+      senin: null, // Libur
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
   {
     name: "John Doe",
-    specialty: "Sleep Disorders Specialist",
-    price: "$20.99",
+    specialty: "Konselor Adiksi",
+    price: 22000,
+    tahunPengalaman: 3,
     rating: 4,
     sessions: 6,
     imageSrc: doctor7,
+    jadwal: {
+      senin: null, // Libur
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
   {
     name: "Jane Smith",
-    specialty: "Anxiety Specialist",
-    price: "$22.99",
+    specialty: "Terapis / Konselor Umum",
+    price: 35000,
+    tahunPengalaman: 3,
     rating: 4,
     sessions: 5,
     imageSrc: doctor8,
+    jadwal: {
+      senin: null, // Libur
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
   {
     name: "Alice Brown",
-    specialty: "Depression Specialist",
-    price: "$27.50",
+    specialty: "Psikolog Klinis",
+    price: 40000,
+    tahunPengalaman: 3,
     rating: 5,
     sessions: 8,
     imageSrc: doctor9,
+    jadwal: {
+      senin: null, // Libur
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
   {
     name: "David Clark",
-    specialty: "PTSD Specialist",
-    price: "$30.00",
+    specialty: "Psikolog Klinis",
+    price: 35000,
+    tahunPengalaman: 2,
     rating: 5,
     sessions: 6,
     imageSrc: doctor10,
+    jadwal: {
+      senin: null, // Libur
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
   {
     name: "Michael White",
-    specialty: "Personality Disorder Specialist",
-    price: "$35.00",
+    specialty: "Psikolog Anak & Remaja",
+    price: 30000,
+    tahunPengalaman: 5,
     rating: 4,
     sessions: 7,
     imageSrc: doctor11,
+    jadwal: {
+      senin: null, // Libur
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
   {
     name: "Ralieyz Baxckz",
-    specialty: "Bipolar Disorder Specialist",
-    price: "$26.50",
+    specialty: "Konselor Adiksi",
+    price: 40000,
+    tahunPengalaman: 9,
     rating: 4,
     sessions: 5,
     imageSrc: doctor12,
+    jadwal: {
+      senin: null, // Libur
+      selasa: { start: 540, end: 960 },
+      rabu: { start: 540, end: 960 },
+      kamis: { start: 540, end: 960 },
+      jumat: { start: 540, end: 960 },
+      sabtu: null, // Libur
+      minggu: { start: 540, end: 960 },
+    },
   },
 ];
 const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
