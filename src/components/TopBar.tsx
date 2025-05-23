@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import { auth } from "../config/firebase";
+import { signOut } from "firebase/auth";
 import logo from "../assets/LogoIconWhite.png";
 import searchLogo from "../assets/MagnifyingGlass.png";
 
@@ -11,6 +13,17 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ userName, onLogout }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      localStorage.removeItem("documentId");
+      navigate("/signin");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
   return (
     <header className="bg-black/20 flex items-center justify-between px-4 py-2 shadow-md relative">
@@ -53,7 +66,7 @@ const TopBar: React.FC<TopBarProps> = ({ userName, onLogout }) => {
               </li>
               <li
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-md"
-                onClick={onLogout}
+                onClick={handleLogout}
               >
                 Logout
               </li>
