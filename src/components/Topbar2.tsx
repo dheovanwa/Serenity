@@ -1,8 +1,6 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { auth } from "../config/firebase";
-import { signOut } from "firebase/auth";
 import logo from "../assets/LogoIconWhite.png";
 import searchLogo from "../assets/MagnifyingGlass.png";
 
@@ -13,40 +11,12 @@ interface TopBarProps {
 
 const TopBar: React.FC<TopBarProps> = ({ userName, onLogout }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const navigate = useNavigate();
-
-  const handleLogout = async () => {
-    try {
-      await signOut(auth);
-      localStorage.removeItem("documentId");
-      navigate("/signin");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
-  };
 
   return (
     <header className="bg-black/20 flex items-center justify-between px-4 py-2 shadow-md relative">
       {/* Logo */}
       <div className="flex items-center">
         <img src={logo} alt="Logo" className="h-8 w-8" />
-      </div>
-
-      {/* Search Bar */}
-      <div className="flex flex-1 justify-center items-center px-4">
-        <div className="flex items-center bg-white rounded-md px-4 py-2 shadow-lg w-full max-w-xl">
-          <input
-            type="text"
-            placeholder="Search Psychiatrists here..."
-            className="flex-1 outline-none text-sm text-gray-700 placeholder-gray-400"
-          />
-          <button
-            aria-label="Search"
-            className="hover:opacity-75 transition cursor-pointer"
-          >
-            <img src={searchLogo} alt="Search" className="h-7 w-7" />
-          </button>
-        </div>
       </div>
 
       {/* Profile Dropdown */}
@@ -66,7 +36,7 @@ const TopBar: React.FC<TopBarProps> = ({ userName, onLogout }) => {
               </li>
               <li
                 className="px-4 py-2 hover:bg-gray-100 cursor-pointer rounded-md"
-                onClick={handleLogout}
+                onClick={onLogout}
               >
                 Logout
               </li>

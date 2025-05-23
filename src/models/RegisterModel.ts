@@ -43,35 +43,40 @@ export class RegisterModel {
     return errors;
   }
 
-  async registerUser(formData: RegisterFormData) {
-    const userCredential = await createUserWithEmailAndPassword(
-      auth,
-      formData.email,
-      formData.password
-    );
+  async handleRegistration(formData: RegisterFormData) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.password
+      );
 
-    const userDocRef = doc(db, "users", userCredential.user.uid);
+      const userDocRef = await addDoc(collection(db, "users"), {
+        uid: userCredential.user.uid,
+        email: formData.email,
+        firstName: null,
+        lastName: null,
+        termsAccepted: formData.termsAccepted,
+        profilePicture: null,
+        address: null,
+        birthOfDate: null,
+        sex: null,
+        phoneNumber: null,
+        isUser: true,
+        dailySurveyCompleted: false,
+      });
 
-    await setDoc(userDocRef, {
-      uid: userCredential.user.uid,
-      email: formData.email,
-      firstName: formData.firstName,
-      lastName: formData.lastName,
-      emailPromo: formData.emailPromo,
-      isUser: true,
-      age: 0,
-      dailySurveyCompleted: false,
-      sex: "",
-      address: "",
-      phoneNumber: "",
-      country: "",
-      city: "",
-      educationLevel: "",
-    });
+      // Create history_stress subcollection
+      const historyCollectionRef = collection(userDocRef, "history_stress");
+      await addDoc(historyCollectionRef, {});
 
-    const historyCollectionRef = collection(userDocRef, "history_stress");
-    await addDoc(historyCollectionRef, {});
-
-    return userCredential.user;
+      return { success: true, docId: userDocRef.id };
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      if (error.code === "auth/email-already-in-use") {
+        throw new Error("Email sudah terdaftar");
+      }
+      throw error;
+    }
   }
 }

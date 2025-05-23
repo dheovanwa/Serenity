@@ -1,5 +1,9 @@
 import { initializeApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  FacebookAuthProvider,
+} from "firebase/auth";
 import { getFirestore, collection } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -14,8 +18,26 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app); // Ensure the app instance is passed here
-export const db = getFirestore(app);
+export const auth = getAuth(app);
+
+// Configure auth persistence and popup settings
+auth.settings = {
+  appVerificationDisabledForTesting: true, // Only for development
+};
+
+// Add custom popup settings
+const popupSettings = {
+  width: 500,
+  height: 600,
+  target: "_blank",
+  features: "location=yes,resizable=yes,statusbar=yes,toolbar=no",
+};
+
+// Export popup settings and providers
+export const googleProvider = new GoogleAuthProvider();
+export const facebookProvider = new FacebookAuthProvider();
+export { popupSettings };
 
 // Collection references
-const userRef = collection(db, "users");
+export const db = getFirestore(app);
+export const userRef = collection(db, "users");
