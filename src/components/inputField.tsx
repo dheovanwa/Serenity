@@ -8,7 +8,7 @@ interface InputFieldProps {
   className?: string;
   readOnly?: boolean;
   icon?: React.ReactNode;
-  iconPosition?: "left" | "right"; 
+  iconPosition?: "left" | "right";
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -21,7 +21,7 @@ const InputField: React.FC<InputFieldProps> = ({
   readOnly = false,
   className = "",
   icon,
-  iconPosition = "right", 
+  iconPosition = "right",
 }) => {
   const hasIcon = Boolean(icon);
   const iconPaddingClass = iconPosition === "left" ? "pl-10" : "pr-10";
@@ -38,8 +38,11 @@ const InputField: React.FC<InputFieldProps> = ({
           placeholder={placeholder}
           readOnly={readOnly}
           className={`w-[90%] p-3 rounded-[6px] focus:outline-none 
-            ${readOnly ? "bg-transparent text-[#161F36] border-2 border-[#161F36]" 
-                       : "bg-transparent text-[#161F36] border-2 border-[#161F36]"} 
+            ${
+              readOnly
+                ? "bg-transparent text-[#161F36] border-2 border-[#161F36]"
+                : "bg-transparent text-[#161F36] border-2 border-[#161F36]"
+            } 
             placeholder-gray-900 placeholder-opacity-90 ml-0
             ${hasIcon ? iconPaddingClass : ""} ${className}`}
         />
