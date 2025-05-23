@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { auth, db } from "../config/firebase";
+import { doc, updateDoc, getDoc } from "firebase/firestore";
 import {
   InputWithLabelGender,
   InputWithLabelBirth,
@@ -16,46 +18,100 @@ type FormErrors = {
   firstName?: string;
   gender?: string;
   birthDate?: string;
+  day?: string;
+  month?: string;
+  year?: string;
 };
 
 const CompleteSignUp = () => {
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
+  const location = useLocation();
+  const [firstName, setFirstName] = useState(location.state?.firstName || "");
+  const [lastName, setLastName] = useState(location.state?.lastName || "");
   const [gender, setGender] = useState("");
   const [birthDate, setBirthDate] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [errors, setErrors] = useState<FormErrors>({});
   const [isClicked, setIsClicked] = useState(false);
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
   const navigate = useNavigate();
   const controller = new LoginController();
+
+  // Add auth check effect
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+      if (!user) {
+        console.log("User not authenticated, redirecting to signup");
+        navigate("/signup");
+      } else {
+        console.log("User authenticated:", user.uid);
+        // Check if user has completed profile by checking birthOfDate
+        const docId = localStorage.getItem("documentId");
+        if (docId) {
+          const userDocRef = doc(db, "users", docId);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists() && userDoc.data().birthOfDate) {
+            console.log("User already completed profile, redirecting to home");
+            navigate("/");
+          }
+        }
+      }
+    });
+
+    return () => unsubscribe();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (location.state?.firstName) {
+      setFirstName(location.state.firstName);
+    }
+    if (location.state?.lastName) {
+      setLastName(location.state.lastName);
+    }
+  }, [location.state]);
 
   const handleClick = () => {
     setIsClicked(true);
     setTimeout(() => setIsClicked(false), 300);
   };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const newErrors: FormErrors = {};
     if (!firstName.trim()) newErrors.firstName = "Nama depan wajib diisi.";
     if (!gender.trim()) newErrors.gender = "Jenis kelamin wajib dipilih.";
-    if (!birthDate.trim()) newErrors.birthDate = "Tanggal lahir wajib diisi.";
+    if (!selectedDay || !selectedMonth || !selectedYear) {
+      newErrors.birthDate = "Tanggal lahir wajib diisi lengkap.";
+    }
 
     setErrors(newErrors);
-
     if (Object.keys(newErrors).length > 0) return;
 
-    const result = await controller.handleLogin({
-      email: "", 
-      password: "", 
-    });
+    try {
+      const docId = localStorage.getItem("documentId");
+      if (!docId) {
+        console.error("No document ID found");
+        return;
+      }
 
-    if (result.success && result.redirectTo) {
-      navigate(result.redirectTo);
-    } else if (result.errors) {
-      console.log(result.errors);
+      const userDocRef = doc(db, "users", docId);
+      await updateDoc(userDocRef, {
+        firstName,
+        lastName,
+        sex: gender,
+        birthOfDate: `${selectedYear}-${String(
+          new Date(Date.parse(`${selectedMonth} 1, 2000`)).getMonth() + 1
+        ).padStart(2, "0")}-${selectedDay.padStart(2, "0")}`,
+        phoneNumber: phone,
+        address,
+      });
+
+      navigate("/"); // Changed from /user-survey to /
+    } catch (error) {
+      console.error("Error updating profile:", error);
     }
   };
 
@@ -77,11 +133,11 @@ const CompleteSignUp = () => {
         </p>
 
         {/* Form */}
-        <form className="space-y-4 text-left" onSubmit={handleLogin}>
+        <form className="space-y-4 text-left" onSubmit={handleSubmit}>
           <div>
             <InputWithLabelNamefirst
               firstName={firstName}
-               onFirstNameChange={(e) => setFirstName(e.target.value)}
+              onFirstNameChange={(e) => setFirstName(e.target.value)}
               error={errors.firstName}
             />
             {errors.firstName && (
@@ -107,8 +163,13 @@ const CompleteSignUp = () => {
 
           <div>
             <InputWithLabelBirth
-              value={birthDate}
-              onChange={(e) => setBirthDate(e.target.value)}
+              day={selectedDay}
+              month={selectedMonth}
+              year={selectedYear}
+              onDayChange={(e) => setSelectedDay(e)}
+              onMonthChange={(e) => setSelectedMonth(e)}
+              onYearChange={(e) => setSelectedYear(e)}
+              error={errors.birthDate}
             />
             {errors.birthDate && (
               <p className="text-red-500 text-sm mt-1">{errors.birthDate}</p>

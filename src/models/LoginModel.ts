@@ -3,17 +3,8 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
-  FacebookAuthProvider,
 } from "firebase/auth";
-import {
-  query,
-  where,
-  getDocs,
-  collection,
-  doc,
-  updateDoc,
-  addDoc,
-} from "firebase/firestore";
+import { query, where, getDocs, collection, addDoc } from "firebase/firestore";
 
 export interface LoginCredentials {
   email: string;
@@ -68,26 +59,17 @@ export class LoginModel {
 
     // Email validation
     if (!credentials.email) {
-      errors.email = "Email is required";
+      errors.email = "Email tidak boleh kosong";
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(credentials.email)) {
-      errors.email = "Please enter a valid email address";
+      errors.email = "Email harus dalam format example@email.com";
     }
 
     // Password validation
     if (!credentials.password) {
-      errors.password = "Password is required";
-    } else if (credentials.password.length < 6) {
-      errors.password = "Password must be at least 6 characters";
+      errors.password = "Kata sandi tidak boleh kosong";
     }
 
     return errors;
-  }
-
-  async updateDailySurveyStatus(docId: string, status: boolean) {
-    const userDocRef = doc(db, "users", docId);
-    await updateDoc(userDocRef, {
-      dailySurveyCompleted: status,
-    });
   }
 
   async handleGoogleLogin() {
@@ -96,7 +78,6 @@ export class LoginModel {
       const result = await signInWithPopup(auth, provider);
       const user = result.user;
 
-      // Check if user exists in Firestore
       const userQuery = query(
         collection(db, "users"),
         where("uid", "==", user.uid)
@@ -104,51 +85,47 @@ export class LoginModel {
       const querySnapshot = await getDocs(userQuery);
 
       if (querySnapshot.empty) {
-        // Create new user document if doesn't exist
+        console.log("New user detected, creating user document...");
+        // New user - create user document
         const userDocRef = await addDoc(collection(db, "users"), {
           uid: user.uid,
           email: user.email,
           firstName: user.displayName?.split(" ")[0] || "",
           lastName: user.displayName?.split(" ")[1] || "",
+          termsAccepted: true,
+          profilePicture: null,
+          address: null,
+          birthOfDate: null,
+          sex: null,
+          phoneNumber: null,
           isUser: true,
-          dailySurveyCompleted: false,
         });
-        return { docId: userDocRef.id };
-      }
 
-      return { docId: querySnapshot.docs[0].id };
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  async handleFacebookLogin() {
-    try {
-      const provider = new FacebookAuthProvider();
-      const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-
-      const userQuery = query(
-        collection(db, "users"),
-        where("uid", "==", user.uid)
-      );
-      const querySnapshot = await getDocs(userQuery);
-
-      if (querySnapshot.empty) {
-        const userDocRef = await addDoc(collection(db, "users"), {
-          uid: user.uid,
-          email: user.email,
+        return {
+          docId: userDocRef.id,
+          success: true,
+          isNewUser: true,
           firstName: user.displayName?.split(" ")[0] || "",
           lastName: user.displayName?.split(" ")[1] || "",
-          isUser: true,
-          dailySurveyCompleted: false,
-        });
-        return { docId: userDocRef.id };
+        };
       }
 
-      return { docId: querySnapshot.docs[0].id };
+      // Existing user - check birthOfDate
+      const userDoc = querySnapshot.docs[0];
+      const userData = userDoc.data();
+
+      return {
+        docId: userDoc.id,
+        success: true,
+        isNewUser: false,
+        needsCompletion: !userData.birthOfDate,
+        userData: userData,
+        firstName: userData.firstName,
+        lastName: userData.lastName,
+      };
     } catch (error) {
-      throw error;
+      console.error("Google login error:", error);
+      return { success: false };
     }
   }
 }

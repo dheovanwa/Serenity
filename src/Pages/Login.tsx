@@ -13,6 +13,10 @@ import { ButtonOutline } from "../components/ButtonOutline";
 import background from "../assets/backgroundSignin.png";
 import logoLight from "../assets/Logo - Light.png";
 import { Button } from "../components/Button";
+import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import { db } from "../config/firebase";
+import Loading from "../components/Loading";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,6 +24,7 @@ const Login = () => {
   const [errors, setErrors] = useState<LoginErrors>({});
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isAuthenticating, setIsAuthenticating] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
   const controller = new LoginController();
   const [isClicked, setIsClicked] = useState(false);
@@ -30,23 +35,26 @@ const Login = () => {
   };
 
   useEffect(() => {
-    // Check if user is already authenticated
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        // User is already signed in, redirect to appropriate page
-        const documentId = localStorage.getItem("documentId");
-        if (documentId) {
+        console.log("User authenticated:", user.uid);
+        // Get user document ID
+        const userData = await controller.getUserData(user.uid);
+        if (userData?.docId) {
+          localStorage.setItem("documentId", userData.docId);
           navigate("/");
         }
       }
+      setIsLoading(false);
     });
 
-    return () => unsubscribe(); // Cleanup subscription
+    return () => unsubscribe(); // Cleanup listener
   }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsAuthenticating(true);
+    setIsLoading(true);
     setErrors({});
 
     try {
@@ -61,34 +69,36 @@ const Login = () => {
       setErrors({ email: "Email atau Kata Sandi salah" });
     } finally {
       setIsAuthenticating(false);
+      setIsLoading(false);
     }
   };
 
   const handleGoogleLogin = async () => {
     setIsAuthenticating(true);
+    setIsLoading(true);
     try {
       const result = await controller.handleGoogleLogin();
-      if (result.success) {
-        navigate("/");
-      }
-    } catch (error) {
-      setErrors({ email: "Google login failed. Please try again." });
-    } finally {
-      setIsAuthenticating(false);
-    }
-  };
+      console.log("Google login result:", result);
 
-  const handleFacebookLogin = async () => {
-    setIsAuthenticating(true);
-    try {
-      const result = await controller.handleFacebookLogin();
       if (result.success) {
-        navigate("/");
+        localStorage.setItem("documentId", result.docId);
+
+        if (result.isNewUser || result.needsCompletion) {
+          navigate("/complete-register", {
+            state: {
+              firstName: result.firstName || "",
+              lastName: result.lastName || "",
+            },
+          });
+        } else {
+          navigate("/");
+        }
       }
     } catch (error) {
-      setErrors({ email: "Facebook login failed. Please try again." });
+      console.error("Google login error:", error);
     } finally {
       setIsAuthenticating(false);
+      setIsLoading(false);
     }
   };
 
@@ -111,6 +121,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col sm:flex-row overflow-hidden">
+      {isLoading && <Loading />}
       <div className="absolute top-5 left-4 flex items-center gap-2 z-10">
         <img src={logoLight} alt="logoLight" className="w-16 h-16" />
         <h1 className="text-xl text-[#78716C]">Serenity</h1>
@@ -128,7 +139,7 @@ const Login = () => {
               Masuk ke Serenity
             </p>
           </h2>
-          <form className="space-y-0.5" onSubmit={handleLogin}>
+          <form className="space-y-0.5" onSubmit={handleLogin} noValidate>
             <div>
               <InputWithLabel
                 value={email}
@@ -142,6 +153,7 @@ const Login = () => {
               <InputWithLabelPass
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autocomplete="current-password" // Add this prop
               />
               {errors.password && (
                 <p className="text-red-500 text-sm">{errors.password}</p>
@@ -176,7 +188,6 @@ const Login = () => {
           </form>
           <ButtonOutline
             onGoogleClick={handleGoogleLogin}
-            onFacebookClick={handleFacebookLogin}
             disabled={isAuthenticating}
             className="flex items-center justify-center gap-2"
           />

@@ -3,40 +3,52 @@ import {
   RegisterFormData,
   RegisterErrors,
 } from "../models/RegisterModel";
+import { LoginModel } from "../models/LoginModel";
 
 export class RegisterController {
   private model: RegisterModel;
+  private loginModel: LoginModel;
 
   constructor() {
     this.model = new RegisterModel();
+    this.loginModel = new LoginModel();
   }
 
   async handleRegistration(formData: RegisterFormData): Promise<{
     success: boolean;
     errors?: RegisterErrors;
+    docId?: string;
   }> {
     try {
-      // Validate form
-      const validationErrors = this.model.validateForm(formData);
-      if (Object.keys(validationErrors).length > 0) {
-        return { success: false, errors: validationErrors };
-      }
+      console.log("Starting registration process...");
+      const result = await this.model.handleRegistration(formData);
+      console.log("Registration result:", result);
 
-      // Register user
-      await this.model.registerUser(formData);
+      if (result.docId) {
+        return { success: true, docId: result.docId };
+      }
       return { success: true };
     } catch (error: any) {
-      if (error.code === "auth/email-already-in-use") {
+      console.error("Registration error:", error);
+      if (error.message === "Email sudah terdaftar") {
         return {
           success: false,
-          errors: { email: "This email is already registered" },
+          errors: { email: "Email sudah terdaftar" },
         };
       }
-      console.error("Registration error:", error);
       return {
         success: false,
-        errors: { email: "An unexpected error occurred" },
+        errors: { email: "Registrasi gagal. Silakan coba lagi." },
       };
+    }
+  }
+
+  async handleGoogleLogin() {
+    try {
+      return await this.loginModel.handleGoogleLogin();
+    } catch (error) {
+      console.error("Google registration error:", error);
+      return { success: false };
     }
   }
 }

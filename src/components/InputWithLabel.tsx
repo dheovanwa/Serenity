@@ -1,14 +1,34 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "../components/Input";
 import { Label } from "../components/Label";
 import mail from "../assets/Mail.png";
 import eyesN from "../assets/eyesN.png";
 import eyes from "../assets/eyes.png";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
+// Add interface for input props
+interface InputProps {
+  value?: string;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  name?: string;
+  error?: string;
+  firstName?: string;
+  lastName?: string;
+  onFirstNameChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onLastNameChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  autocomplete?: string;
+}
 
-
-
-export function InputWithLabelNamefirst({ firstName,  onFirstNameChange }: InputProps) {
+export function InputWithLabelNamefirst({
+  firstName,
+  onFirstNameChange,
+}: InputProps) {
   return (
     <div className="grid w-full items-center mt-10 text-black gap-4">
       <div className="w-full">
@@ -25,7 +45,10 @@ export function InputWithLabelNamefirst({ firstName,  onFirstNameChange }: Input
     </div>
   );
 }
-export function InputWithLabelNamelast({lastName, onLastNameChange }: InputProps) {
+export function InputWithLabelNamelast({
+  lastName,
+  onLastNameChange,
+}: InputProps) {
   return (
     <div className="grid w-full items-center mt-5 text-black gap-4">
       <div className="w-full">
@@ -47,53 +70,245 @@ export function InputWithLabelGender({ value, onChange }: InputProps) {
   return (
     <div className="relative w-full">
       <Label htmlFor="gender">Jenis Kelamin*</Label>
-      <select
-        id="gender"
+      <Select
         value={value}
-        onChange={onChange}
-        className="border border-black px-3 py-2 w-full rounded-md appearance-none"
+        onValueChange={(value) => {
+          if (onChange) {
+            onChange({
+              target: { value },
+            } as React.ChangeEvent<HTMLInputElement>);
+          }
+        }}
       >
-        <option value="Laki-laki">Laki-laki</option>
-        <option value="Perempuan">Perempuan</option>
-        <option value="Lainnya">Lainnya</option>
-      </select>
-      <svg
-        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-black mt-3"
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-        stroke="currentColor"
-      >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-      </svg>
+        <SelectTrigger className="w-full border border-black rounded-sm px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12">
+          <SelectValue placeholder="Pilih jenis kelamin" />
+        </SelectTrigger>
+        <SelectContent className="bg-[#F2EDE2] border border-black rounded-sm">
+          <SelectItem value="Laki-laki" className="hover:bg-[#BACBD8]">
+            Laki-laki
+          </SelectItem>
+          <SelectItem value="Perempuan" className="hover:bg-[#BACBD8]">
+            Perempuan
+          </SelectItem>
+        </SelectContent>
+      </Select>
     </div>
   );
 }
 
-export function InputWithLabelBirth({ value, onChange }: InputProps) {
+type Props = {
+  day: string;
+  month: string;
+  year: string;
+  onDayChange: (value: string) => void;
+  onMonthChange: (value: string) => void;
+  onYearChange: (value: string) => void;
+  error?: string;
+};
+
+export function InputWithLabelBirth({
+  day,
+  month,
+  year,
+  onDayChange,
+  onMonthChange,
+  onYearChange,
+  error,
+}: Props) {
+  const [selectedDay, setSelectedDay] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [availableDays, setAvailableDays] = useState<number[]>([]);
+
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const years = Array.from({ length: 100 }, (_, i) => 2025 - i); // 100 years back from 2025
+
+  const getDaysInMonth = (month: string, year: string) => {
+    if (!month || !year) return Array.from({ length: 31 }, (_, i) => i + 1);
+
+    const monthIndex = months.indexOf(month);
+    const yearNum = parseInt(year);
+
+    const daysInMonth = new Date(yearNum, monthIndex + 1, 0).getDate();
+    return Array.from({ length: daysInMonth }, (_, i) => i + 1);
+  };
+
+  const handleDateChange = (type: string, value: string) => {
+    let newDay = selectedDay;
+    let newMonth = selectedMonth;
+    let newYear = selectedYear;
+
+    switch (type) {
+      case "day":
+        newDay = value;
+        setSelectedDay(value);
+        break;
+      case "month":
+        newMonth = value;
+        setSelectedMonth(value);
+        // Update days when month changes
+        const newDaysMonth = getDaysInMonth(value, selectedYear);
+        setAvailableDays(newDaysMonth);
+        // Reset day if it exceeds new maximum
+        if (selectedDay && parseInt(selectedDay) > newDaysMonth.length) {
+          newDay = "";
+          setSelectedDay("");
+        }
+        break;
+      case "year":
+        newYear = value;
+        setSelectedYear(value);
+        // Update days when year changes
+        const newDaysYear = getDaysInMonth(selectedMonth, value);
+        setAvailableDays(newDaysYear);
+        // Reset day if it exceeds new maximum
+        if (selectedDay && parseInt(selectedDay) > newDaysYear.length) {
+          newDay = "";
+          setSelectedDay("");
+        }
+        break;
+    }
+
+    // Immediately trigger onChange with the new values
+    if (onChange && newDay && newMonth && newYear) {
+      const dateString = `${newYear}-${String(
+        months.indexOf(newMonth) + 1
+      ).padStart(2, "0")}-${newDay.padStart(2, "0")}`;
+      const event = {
+        target: { value: dateString },
+      } as React.ChangeEvent<HTMLInputElement>;
+      onChange(event);
+    }
+  };
+
+  // Initialize available days
+  useEffect(() => {
+    setAvailableDays(getDaysInMonth(selectedMonth, selectedYear));
+  }, [selectedMonth, selectedYear]);
+
+  const days = Array.from({ length: 31 }, (_, i) => i + 1); // 1 to 31
+
   return (
-    <div
-      className="w-full"
-      onClick={() => {
-        const input = document.getElementById('birthdate');
-        if (input) input.showPicker ? input.showPicker() : input.focus(); 
-      }}
-      style={{ cursor: 'text' }}
-    >
-      <Label htmlFor="birthdate">Tanggal Lahir*</Label>
-      <input
-        type="date"
-        id="birthdate"
-        placeholder="dd/mm/yyyy"
-        value={value}
-        onChange={onChange}
-        className="border border-black px-3 py-2 w-full rounded-md"
-      />
+    <div className="w-full">
+      <Label htmlFor="birthdate" className="block mb-2">
+        Tanggal Lahir*
+      </Label>
+      <div className="flex gap-2">
+        {/* Day Select */}
+        <Select value={day} onValueChange={onDayChange}>
+          <SelectTrigger className="w-[100px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12">
+            <SelectValue placeholder="Tanggal" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md">
+            {availableDays.map((day) => (
+              <SelectItem
+                key={day}
+                value={String(day).padStart(2, "0")}
+                className="hover:bg-[#BACBD8]"
+              >
+                {String(day).padStart(2, "0")}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Month Select */}
+        <Select
+          value={month}
+          onValueChange={(value) => {
+            onMonthChange(value);
+          }}
+        >
+          <SelectTrigger className="w-[130px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12">
+            <SelectValue placeholder="Bulan" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md">
+            {months.map((month) => (
+              <SelectItem
+                key={month}
+                value={month}
+                className="hover:bg-[#BACBD8]"
+              >
+                {month}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Year Select */}
+        <Select
+          value={year}
+          onValueChange={(value) => {
+            onYearChange(value);
+          }}
+        >
+          <SelectTrigger className="w-[100px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12">
+            <SelectValue placeholder="Tahun" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md">
+            {years.map((year) => (
+              <SelectItem
+                key={year}
+                value={String(year)}
+                className="hover:bg-[#BACBD8]"
+              >
+                {year}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }
 
 export function InputWithLabelPhone({ value, onChange }: InputProps) {
+  const [error, setError] = useState<string>("");
+
+  const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const numeric = e.target.value.replace(/[^0-9]/g, "");
+
+    if (numeric.length > 0 && !numeric.startsWith("08")) {
+      setError("Nomor telepon harus dimulai dengan '08'");
+      // Keep the invalid input but show error
+      if (onChange) {
+        onChange({
+          ...e,
+          target: {
+            ...e.target,
+            value: numeric,
+          },
+        });
+      }
+      return;
+    }
+
+    setError("");
+    if (onChange) {
+      onChange({
+        ...e,
+        target: {
+          ...e.target,
+          value: numeric,
+        },
+      });
+    }
+  };
+
   return (
     <div className="w-full">
       <Label htmlFor="phone">Nomor Telepon</Label>
@@ -101,10 +316,15 @@ export function InputWithLabelPhone({ value, onChange }: InputProps) {
         type="tel"
         id="phone"
         placeholder="08xxxxxxxxxx"
-        className="border border-black px-3 py-2 w-full"
+        className={`border border-black px-3 py-2 w-full ${
+          error ? "border-red-500" : ""
+        }`}
         value={value}
-        onChange={onChange}
+        onChange={handlePhoneInput}
+        inputMode="numeric"
+        pattern="[0-9]*"
       />
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 }
@@ -125,9 +345,12 @@ export function InputWithLabelAddress({ value, onChange }: InputProps) {
   );
 }
 
-
-export function InputWithLabel() {
-
+export function InputWithLabel({
+  value = "",
+  onChange,
+  name,
+  error,
+}: InputProps) {
   return (
     <div className="grid w-full max-w-sm items-center gap-1.5 text-black mt-10">
       <Label htmlFor="email">Email</Label>
@@ -148,6 +371,7 @@ export function InputWithLabel() {
           name={name}
         />
       </div>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 }
@@ -157,6 +381,7 @@ export function InputWithLabelPass({
   onChange,
   name,
   error,
+  autocomplete,
 }: InputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -178,6 +403,7 @@ export function InputWithLabelPass({
           value={value}
           onChange={onChange}
           name={name}
+          autoComplete={autocomplete} // Add this prop
         />
         <button
           type="button"
@@ -232,7 +458,7 @@ export function InputWithLabelPassConfirm({
           />
         </button>
       </div>
-      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 }
