@@ -1,46 +1,50 @@
-import { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import React from "react";
+import logoLight from "../assets/Logo - Light.png";
 
-const Navbar = ({ userFullName }: { userFullName: string }) => {
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-
+const NavBar: React.FC = () => {
   return (
-    <nav className="bg-[#2a3d23] text-white px-6 py-3 flex items-center justify-between shadow-md">
-      <div className="flex items-center gap-2 text-xl font-bold">
-        <span className="text-2xl">Logo</span>
-      </div>
+    <header className="bg-[#BACBD8] p-4 mt-6 mx-8 rounded-lg">
+      <div className="flex justify-between items-center">
+        {/* Logo or Brand Icon */}
+        <div className="flex items-center" style={ logoLight: `url(${logoLight})` }></div>
 
-      <div className="flex-grow bg-amber-50 mx-4 max-w-xl">
-        <input
-          type="text"
-          placeholder="Search Psychiatrists here..."
-          className="w-full px-4 py-2 rounded-md text-black"
-        />
-      </div>
+        {/* Navigation Links */}
+        <nav className="flex space-x-6 text-[#161F36] gap-20">
+          <a href="/" className="font-medium">
+            Beranda
+          </a>
+          <a href="/Search-psi" className="font-medium">
+            Cari
+          </a>
+          <a href="#" className="font-medium">
+            Janji Temu
+          </a>
+          <a href="#" className="font-medium relative">
+            Chat
+            <span className="absolute top-0 left-10 bg-red-500 text-white text-xs rounded-full w-2 h-2 flex items-center justify-center"></span>
+          </a>
+          <a href="/profile" className="font-medium">
+            Profil
+          </a>
+        </nav>
 
-      <div className="relative">
-        <button
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="flex items-center gap-2 font-medium"
-        >
-          {userFullName}
-          <ChevronDown className="w-4 h-4" />
-        </button>
-        {dropdownOpen && (
-          <div className="absolute right-0 mt-2 w-40 bg-white text-black rounded-md shadow-lg z-10">
-            <ul>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                Profile
-              </li>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                Logout
-              </li>
-            </ul>
+        {/* Profile and Notifications */}
+        <div className="flex items-center space-x-4">
+          {/* Notifications Icon */}
+          <div className="relative">
+            <span className="absolute top-0 right-0 bg-yellow-400 text-white text-xs rounded-full w-3 h-3 flex items-center justify-center">
+              !
+            </span>
           </div>
-        )}
+
+          {/* Toggle */}
+          <div className="flex items-center">
+            <input type="checkbox" className="toggle toggle-primary" />
+          </div>
+        </div>
       </div>
-    </nav>
+    </header>
   );
 };
 
-export default Navbar;
+export default NavBar;

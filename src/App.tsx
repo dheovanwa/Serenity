@@ -10,7 +10,7 @@ import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";
 import PsychiatristProfile from "./Pages/PsychiatristProfile";
 import Dashboardpsychiatrist from "./Pages/Dashboardpsychiatrist";
-import ManageApt from "./components/ManageAppointmentContent";
+import NavBar from "./components/Navbar";
 
 const App: React.FC = () => {
   return (
@@ -29,12 +29,9 @@ const App: React.FC = () => {
           path="/psychiatrist-coolit-heytame"
           element={<PsychiatristProfile />}
         ></Route>
-        <Route
-          path="/schedule-appointment/:id?"
-          element={<ManageApt />}
-        ></Route>
         <Route path="/welcome" element={<LandingPage />}></Route>
         <Route path="/dp" element={<Dashboardpsychiatrist />}></Route>
+        <Route path="/test" element={<NavBar />}></Route>
       </Routes>
     </Router>
   );
