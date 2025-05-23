@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { collection, doc, addDoc, updateDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "../config/firebase";
 import AuthLayout from "../components/BackgroundLayout";
+import { SurveyController } from "../controllers/SurveyController";
+import type { SurveyPoints } from "../models/SurveyModel";
 
 const questions = [
   {
@@ -92,41 +92,16 @@ const questions = [
 export default function UserSurvey() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const navigate = useNavigate();
+  const controller = new SurveyController();
 
   useEffect(() => {
     const checkAuthorization = async () => {
       const documentId = localStorage.getItem("documentId");
-      if (!documentId) {
-        navigate("/signin");
-        return;
-      }
+      const { isAuthorized, shouldRedirect } =
+        await controller.checkAuthorization(documentId);
 
-      try {
-        const userDocRef = doc(db, "users", documentId);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          const lastSurveyTimestamp = userData.lastSurveyTimestamp || null;
-
-          if (lastSurveyTimestamp) {
-            const lastSurveyDate = new Date(lastSurveyTimestamp).toDateString();
-            const todayDate = new Date().toDateString();
-
-            if (lastSurveyDate !== todayDate) {
-              await updateDoc(userDocRef, { dailySurveyCompleted: false });
-            } else {
-              console.log("User has already completed the survey today.");
-              navigate("/");
-            }
-          }
-
-          // if (userData.dailySurveyCompleted) {
-          //   navigate("/");
-          // }
-        }
-      } catch (error) {
-        console.error("Error checking user authorization:", error);
+      if (!isAuthorized || shouldRedirect) {
+        navigate(isAuthorized ? "/" : "/signin");
       }
     };
 
@@ -138,8 +113,7 @@ export default function UserSurvey() {
     Array(questions.length).fill(null)
   );
   const selected = answers[questionIndex];
-  const pointsScale = [4, 3, 2, 1, 0];
-  const [points, setPoints] = useState({
+  const [points, setPoints] = useState<SurveyPoints>({
     who5: 0,
     gad7: 0,
     phq9: 0,
@@ -150,6 +124,7 @@ export default function UserSurvey() {
 
   const handleNext = async () => {
     const updatedPoints = { ...points };
+    const pointsScale = controller.getPointsScale();
 
     if (questionIndex < questions.length - 1) {
       setQuestionIndex((prevIndex) => prevIndex + 1);
@@ -163,54 +138,16 @@ export default function UserSurvey() {
         updatedPoints.cope += pointsScale[selected!];
 
       setPoints(updatedPoints);
-      console.log("Updated Points:", updatedPoints);
-      console.log(questionIndex);
     } else {
-      if (questionIndex === 12) {
+      if (questionIndex === 12 && selected !== null) {
         const reversedScale = [...pointsScale].reverse();
-        if (selected !== null) {
-          updatedPoints.highRisk += reversedScale[selected];
-        }
-        console.log("High Risk Points:", updatedPoints.highRisk);
+        updatedPoints.highRisk += reversedScale[selected];
       }
 
-      const calculatedPercentages = {
-        who5: parseFloat(((((points.who5 / 15) * 100) / 80) * 100).toFixed(2)),
-        gad7: parseFloat(((((points.gad7 / 15) * 100) / 80) * 100).toFixed(2)),
-        phq9: parseFloat(((((points.phq9 / 10) * 100) / 80) * 100).toFixed(2)),
-        mspss: parseFloat(
-          ((((points.mspss / 10) * 100) / 80) * 100).toFixed(2)
-        ),
-        cope: parseFloat(((((points.cope / 10) * 100) / 80) * 100).toFixed(2)),
-        highRisk: updatedPoints.highRisk,
-      };
-
-      try {
-        const documentId = localStorage.getItem("documentId");
-        if (documentId) {
-          const userDocRef = doc(db, "users", documentId);
-          const historyCollectionRef = collection(userDocRef, "history_stress");
-
-          // Prepare data to save
-          const timestamp = Date.now();
-
-          await addDoc(historyCollectionRef, {
-            timestamp,
-            ...calculatedPercentages,
-          });
-
-          // Optionally update the user's dailySurveyCompleted status
-          await updateDoc(userDocRef, {
-            dailySurveyCompleted: true,
-            lastSurveyTimestamp: timestamp, // Save the timestamp of the latest survey
-          });
-        }
-      } catch (error) {
-        console.error("Error saving survey result:", error);
+      const success = await controller.handleSurveyCompletion(updatedPoints);
+      if (success) {
+        setIsFinished(true);
       }
-
-      console.log("Calculated Percentages:", calculatedPercentages);
-      setIsFinished(true); // Set finished state after everything is done
     }
   };
 

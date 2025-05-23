@@ -28,7 +28,13 @@ const InputField: React.FC<InputFieldProps> = ({
         onChange={onChange}
         placeholder={placeholder}
         readOnly={readOnly}
-        className="w-full p-3 rounded-lg focus:outline-none bg-white placeholder-gray-300 placeholder-opacity-90"
+        className={`w-full p-3 rounded-lg focus:outline-none 
+          ${
+            readOnly
+              ? "bg-transparent text-white border-2 border-white"
+              : "bg-white text-gray-700"
+          } 
+          placeholder-gray-300 placeholder-opacity-90 ml-0 ${className}`}
       />
     </div>
   );
