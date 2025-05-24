@@ -13,6 +13,7 @@ import NavBar from "./components/Navbar";
 import SignUpComplete from "./Pages/CompleteSignUp";
 import TermsOfService from "./Pages/TermsOfService";
 // import ManageApt from "./components/ManageAppointmentContent";
+import ChatPage from "./Pages/Chat";
 
 const App: React.FC = () => {
   return (
@@ -40,6 +41,7 @@ const App: React.FC = () => {
         ></Route> */}
         <Route path="/welcome" element={<LandingPage />}></Route>
         <Route path="/terms" element={<TermsOfService />}></Route>
+        <Route path="/chat" element={<ChatPage />}></Route>
       </Routes>
     </Router>
   );
