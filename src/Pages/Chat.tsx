@@ -1,22 +1,7 @@
 import React, { useState, useEffect } from "react";
-import {
-  Search,
-  Video,
-  Phone,
-  Send,
-  Moon,
-  Sun,
-  MessageSquare,
-  Users,
-  CalendarDays,
-  User,
-} from "lucide-react";
-
-// Assuming NavBar component is in ../components/Navbar.tsx
-// Make sure this path is correct for your project structure.
+import { Video, Phone, Send } from "lucide-react";
 import NavBar from "../components/Navbar";
 
-// Define ThemeColorMap type for themeColors prop
 interface ThemeColorMap {
   bgBody: string;
   bgNav: string;
@@ -46,13 +31,6 @@ interface ThemeColorMap {
   sendButton: string;
 }
 
-// Props for NavBar, ensure this matches your NavBar component's expected props
-interface NavBarProps {
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-}
-
-// TypeScript interfaces for our data structures
 interface Message {
   id: string;
   text: string;
