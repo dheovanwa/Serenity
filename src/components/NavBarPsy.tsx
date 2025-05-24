@@ -3,7 +3,7 @@ import sunIcon from "../assets/Sun.svg";
 import moonIcon from "../assets/Do not Disturb iOS.svg";
 import LogoLight from "../assets/Logo - Light.png";
 
-const NavBar: React.FC = () => {
+const NavBarPsy: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   useEffect(() => {
@@ -49,12 +49,6 @@ const NavBar: React.FC = () => {
             className="font-medium hover:text-opacity-80 dark:hover:text-opacity-88"
           >
             Halaman Utama
-          </a>
-          <a
-            href="/Search-psi"
-            className="font-medium hover:text-opacity-80 dark:hover:text-opacity-80"
-          >
-            Cari
           </a>
           <a
             href="#"
@@ -114,4 +108,4 @@ const NavBar: React.FC = () => {
   );
 };
 
-export default NavBar;
+export default NavBarPsy;
