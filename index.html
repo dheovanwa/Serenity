@@ -1,15 +1,28 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <link href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap" rel="stylesheet" h>
-    <link href="/src/styles.css" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Josefin+Sans:ital,wght@0,100..700;1,100..700&display=swap"
+      rel="stylesheet"
+      h
+    />
+    <link href="/src/styles.css" rel="stylesheet" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Serenity</title>
+    <script
+      type="text/javascript"
+      src="https://app.sandbox.midtrans.com/snap/snap.js"
+      data-client-key="SB-Mid-client-r37KgcFHWMmxfN8H"
+    ></script>
   </head>
   <body>
     <div id="root"></div>
+    <script>
+      // Shim for 'global' in browser
+      var global = global || window;
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

@@ -60,8 +60,9 @@ const Login = () => {
     try {
       const result = await controller.handleLogin({ email, password });
 
-      if (result.success && result.redirectTo) {
-        navigate("/");
+      if (result.success) {
+        const userType = localStorage.getItem("userType");
+        navigate(userType === "psychiatrist" ? "/dashboard" : "/");
       } else if (result.errors) {
         setErrors(result.errors);
       }
@@ -78,11 +79,9 @@ const Login = () => {
     setIsLoading(true);
     try {
       const result = await controller.handleGoogleLogin();
-      console.log("Google login result:", result);
 
       if (result.success) {
-        localStorage.setItem("documentId", result.docId);
-
+        const userType = localStorage.getItem("userType");
         if (result.isNewUser || result.needsCompletion) {
           navigate("/complete-register", {
             state: {
@@ -91,7 +90,7 @@ const Login = () => {
             },
           });
         } else {
-          navigate("/");
+          navigate(userType === "psychiatrist" ? "/dashboard" : "/");
         }
       }
     } catch (error) {

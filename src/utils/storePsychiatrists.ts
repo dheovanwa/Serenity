@@ -1,250 +1,57 @@
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
+import psychiatristsDataJson from "./psychiatristsData.json";
 import Compressor from "compressorjs";
-
-// Import all doctor images
-import doctor1 from "../assets/D10.png";
-import doctor2 from "../assets/D10.png";
-import doctor3 from "../assets/D10.png";
-import doctor4 from "../assets/D10.png";
-import doctor5 from "../assets/D10.png";
-import doctor6 from "../assets/D10.png";
-import doctor7 from "../assets/D10.png";
-import doctor8 from "../assets/D10.png";
-import doctor9 from "../assets/D10.png";
-import doctor10 from "../assets/D10.png";
-import doctor11 from "../assets/D10.png";
-import doctor12 from "../assets/D10.png";
 
 export interface TimeRange {
   start: number; // 24-hour format in minutes from midnight
   end: number;
 }
 
-const specialties = [
-  "Psikolog Klinis",
-  "Psikolog Anak & Remaja",
-  "Psikolog Industri dan Organisasi",
-  "Psikolog Pendidikan",
-  "Konselor Pernikahan dan Keluarga",
-  "Konselor Adiksi",
-  "Terapis / Konselor Umum",
-];
+export interface Psychiatrist {
+  id: string;
+  name: string;
+  specialty: string;
+  image: string;
+  price: number;
+  basePrice: number;
+  rating: number;
+  tahunPengalaman: number;
+  jadwal: {
+    [key: string]: TimeRange | null;
+  };
+}
 
-export const psychiatristsData = [
-  {
-    name: "Anita Wijaya",
-    specialty: "Psikolog Klinis",
-    price: 25000.0,
-    rating: 5,
-    tahunPengalaman: 4,
-    imageSrc: doctor1,
-    jadwal: {
-      senin: { start: 540, end: 960 }, // 09:00-16:00 in minutes
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: null, // Libur
-    },
-  },
-  {
-    name: "Budi Santoso",
-    specialty: "Psikolog Klinis",
-    price: 27500.0,
-    rating: 4,
-    tahunPengalaman: 6,
-    imageSrc: doctor2,
-    jadwal: {
-      senin: { start: 540, end: 960 },
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: null, // Libur
-      sabtu: { start: 540, end: 960 },
-      minggu: null, // Libur
-    },
-  },
-  {
-    name: "Dewi Kusuma",
-    specialty: "Psikolog Anak & Remaja",
-    price: 22500.0,
-    rating: 5,
-    tahunPengalaman: 8,
-    imageSrc: doctor3,
-    jadwal: {
-      senin: { start: 540, end: 960 },
-      selasa: { start: 540, end: 960 },
-      rabu: null, // Libur
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: { start: 540, end: 960 },
-      minggu: null, // Libur
-    },
-  },
-  {
-    name: "Hendra Gunawan",
-    specialty: "Psikolog Industri dan Organisasi",
-    price: 30000.0,
-    rating: 5,
-    tahunPengalaman: 5,
-    imageSrc: doctor4,
-    jadwal: {
-      senin: null, // Libur
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-  {
-    name: "Robert Ukerliznes",
-    specialty: "Psikolog Pendidikan",
-    price: 20000,
-    rating: 5,
-    tahunPengalaman: 2,
-    sessions: 7,
-    imageSrc: doctor5,
-    jadwal: {
-      senin: { start: 540, end: 960 }, // Libur
-      selasa: null,
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-  {
-    name: "Tariots Survfig",
-    specialty: "Konselor Pernikahan dan Keluarga",
-    price: 24000,
-    rating: 5,
-    sessions: 7,
-    tahunPengalaman: 5,
-    imageSrc: doctor6,
-    jadwal: {
-      senin: null, // Libur
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-  {
-    name: "John Doe",
-    specialty: "Konselor Adiksi",
-    price: 22000,
-    tahunPengalaman: 3,
-    rating: 4,
-    sessions: 6,
-    imageSrc: doctor7,
-    jadwal: {
-      senin: null, // Libur
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-  {
-    name: "Jane Smith",
-    specialty: "Terapis / Konselor Umum",
-    price: 35000,
-    tahunPengalaman: 3,
-    rating: 4,
-    sessions: 5,
-    imageSrc: doctor8,
-    jadwal: {
-      senin: null, // Libur
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-  {
-    name: "Alice Brown",
-    specialty: "Psikolog Klinis",
-    price: 40000,
-    tahunPengalaman: 3,
-    rating: 5,
-    sessions: 8,
-    imageSrc: doctor9,
-    jadwal: {
-      senin: null, // Libur
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-  {
-    name: "David Clark",
-    specialty: "Psikolog Klinis",
-    price: 35000,
-    tahunPengalaman: 2,
-    rating: 5,
-    sessions: 6,
-    imageSrc: doctor10,
-    jadwal: {
-      senin: null, // Libur
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-  {
-    name: "Michael White",
-    specialty: "Psikolog Anak & Remaja",
-    price: 30000,
-    tahunPengalaman: 5,
-    rating: 4,
-    sessions: 7,
-    imageSrc: doctor11,
-    jadwal: {
-      senin: null, // Libur
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-  {
-    name: "Ralieyz Baxckz",
-    specialty: "Konselor Adiksi",
-    price: 40000,
-    tahunPengalaman: 9,
-    rating: 4,
-    sessions: 5,
-    imageSrc: doctor12,
-    jadwal: {
-      senin: null, // Libur
-      selasa: { start: 540, end: 960 },
-      rabu: { start: 540, end: 960 },
-      kamis: { start: 540, end: 960 },
-      jumat: { start: 540, end: 960 },
-      sabtu: null, // Libur
-      minggu: { start: 540, end: 960 },
-    },
-  },
-];
+// Add debug logging
+const debugData = psychiatristsDataJson;
+console.log("Raw JSON data:", debugData);
+
+// Export the data with better error handling and default data
+export const psychiatristsData: Psychiatrist[] = (() => {
+  try {
+    if (!psychiatristsDataJson || !psychiatristsDataJson.psychiatrists) {
+      console.error(
+        "Invalid psychiatrists data format:",
+        psychiatristsDataJson
+      );
+      return [];
+    }
+
+    const data = psychiatristsDataJson.psychiatrists;
+    console.log("Parsed psychiatrists data:", data);
+
+    if (!Array.isArray(data)) {
+      console.error("Psychiatrists data is not an array:", data);
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error parsing psychiatrists data:", error);
+    return [];
+  }
+})();
+
 const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -316,20 +123,79 @@ export const storePsychiatrists = async () => {
   const psychiatristsRef = collection(db, "psychiatrists");
 
   try {
-    for (const psych of psychiatristsData) {
-      // Convert and compress image to base64
-      const base64Image = await convertImageToBase64(psych.imageSrc);
+    console.log("Starting storePsychiatrists with data:", psychiatristsData);
 
-      // Store in Firestore with both base64 and original imageSrc
-      await addDoc(psychiatristsRef, {
-        ...psych,
-        image: base64Image,
-      });
+    // Add validation for required fields
+    const validPsychiatrists = psychiatristsData.filter(
+      (psych) => psych.name && psych.specialty
+    );
 
-      console.log(`Stored psychiatrist: ${psych.name}`);
+    if (validPsychiatrists.length === 0) {
+      throw new Error("No valid psychiatrists data available");
+    }
+
+    const psychiatristsToStore = validPsychiatrists.map((psych) => ({
+      ...psych,
+      chatPatientQuota: 5, // Add default quota
+    }));
+
+    for (const psych of psychiatristsToStore) {
+      try {
+        // Convert and compress image to base64
+        // const base64Image = await convertImageToBase64(psych.image);
+
+        // Store in Firestore with base64 image
+        await addDoc(psychiatristsRef, {
+          ...psych,
+          // image: base64Image,
+        });
+
+        console.log(`Stored psychiatrist: ${psych.name}`);
+      } catch (error) {
+        console.error(`Error storing psychiatrist ${psych.name}:`, error);
+        // Continue with next psychiatrist even if one fails
+        continue;
+      }
     }
     console.log("All psychiatrists stored successfully!");
   } catch (error) {
     console.error("Error storing psychiatrists:", error);
+    throw error; // Re-throw to let caller handle the error
   }
+};
+
+export const resetDailyQuotas = async () => {
+  try {
+    const psychiatristsRef = collection(db, "psychiatrists");
+    const querySnapshot = await getDocs(psychiatristsRef);
+
+    // Reset each psychiatrist's quota to their original value
+    const resetPromises = querySnapshot.docs.map((doc) => {
+      return updateDoc(doc.ref, {
+        chatPatientQuota: 5, // Reset to default value
+      });
+    });
+
+    await Promise.all(resetPromises);
+    console.log("Successfully reset all psychiatrists' chat quotas");
+  } catch (error) {
+    console.error("Error resetting chat quotas:", error);
+  }
+};
+
+// Add this to App.tsx or a suitable initialization point
+export const initializeQuotaReset = () => {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
+  const timeUntilReset = tomorrow.getTime() - now.getTime();
+
+  // Set initial timeout to run at midnight
+  setTimeout(() => {
+    resetDailyQuotas();
+    // Then set it to run daily
+    setInterval(resetDailyQuotas, 24 * 60 * 60 * 1000);
+  }, timeUntilReset);
 };

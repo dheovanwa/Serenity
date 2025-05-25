@@ -4,7 +4,7 @@ import starIcon from "../assets/star.svg";
 import briefcase from "../assets/briefcase.svg";
 
 interface PsychiatristProps {
-  id?: string;
+  id: string; // Make id required instead of optional
   name: string;
   specialty: string;
   price: number;
@@ -77,7 +77,7 @@ const PsychiatristSearchProfile: React.FC<PsychiatristProps> = ({
   return (
     <div className="flex flex-col items-center bg-[#F8F0E0] p-4 rounded-lg shadow-xl hover:shadow-lg hover:bg-[#E4DCCC] hover:border-2 transition-all duration-300 focus:outline-none">
       <img
-        src={image}
+        src={image ? image : "https://via.placeholder.com/213"}
         alt={name}
         className="w-full h-auto max-w-[213px] max-h- rounded-lg object-cover"
       />
@@ -104,9 +104,7 @@ const PsychiatristSearchProfile: React.FC<PsychiatristProps> = ({
       </div>
 
       <div className="flex items-center mt-5">
-        <p className="text-base text-[#161F36] font-semibold">
-          {`Rp${price.toLocaleString("id-ID")}`}
-        </p>
+        <p className="text-base text-[#161F36] font-semibold">{`Rp${price}`}</p>
       </div>
 
       <button

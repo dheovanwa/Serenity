@@ -1,8 +1,10 @@
 import React, { useState, useRef, useEffect } from "react";
 import searchIcon from "../assets/search1.png";
 import chevronDownIcon from "../assets/con1.png";
+import SparklingIcon from "../assets/Sparkling.svg";
 import PsychiatristSearchProfile from "../components/PsychiatristSearchProfile";
-import { psychiatristsData } from "../utils/storePsychiatrists";
+import { collection, getDocs } from "firebase/firestore";
+import { db } from "../config/firebase";
 
 interface Psychiatrist {
   id?: string;
@@ -14,7 +16,7 @@ interface Psychiatrist {
   jadwal: {
     [key: string]: { start: number; end: number } | null;
   };
-  imageSrc: string;
+  image: string;
 }
 
 const AscendingIcon = () => (
@@ -77,8 +79,29 @@ const SearchPsikiater: React.FC = () => {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setPsychiatrists(psychiatristsData);
-    setIsLoading(false);
+    const fetchPsychiatrists = async () => {
+      try {
+        setIsLoading(true);
+        const psychiatristsRef = collection(db, "psychiatrists");
+        const querySnapshot = await getDocs(psychiatristsRef);
+
+        const fetchedPsychiatrists: Psychiatrist[] = [];
+        querySnapshot.forEach((doc) => {
+          fetchedPsychiatrists.push({
+            id: doc.id,
+            ...doc.data(),
+          } as Psychiatrist);
+        });
+
+        setPsychiatrists(fetchedPsychiatrists);
+      } catch (error) {
+        console.error("Error fetching psychiatrists:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPsychiatrists();
   }, []);
 
   useEffect(() => {
@@ -191,6 +214,17 @@ const SearchPsikiater: React.FC = () => {
       <div className="mt-50 pt-6 px-2 sm:px-4 md:px-6 lg:px-8 ">
         <div className="w-full sm:w-[90%] lg:w-[75%] mx-auto flex flex-col gap-3 sm:flex-row sm:justify-between">
           <div className="flex flex-wrap items-center gap-3 sm:w-[60%] lg:w-[70%]">
+            {/* Magic Recommendation Button */}
+            <button
+              className="flex items-center justify-center bg-[#BACBD8] text-[#161F36] font-semibold rounded-md h-[45px] px-3"
+              style={{ minWidth: 45 }}
+              title="Magic Recommendation"
+              // onClick={handleMagicRecommendation}
+            >
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#BACBD8]">
+                <img src={SparklingIcon} alt="Magic" className="w-5 h-5" />
+              </span>
+            </button>
             <div className="relative flex-grow">
               <input
                 type="text"
@@ -218,20 +252,19 @@ const SearchPsikiater: React.FC = () => {
                 onClick={() => setIsSpecialtyOpen(!isSpecialtyOpen)}
                 className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold text-sm sm:text-base w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300"
               >
-                <span className="ml-1 truncate">
+                <span className="truncate">
                   {selectedSpecialty ? selectedSpecialty : "Pilih Spesialisasi"}
                 </span>
                 <img
                   src={chevronDownIcon}
                   alt="Dropdown Icon"
-                  className={`w-4 h-4 mr-1 max-w-[24px] max-h-[24px] object-contain ${
+                  className={`w-4 h-4 ml-2 max-w-[24px] max-h-[24px] object-contain ${
                     isSpecialtyOpen ? "transform rotate-180" : ""
                   } transition-transform duration-300`}
                 />
               </button>
-
               <div
-                className={`absolute w-full mt-1 bg-[#BACBD8] rounded-md shadow-lg transition-opacity duration-300 ${
+                className={`absolute w-full mt-1 bg-[#BACBD8] rounded-md shadow-lg transition-opacity duration-300 z-30 ${
                   isSpecialtyOpen
                     ? "opacity-100"
                     : "opacity-0 pointer-events-none"
@@ -261,7 +294,8 @@ const SearchPsikiater: React.FC = () => {
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsSortOpen((prev) => !prev)}
-                  className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold text-sm sm:text-base md:text-base w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300"
+                  className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold text-sm sm:text-base md:text-base w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300 min-w-[180px] max-w-[180px]"
+                  style={{ minWidth: 180, maxWidth: 180 }}
                 >
                   <span
                     className="ml-1 mr-5 truncate"
@@ -301,6 +335,7 @@ const SearchPsikiater: React.FC = () => {
                 className={`absolute w-full mt-1 bg-[#BACBD8] rounded-md shadow-lg transition-opacity duration-300 ${
                   isSortOpen ? "opacity-100" : "opacity-0 pointer-events-none"
                 }`}
+                style={{ minWidth: 180, maxWidth: 180 }}
               >
                 <ul className="space-y-2">
                   <li
@@ -368,7 +403,7 @@ const SearchPsikiater: React.FC = () => {
                   rating={psychiatrist.rating}
                   tahunPengalaman={psychiatrist.tahunPengalaman}
                   jadwal={psychiatrist.jadwal || {}}
-                  image={psychiatrist.imageSrc}
+                  image={psychiatrist.image}
                 />
               ))}
             </div>

@@ -1,58 +1,31 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { HomeController } from "../controllers/HomeController";
-import backgroundImage from "../assets/Master Background11.png";
 import Instagram from "../assets/instagram.png";
 import Whatsapp from "../assets/whatsapp.png";
 import email from "../assets/email.png";
-import TopBar from "../components/Topbar2";
 import CancelAppointmentModal from "../components/Cancel";
 import foto1 from "../assets/p1.png";
 import foto2 from "../assets/p2.png";
 import foto3 from "../assets/p3.png";
 import foto4 from "../assets/p4.png";
 import foto5 from "../assets/p5.png";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  doc,
+  orderBy,
+} from "firebase/firestore";
+import { db } from "../config/firebase"; // Adjust the import based on your project structure
+import { HomeController } from "../controllers/HomeController";
+import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
 
 const dashboardPsychiatrist: React.FC = () => {
   const [userName, setUserName] = useState<string>("Loading...");
   const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [todaySchedule, setTodaySchedule] = useState<any[]>([
-    {
-      patient: "Kristina Stokes",
-      service: "Consultation",
-      date: "05/02/2022",
-      time: "09:30",
-      symptoms: "Headache, Nausea",
-    },
-    {
-      patient: "Alexander Preston",
-      service: "Consultation",
-      date: "05/02/2022",
-      time: "12:00",
-      symptoms: "Fatigue, Cough",
-    },
-    {
-      patient: "Johnathan Mcgee",
-      service: "Consultation",
-      date: "05/02/2022",
-      time: "16:30",
-      symptoms: "Shortness of breath",
-    },
-    {
-      patient: "Regan Roberts",
-      service: "Therapy",
-      date: "05/02/2022",
-      time: "10:30",
-      symptoms: "Anxiety, Insomnia",
-    },
-    {
-      patient: "David Brown",
-      service: "Consultation",
-      date: "05/02/2022",
-      time: "14:00",
-      symptoms: "Joint pain, Swelling",
-    },
-  ]);
+  const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
 
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([
     {
@@ -76,42 +49,47 @@ const dashboardPsychiatrist: React.FC = () => {
     {
       from: "David Brown",
       date: "4:00 PM",
-      content: "You : Alright see you next week",
+      content: "Anda : Sampai ketemu minggu depan",
       profileImage: foto1,
       isRead: false,
     },
     {
       from: "Regan Roberts",
       date: "3:28 PM",
-      content: "Megan: How About my illness?!",
+      content: "Megan: Saya merasakan keresahan yang sangat mendalam!!!",
       profileImage: foto2,
       isRead: true,
     },
     {
       from: "Alexander Preston",
       date: "13:18 PM",
-      content:
-        "Alexander: Everything feels overwhelming I’m lost in a world that doesn’t care",
+      content: "Alexander: Kenapa dunia ini begitu tidak adil untuk saya???",
       profileImage: foto3,
       isRead: true,
     },
     {
       from: "Kristina Stokes",
       date: "12:12 PM",
-      content: "Kristina: I feel useless in this world",
+      content: "Kristina: Saya mengalami insomnia",
       profileImage: foto4,
       isRead: true,
     },
     {
       from: "Johnathan Mcgee",
       date: "8:11 AM",
-      content: "You: Try to sleep a litte more",
+      content: "Anda: Cobalah untuk tidur meskipun sebentar",
       profileImage: foto5,
       isRead: false,
     },
   ]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState<any>(null);
+  const [psychiatristName, setPsychiatristName] =
+    useState<string>("Loading...");
+  const [psychiatristSpecialty, setPsychiatristSpecialty] =
+    useState<string>("");
+  const [upcomingSchedule, setUpcomingSchedule] = useState<any[]>([]);
+  const [activeAppointments, setActiveAppointments] = useState<any[]>([]);
   const navigate = useNavigate();
   const controller = new HomeController();
 
@@ -141,6 +119,222 @@ const dashboardPsychiatrist: React.FC = () => {
 
     checkAuth();
   }, [navigate]);
+
+  useEffect(() => {
+    const fetchPsychiatristData = async () => {
+      try {
+        const documentId = localStorage.getItem("documentId");
+        if (!documentId) return;
+
+        // Get psychiatrist data
+        const psychiatristRef = doc(db, "psychiatrists", documentId);
+        const psychiatristSnap = await getDoc(psychiatristRef);
+
+        if (psychiatristSnap.exists()) {
+          const data = psychiatristSnap.data();
+          setPsychiatristName(data.name);
+          setPsychiatristSpecialty(data.specialty);
+
+          // Get appointments for this psychiatrist
+          const appointmentsRef = collection(db, "appointments");
+          const q = query(
+            appointmentsRef,
+            where("psychiatristId", "==", documentId)
+          );
+          const appointmentSnap = await getDocs(q);
+
+          const appointments = appointmentSnap.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+
+          // Transform appointments data to match your state structure
+          const formattedAppointments = appointments.map((apt) => {
+            const date = new Date(apt.date);
+            return {
+              date: date.getDate().toString(),
+              day: ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"][
+                date.getDay()
+              ],
+              doctor: apt.patientName, // Show patient name instead of doctor
+              appointmentDate: `${date.toLocaleDateString("id-ID", {
+                weekday: "long",
+              })}, ${date.getDate()} ${date.toLocaleDateString("id-ID", {
+                month: "long",
+              })} ${date.getFullYear()}`,
+              service: apt.method,
+              time: apt.time,
+              action: "Kelola",
+              status: apt.status,
+            };
+          });
+
+          setTodaySchedule(formattedAppointments);
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchPsychiatristData();
+  }, []);
+
+  useEffect(() => {
+    const fetchUpcomingAppointments = async () => {
+      try {
+        const documentId = localStorage.getItem("documentId");
+        if (!documentId) return;
+
+        // Get psychiatrist data (for name)
+        const psychiatristRef = doc(db, "psychiatrists", documentId);
+        const psychiatristSnap = await getDoc(psychiatristRef);
+        let psychiatristName = "";
+        if (psychiatristSnap.exists()) {
+          const data = psychiatristSnap.data();
+          psychiatristName = data.name;
+        }
+
+        // Query appointments for this psychiatrist with status "Terjadwal", ascending order
+        const appointmentsRef = collection(db, "appointments");
+        const q = query(
+          appointmentsRef,
+          where("psychiatristId", "==", documentId),
+          where("status", "==", "Terjadwal"),
+          orderBy("date", "asc")
+        );
+        const appointmentSnap = await getDocs(q);
+
+        const appointments = appointmentSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Only include appointments where doctorName matches psychiatristName
+        const filteredAppointments = appointments.filter(
+          (apt) => apt.doctorName === psychiatristName
+        );
+
+        // Sort: Chat first, then Video (by start time ascending)
+        const sortedAppointments = filteredAppointments.sort((a, b) => {
+          if (a.method === b.method) {
+            if (a.method === "Video" && b.method === "Video") {
+              // Sort by start time (e.g. "09.00 - 10.00")
+              const getStartMinutes = (time: string) => {
+                if (!time) return 0;
+                const [start] = time.split(" - ");
+                const [h, m] = start.split(".").map(Number);
+                return h * 60 + (m || 0);
+              };
+              return getStartMinutes(a.time) - getStartMinutes(b.time);
+            }
+            // If both are Chat, keep original order (by date)
+            return 0;
+          }
+          // Chat comes before Video
+          return a.method === "Chat" ? -1 : 1;
+        });
+
+        // Format for display and limit to 10
+        const formattedAppointments = sortedAppointments
+          .slice(0, 10)
+          .map((apt) => {
+            const date = new Date(apt.date);
+            let time = apt.time;
+            // Remove "today" for chat method
+            if (apt.method === "Chat" && time === "today") {
+              time = "";
+            }
+            return {
+              date: date.getDate().toString(),
+              day: ["MIN", "SEN", "SEL", "RAB", "KAM", "JUM", "SAB"][
+                date.getDay()
+              ],
+              patient: apt.patientName,
+              appointmentDate: `${date.toLocaleDateString("id-ID", {
+                weekday: "long",
+              })}, ${date.getDate()} ${date.toLocaleDateString("id-ID", {
+                month: "long",
+              })} ${date.getFullYear()}`,
+              service: apt.method,
+              time,
+              action: "Kelola",
+              status: apt.status,
+            };
+          });
+
+        setUpcomingSchedule(formattedAppointments);
+      } catch (error) {
+        console.error("Error fetching upcoming appointments:", error);
+      }
+    };
+
+    fetchUpcomingAppointments();
+  }, []);
+
+  useEffect(() => {
+    const fetchActiveAppointments = async () => {
+      try {
+        const documentId = localStorage.getItem("documentId");
+        if (!documentId) return;
+
+        // Get psychiatrist data (for name)
+        const psychiatristRef = doc(db, "psychiatrists", documentId);
+        const psychiatristSnap = await getDoc(psychiatristRef);
+        let psychiatristName = "";
+        if (psychiatristSnap.exists()) {
+          const data = psychiatristSnap.data();
+          psychiatristName = data.name;
+        }
+
+        // Query appointments for this psychiatrist with status "Sedang berlangsung"
+        const appointmentsRef = collection(db, "appointments");
+        const q = query(
+          appointmentsRef,
+          where("psychiatristId", "==", documentId),
+          where("status", "==", "Sedang berlangsung"),
+          orderBy("date", "asc")
+        );
+        const appointmentSnap = await getDocs(q);
+
+        const appointments = appointmentSnap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+
+        // Only include appointments where doctorName matches psychiatristName
+        const filteredAppointments = appointments.filter(
+          (apt) => apt.doctorName === psychiatristName
+        );
+
+        // Format for display
+        const formattedAppointments = filteredAppointments.map((apt) => {
+          const date = new Date(apt.date);
+          let time = apt.time;
+          if (apt.method === "Chat" && time === "today") {
+            time = "";
+          }
+          return {
+            id: apt.id,
+            patientName: apt.patientName,
+            symptoms: apt.gejala,
+            service: apt.method,
+            date: date.toLocaleDateString("id-ID", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            }),
+            time,
+          };
+        });
+
+        setActiveAppointments(formattedAppointments);
+      } catch (error) {
+        console.error("Error fetching active appointments:", error);
+      }
+    };
+
+    fetchActiveAppointments();
+  }, []);
 
   const handleLogout = () => {
     controller.handleLogout();
@@ -176,149 +370,177 @@ const dashboardPsychiatrist: React.FC = () => {
   };
 
   return (
-    <div
-      className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden"
-      style={{ backgroundImage: `url(${backgroundImage})` }}
-    >
-      <TopBar userName={userName} onLogout={handleLogout} />
-      <div className="flex justify-center items-center mt-40 font-krub">
-        <h1 className="text-white text-8xl font-bold text-center leading-snug">
-          Welcome to
-          <br /> <span>Serenity</span>
+    <div className="min-h-screen bg-[#F2EDE2] w-full bg-cover flex flex-col overflow-x-hidden">
+      <AppointmentStatusUpdater />
+      <div className="h-[370px] bg-white w-full bg-cover flex flex-col overflow-x-hidden">
+        <h1 className="text-[#161F36] text-4xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center leading-snug mt-40 sm:mt-20 md:mt-32 lg:mt-40">
+          Selamat datang,
+          <br /> <span>{psychiatristName}</span>
         </h1>
       </div>
 
-      {/* Today's Schedule */}
-      <section className="mt-220 ml-15 mr-15 mb-100">
-        <h1 className="text-6xl text-white font-semibold drop-shadow-md mb-8">
-          Today's Schedule
+      {/* Konsultasi Mendatang */}
+      <section className="w-full mt-30 mb-40">
+        <h1 className="text-6xl text-[#161F36] font-bold mb-8 text-center">
+          Konsultasi Mendatang
         </h1>
-        <div className="bg-white bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto overflow-x-auto">
-          {todaySchedule.length > 0 ? (
-            <table className="min-w-full table-auto text-center">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="px-4 py-2 text-left text-gray-700">Patient</th>
-                  <th className="px-4 py-2 text-left text-gray-700">Service</th>
-                  <th className="px-4 py-2 text-left text-gray-700">Date</th>
-                  <th className="px-4 py-2 text-left text-gray-700">Time</th>
-                  <th className="px-4 py-2 text-left text-gray-700">
-                    Symptoms
-                  </th>
-                  <th className="px-4 py-2 text-center text-gray-700">
-                    Action
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {todaySchedule.map((item, index) => (
-                  <tr
-                    key={index}
-                    className="border-b border-gray-300 hover:bg-gray-50"
-                  >
-                    <td className="px-4 py-2 font-medium text-gray-900 text-left">
-                      {item.patient}
-                    </td>
-                    <td className="px-4 py-2 text-gray-600 text-left">
-                      {item.service}
-                    </td>
-                    <td className="px-4 py-2 text-gray-600 text-left">
-                      {item.date}
-                    </td>
-                    <td className="px-4 py-2 text-gray-600 text-left">
-                      {item.time}
-                    </td>
-                    <td className="px-4 py-2 text-gray-600 text-left">
-                      {item.symptoms}
-                    </td>
-                    <td className="px-4 py-2 text-center">
-                      <button className="px-6 py-2 bg-green-500 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors duration-300">
-                        Start
+        {!isMobile && (
+          <div className="bg-[#E4DCCC] bg-opacity-90 p-5 rounded-md shadow-lg w-[80%] max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 gap-4">
+              {upcomingSchedule.length === 0 ? (
+                <div className="text-center text-gray-600 py-10">
+                  Tidak ada konsultasi mendatang.
+                </div>
+              ) : (
+                upcomingSchedule.map((appointment, index) => (
+                  <div key={index} className="flex flex-row">
+                    <div className="text-center w-[8%] bg-[#F9F1E0] pt-4 rounded-xs pb-2 flex flex-col">
+                      <span className="font-medium text-sm sm:text-base md:text-lg text-[#161F36]">
+                        {appointment.day}
+                      </span>
+                      <span className="text-5xl sm:text-4xl md:text-6xl font-medium text-[#161F36]">
+                        {appointment.date}
+                      </span>
+                    </div>
+                    <div className="ml-3 w-full bg-[#F9F1E0] rounded-xs grid grid-cols-3">
+                      <div className="text-2xl grid grid-row ml-3 mt-4">
+                        <span className="font-medium text-[#161F36]">
+                          {appointment.patient}
+                        </span>
+                        <span className="font-medium text-[#161F36]">
+                          {appointment.appointmentDate}
+                        </span>
+                      </div>
+                      <div className="ml-20 flex flex-col justify-center items-center">
+                        <span className="text-2xl">{appointment.time}</span>
+                        <span className="text-lg">{appointment.service}</span>
+                      </div>
+                      <button className="text-2xl justify-end items-end text-end mr-20 text-[#161F36] rounded-md">
+                        <span className="hover:cursor-pointer hover:text-[#187DA8] p-2 rounded-md">
+                          {appointment.action}
+                        </span>
                       </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          ) : (
-            <p className="text-gray-700 text-lg">No schedule for today.</p>
-          )}
-        </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Mobile Layout */}
+        {isMobile && (
+          <div className="bg-[#E4DCCC] bg-opacity-90 p-5 rounded-md shadow-lg w-[90%] max-w-md mx-auto">
+            {upcomingSchedule.length === 0 ? (
+              <div className="text-center text-gray-600 py-10">
+                Tidak ada konsultasi mendatang.
+              </div>
+            ) : (
+              upcomingSchedule.map((appointment, index) => (
+                <div
+                  key={index}
+                  className="bg-[#F9F1E0] rounded-md p-4 mb-4 shadow-lg"
+                >
+                  <div className="text-left flex flex-col">
+                    <span className="font-medium text-[#161F36] text-lg">
+                      {appointment.patient}
+                    </span>
+                    <div className="grid grid-cols-3">
+                      <span className="text-md mt-1 mr-6">
+                        {appointment.service}
+                      </span>
+                      <span className="text-md">{appointment.time}</span>
+                      <button className="text-xl justify-end items-end text-end mr-1 text-[#161F36] rounded-md">
+                        <span className="hover:cursor-pointer hover:text-[#187DA8] p-2 rounded-md">
+                          {appointment.action}
+                        </span>
+                      </button>
+                    </div>
+                    <span className="font-medium text-[#161F36]">
+                      {appointment.appointmentDate}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </section>
+
       {/* Upcoming Appointments */}
-      <section className=" ml-4 mr-4 mb-50">
-        <h1 className="text-6xl text-white font-semibold drop-shadow-md mb-8">
-          Upcoming Appointments
+      <section className=" ml-4 mr-4 mb-30">
+        <h1 className="text-6xl text-[#161F36] font-bold mb-8 text-center ">
+          Sesi yang sedang Aktif
         </h1>
-        <div className="bg-white bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
-          {upcomingAppointments.length > 0 ? (
+        <div className="bg-[#E4DCCC] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-7xl mx-auto">
+          {activeAppointments.length > 0 ? (
             isMobile ? (
-              upcomingAppointments.map((apt, idx) => (
+              activeAppointments.map((apt, idx) => (
                 <div
                   key={idx}
-                  className="bg-gray-100 p-6 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                  className="bg-[#F9F1E0] p-6 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
                 >
-                  <h2 className="text-2xl font-semibold text-gray-800">
+                  <h2 className="text-2xl font-semibold text-[#161F36]">
                     {apt.patientName}
                   </h2>
-                  <p className="text-gray-600 text-sm">
-                    Symptoms: {apt.symptoms}
+                  <p className="text-gray-800 text-sm">
+                    Gejala: {apt.symptoms}
                   </p>
-                  <p className="text-gray-600 text-sm">
-                    Service: {apt.service}
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    {apt.date} | {apt.time}
+                  <p className="text-gray-800 text-sm">Metode: {apt.service}</p>
+                  <p className="text-gray-800 text-sm">
+                    {apt.date} {apt.time && `| ${apt.time}`}
                   </p>
                   <div className="mt-4 flex flex-col sm:flex-row gap-4 sm:gap-6">
-                    <button className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors duration-300 w-full sm:w-auto">
-                      Join Session
+                    <button className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#5a7da1] transition-colors duration-300 w-full sm:w-auto">
+                      Gabung Sesi
                     </button>
                     <button
                       onClick={() => handleCancelAppointment(apt)}
                       className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300 w-full sm:w-auto sm:ml-auto"
                     >
-                      Cancel Appointment
+                      Batalkan Janji Temu
                     </button>
                   </div>
                 </div>
               ))
             ) : (
-              upcomingAppointments.map((apt, idx) => (
+              activeAppointments.map((apt, idx) => (
                 <div
                   key={idx}
-                  className="bg-gray-100 p-6 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center"
+                  className="bg-[#F9F1E0] p-6 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center"
                 >
                   <div className="flex flex-col text-left">
-                    <h2 className="text-2xl font-semibold text-gray-800">
+                    <h2 className="text-2xl font-semibold text-[#161F36]">
                       {apt.patientName}
                     </h2>
-                    <p className="text-gray-600 text-sm">
-                      Symptoms: {apt.symptoms}
+                    <p className="text-gray-800 text-sm">
+                      Gejala: {apt.symptoms}
                     </p>
-                    <p className="text-gray-600 text-sm">
-                      Service: {apt.service}
+                    <p className="text-gray-800 text-sm">
+                      Metode: {apt.service}
                     </p>
-                    <p className="text-gray-500 text-sm">
-                      {apt.date} | {apt.time}
+                    <p className="text-gray-800 text-sm">
+                      {apt.date} {apt.time && `| ${apt.time}`}
                     </p>
                   </div>
                   <div className="flex gap-4">
-                    <button className="px-6 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors duration-300 w-auto">
-                      Join Session
+                    <button className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#186ca8] transition-colors duration-300 w-auto">
+                      Gabung Sesi
                     </button>
                     <button
                       onClick={() => handleCancelAppointment(apt)}
                       className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300 w-auto"
                     >
-                      Cancel Appointment
+                      Batalkan Janji Temu
                     </button>
                   </div>
                 </div>
               ))
             )
           ) : (
-            <p className="text-gray-700 text-lg">No upcoming appointments.</p>
+            <p className="text-gray-700 text-lg">
+              Belum ada janji temu yang sedang berlangsung
+            </p>
           )}
         </div>
       </section>
@@ -330,16 +552,16 @@ const dashboardPsychiatrist: React.FC = () => {
       />
 
       {/*Messages */}
-      <section className="mt-20 ml-15 mr-15 mb-20">
-        <h1 className="text-6xl text-white font-semibold drop-shadow-md mb-8">
-          Messages
+      <section className="mt-10 ml-15 mr-15 mb-30 ">
+        <h1 className="text-6xl text-[#161F36] font-semibold drop-shadow-md mb-8 text-center">
+          Pesan
         </h1>
-        <div className="bg-white bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
+        <div className="bg-[#E4DCCC] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
           {messages.length > 0 ? (
             messages.map((msg, index) => (
               <div
                 key={index}
-                className="border-b border-gray-300 py-4 last:border-none"
+                className="border-b border-gray-600 py-3 last:border-none"
               >
                 <div className="flex items-center space-x-4">
                   <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden">
@@ -353,22 +575,24 @@ const dashboardPsychiatrist: React.FC = () => {
                   <div className="flex flex-col w-full">
                     <div className="flex justify-between items-center">
                       <div className="flex items-center space-x-2">
-                        <h3 className="text-xl font-semibold">{msg.from}</h3>
+                        <h3 className="text-xl font-bold">{msg.from}</h3>
                         {!msg.isRead && (
-                          <span className="w-3.5 h-3.5 rounded-full bg-red-500 mt-1 mx-auto" />
+                          <span className="p-2 rounded-full bg-red-500   mr-2 mx-auto" />
                         )}
                       </div>
-                      <p className="text-gray-500 text-sm">{msg.date}</p>
+                      <p className="text-gray-600 text-sm">{msg.date}</p>
                     </div>
 
                     {/* Message Content */}
-                    <p className="text-gray-800 mt-1">{msg.content}</p>
+                    <p className="text-black font-medium mt-1">{msg.content}</p>
                   </div>
                 </div>
               </div>
             ))
           ) : (
-            <p className="text-gray-700 text-lg">You have no new messages.</p>
+            <p className="text-gray-700 text-lg">
+              Anda tidak memiliki pesan baru.
+            </p>
           )}
         </div>
       </section>

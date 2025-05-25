@@ -5,6 +5,7 @@ import {
 } from "../models/LoginModel";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { collection, query, where, getDocs } from "firebase/firestore";
 
 export class LoginController {
   private model: LoginModel;
@@ -31,6 +32,7 @@ export class LoginController {
       // Get user data
       const userData = await this.getUserData(userId);
 
+      console.log("User data:", userId);
       if (!userData) {
         return {
           success: false,
@@ -94,7 +96,33 @@ export class LoginController {
 
   async getUserData(userId: string) {
     try {
-      return await this.model.getUserData(userId);
+      // Check psychiatrists collection first
+      const psychiatristQuery = query(
+        collection(db, "psychiatrists"),
+        where("uid", "==", userId)
+      );
+      const psychiatristDocs = await getDocs(psychiatristQuery);
+
+      if (!psychiatristDocs.empty) {
+        const docId = psychiatristDocs.docs[0].id;
+        localStorage.setItem("userType", "psychiatrist");
+        return { docId, data: psychiatristDocs.docs[0].data() };
+      }
+
+      // If not found in psychiatrists, check users collection
+      const userQuery = query(
+        collection(db, "users"),
+        where("uid", "==", userId)
+      );
+      const userDocs = await getDocs(userQuery);
+
+      if (!userDocs.empty) {
+        const docId = userDocs.docs[0].id;
+        localStorage.setItem("userType", "user");
+        return { docId, data: userDocs.docs[0].data() };
+      }
+
+      return null;
     } catch (error) {
       console.error("Error getting user data:", error);
       return null;
