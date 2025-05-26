@@ -21,6 +21,7 @@ import ChatPage from "./Pages/Chat";
 import VideoCallPage from "./Pages/VideoCallPage";
 // import { initializeQuotaReset } from "./utils/storePsychiatrists";
 
+
 const App: React.FC = () => {
   // useEffect(() => {
   //   initializeQuotaReset();
@@ -34,8 +35,9 @@ const App: React.FC = () => {
         <Route path="/signup" element={<Register />} />
         <Route path="/complete-register" element={<SignUpComplete />} />
         <Route path="/verify-email" element={<Verif />} />
+        
         <Route path="/forgot-password/*" element={<ForgotPassword />} />
-
+        
         {/* Routes with navbar */}
         <Route
           path="/"
@@ -142,6 +144,7 @@ const App: React.FC = () => {
           }
         />
       </Routes>
+      
     </Router>
   );
 };
