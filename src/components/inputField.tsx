@@ -28,8 +28,8 @@ const InputField: React.FC<InputFieldProps> = ({
 
   return (
     <div className="mb-0.5">
-      <label className="block text-[#161F36] mb-1 font-regular">{label}</label>
-      <div className="relative font-regular pr-0 ">
+      <label className="block lg:text-[22px] text-[#161F36] mb-1 font-regular">{label}</label>
+      <div className="relative w-full lg:text-lg font-regular ">
         <input
           type={type}
           name={name}
