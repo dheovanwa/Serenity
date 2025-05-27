@@ -62,7 +62,32 @@ const ChatPage: React.FC = () => {
   const [summary, setSummary] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
+  const [isConfirmingEnd, setIsConfirmingEnd] = useState(false); 
 
+  const handleEndConversationClick = () => {
+    setIsConfirmingEnd(true); // Tampilkan pop-up konfirmasi
+  };
+
+  const confirmEndConversation = async () => {
+    if (!activeAppointment) return;
+    setIsEnding(true);
+    try {
+      await updateDoc(doc(db, "appointments", activeAppointment.id), {
+        status: "Selesai",
+      });
+      const chatDocRef = doc(db, "chats", activeAppointment.id);
+      await setDoc(chatDocRef, { hasEnded: true }, { merge: true });
+      setActiveAppointment({ ...activeAppointment, status: "Selesai" });
+      setHasEnded(true);
+    } catch (e) {
+      alert("Gagal menyelesaikan percakapan.");
+    }
+    setIsEnding(false);
+    setIsConfirmingEnd(false); // Menutup pop-up konfirmasi setelah selesai
+  };
+   const cancelEndConversation = () => {
+    setIsConfirmingEnd(false); // Menutup pop-up tanpa melakukan apapun
+  };
   // Scroll to bottom on new message
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -547,25 +572,40 @@ const ChatPage: React.FC = () => {
               activeAppointment.status !== "Selesai" &&
               !hasEnded && (
                 <button
-                  onClick={handleEndConversation}
+                  onClick={handleEndConversationClick}
                   disabled={isEnding}
                   className="ml-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-60"
                 >
                   {isEnding ? "Menyelesaikan..." : "Selesaikan Percakapan"}
                 </button>
               )}
-            {userType === "user" &&
-              (activeAppointment?.status === "Selesai" || hasEnded) && (
-                <button
-                  onClick={handleSummarize}
-                  className="ml-4 px-4 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition"
-                  disabled={showSummary}
-                >
-                  Summarize
-                </button>
-              )}
           </div>
         </header>
+                
+        {isConfirmingEnd && (
+          <div className="fixed inset-0 bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl w-80">
+              <h3 className="text-xl font-semibold mb-4">Konfirmasi</h3>
+              <p className="mb-6">Apakah Anda yakin ingin menyelesaikan percakapan?</p>
+              <div className="flex justify-end space-x-4">
+                <button
+                  onClick={cancelEndConversation}
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1"
+                >
+                  Batal
+                </button>
+                <button
+                  onClick={confirmEndConversation}
+                  className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 "
+                >
+                  Ya, Selesaikan
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+      
         {loading ? (
           <div className="flex items-center justify-center flex-1">
             <span>Loading chat...</span>
