@@ -23,7 +23,9 @@ const PsychiatristProfile = () => {
   const [profilePic, setProfilePic] = useState(ProfilePic); // State for profile picture
   const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref for file input
   const [phoneError, setPhoneError] = useState(false);
-
+  const [errorName, setErrorName] = useState(false);
+  const [errorSpecialization, setErrorSpecialization] = useState(false);
+  const [strError, setStrError] = useState(false);
   const [workSchedule, setWorkSchedule] = useState({
     Monday: "08:00 - 12:00",
     Tuesday: "08:00 - 12:00",
@@ -35,25 +37,23 @@ const PsychiatristProfile = () => {
   });
 
   const [formData, setFormData] = useState({
-    firstName: "Elon",
-    lastName: "Musk",
-    address: "Jl. Anggrek No. 5",
-    sex: "Pria",
+    name: "dr. Elon Musk",
+    specialization: "Sp, Kejiwaan Konsultan",
+    alumnus: "Universitas Indonesia",
     email: "elon@example.com",
-    birthOfDate: "01/01/2001",
-    phoneNumber: "",
-  });
+    practiceYear: "01/01/2001",
+    strNumber: "QH0000000000003621",
+    phoneNumber:"",
+  });;
   const [initialFormData, setInitialFormData] = useState({
-    firstName: "",
-    lastName: "",
-    address: "",
-    sex: "",
-    education: "",
-    birthOfDate: "",
+    name: "",
+    specialization: "",
+    practiceAddress: "",
+    alumnus: "",
+    practiceYear: "",
     email: "",
-    phoneNumber: "",
-    country: "",
-    city: "",
+    strNumber: "",
+    phoneNumber:"",
   });
 
   const [isProfileClicked, setIsProfileClicked] = useState(false);
@@ -69,13 +69,7 @@ const PsychiatristProfile = () => {
   };
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
 
-  const handleGenderChange = (gender: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      sex: gender,
-    }));
-    setIsGenderDropdownOpen(false);
-  };
+ 
   const handleProfileClick = () => {
     setIsProfileClicked(true);
     setIsSettingsClicked(false);
@@ -87,44 +81,37 @@ const PsychiatristProfile = () => {
   };
   useEffect(() => {
     const fetchUserData = async () => {
-      const documentId = localStorage.getItem("documentId");
-      if (!documentId) {
-        navigate("/signin");
-        return;
-      }
+  const documentId = localStorage.getItem("documentId");
+  if (!documentId) {
+    navigate("/signin");
+    return;
+  }
 
-      try {
-        const userDocRef = doc(db, "users", documentId);
-        const userDoc = await getDoc(userDocRef);
+  try {
+    const userDocRef = doc(db, "users", documentId);
+    const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setFormData({
-            firstName: userData.firstName || "",
-            lastName: userData.lastName || "",
-            address: userData.address || "",
-            sex: userData.sex || "",
-            birthOfDate: userData.birthOfDate || "",
-            email: userData.email || "",
-            phoneNumber: userData.phoneNumber || "",
-            birthOfDate: userData.birthOfDate || "",
-          });
-          setInitialFormData(userData);
+    if (userDoc.exists()) {
+      const userData = userDoc.data();
+      setFormData({
+        name: userData.name || "",
+        specialization: userData.specialization || "",
+        alumnus: userData.alumnus || "",
+        practiceYear: userData.practiceYear || "",
+        email: userData.email || "",
+        strNumber: userData.strNumber || "",
+        phoneNumber: userData.phoneNumber || "",
+      });
+      setInitialFormData(userData);
+      checkFormValidity();
+    }
+  } catch (error) {
+    console.error("Error fetching user data:", error);
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-          // Load profile picture from Firestore
-          if (userData.profilePicture) {
-            setProfilePic(userData.profilePicture);
-          }
-
-          checkFormValidity();
-          console.log("User data fetched:", userData);
-        }
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-      } finally {
-        setIsLoading(false); // Stop loading
-      }
-    };
 
     fetchUserData();
   }, [navigate]);
@@ -137,30 +124,11 @@ const PsychiatristProfile = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-
+  
+  
   useEffect(() => {
-    const fetchUserName = async () => {
-      const documentId = localStorage.getItem("documentId");
-      if (!documentId) return;
-
-      try {
-        const userDocRef = doc(db, "users", documentId);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUserName(
-            `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching user name:", error);
-        setUserName("User");
-      }
-    };
-
-    fetchUserName();
-  }, []);
+  checkFormValidity();
+}, [formData]);
 
   const handleLogout = () => {
     localStorage.removeItem("documentId");
@@ -170,6 +138,7 @@ const PsychiatristProfile = () => {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setFormData(initialFormData);
+    setStrError(false);
     setPhoneError(false);
     setErrorFirstName(false);
     setIsFormValid(true);
@@ -181,7 +150,7 @@ const PsychiatristProfile = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
+  const { name, value } = e.target;
 
     if (name === "phoneNumber") {
       if (/[^0-9]/.test(value) || value.length > 13) {
@@ -193,71 +162,69 @@ const PsychiatristProfile = () => {
         setPhoneError(false);
       }
     }
-
-    if (
-      (name === "firstName" ||
-        name === "lastName" ||
-        name === "country" ||
-        name === "city") &&
-      /[^a-zA-Z\s]/.test(value)
-    ) {
+  if (name === "strNumber") {
+    if (value.length > 16) {
       return;
     }
+  }
 
-    if (name === "nationalCode") {
-      if (/[^0-9]/.test(value) || value.length > 16) {
-        return;
-      }
-    }
+  setFormData((prev) => {
+    const updatedData = { ...prev, [name]: value };
+    return updatedData;
+  });
+  checkFormValidity();
+};
 
-    setFormData((prev) => {
-      const updatedData = { ...prev, [name]: value };
-      return updatedData;
-    });
-    checkFormValidity();
-  };
   const checkFormValidity = () => {
-    const isFirstNameValid = formData.firstName.trim() !== "";
-    setIsFormValid(isFirstNameValid);
-    setErrorFirstName(!isFirstNameValid);
-  };
+  const isNameValid = formData.name.trim() !== "";
+  const isSpecializationValid = formData.specialization.trim() !== "";
+  const isStrValid = formData.strNumber.trim() !== "";
+  const isPhoneValid = formData.phoneNumber.trim() !== "" && formData.phoneNumber.startsWith("08") && formData.phoneNumber.length >= 6;
+
+  const formIsValid = isNameValid && isSpecializationValid && isStrValid && isPhoneValid;
+
+  setIsFormValid(formIsValid);
+
+  setErrorName(!isNameValid);
+  setErrorSpecialization(!isSpecializationValid);
+  setStrError(!isStrValid);
+};
   const handleSave = async () => {
-    if (!formData.firstName.trim()) {
-      setErrorFirstName(true);
-      return;
-    }
+  if (!formData.name.trim()) {
+    setErrorName(true);
+    return;
+  }
+  if (!formData.specialization.trim()) {
+    setErrorSpecialization(true);
+    return;
+  }
 
-    if (
-      !formData.phoneNumber.startsWith("08") ||
-      formData.phoneNumber.length < 6
-    ) {
-      setPhoneError(true);
-      return;
-    }
+  setErrorName(false);
+  setErrorSpecialization(false);
+  setStrError(false);
 
-    setErrorFirstName(false);
-    const documentId = localStorage.getItem("documentId");
-    if (!documentId) {
-      console.error("No document ID found in localStorage.");
-      return;
-    }
+  const documentId = localStorage.getItem("documentId");
+  if (!documentId) {
+    console.error("No document ID found in localStorage.");
+    return;
+  }
 
-    try {
-      const userDocRef = doc(db, "users", documentId);
+  try {
+    const userDocRef = doc(db, "users", documentId);
+    await updateDoc(userDocRef, {
+      name: formData.name,
+      specialization: formData.specialization,
+      strNumber: formData.strNumber,
+      phoneNumber: formData.phoneNumber,
+    });
 
-      await updateDoc(userDocRef, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        address: formData.address,
-        phoneNumber: formData.phoneNumber,
-      });
+    console.log("User data updated successfully.");
+    setIsEditing(false); // Menonaktifkan mode edit setelah simpan
+  } catch (error) {
+    console.error("Error updating user data:", error);
+  }
+};
 
-      console.log("User data updated successfully.");
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Error updating user data:", error);
-    }
-  };
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -325,7 +292,7 @@ const PsychiatristProfile = () => {
 
   return (
     <div className="w-full h-screen flex flex-col">
-      <div className="w-full bg-white items-center justify-center mt-40 mb-2">
+      <div className="w-full bg-white items-center justify-center mt-40 ">
         <div className="flex items-center justify-center">
           <div className="relative w-24 h-24 sm:w-55 sm:h-55 rounded-full overflow-hidden">
             <img
@@ -359,10 +326,15 @@ const PsychiatristProfile = () => {
 
         <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left mt-6">
           <h1 className="text-2xl sm:text-4xl font-medium">
-            {formData.firstName} {formData.lastName}
-          </h1>
+            {formData.name}
+          </h1>   
         </div>
-        <div className="flex justify-center text-lg items-center text-[#161F36] font-light">
+            <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left ">
+          <h2 className="text-xl font-light">
+            {formData.specialization}
+          </h2>   
+        </div>  
+        <div className="flex justify-center text-md items-center text-[#161F36] font-light mb-10">
           {formData.email}
         </div>
 
@@ -377,7 +349,6 @@ const PsychiatristProfile = () => {
       <h1 className="text-lg text-center ">Profile</h1>
     </button>
 
-    {/* Settings Button */}
     <button
       className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${isSettingsClicked ? "bg-[#BACBD8]" : ""} transition-all duration-300`}
       onClick={handleSettingsClick}
@@ -410,7 +381,7 @@ const PsychiatristProfile = () => {
               {/* Tombol Keluar di bawah kiri */}
               <button
                 onClick={handleLogoutClick}
-                className="text-[#FF5640] text-sm lg:text-xl text-left mt-auto lg:ml-2 md:ml-12 sm:ml-15 self-start w-full lg:w-full transition-all duration-300"
+                className="text-[#FF5640] text-sm lg:text-xl text-left mt-auto lg:ml-3 md:ml-12 sm:ml-15 self-start w-full lg:w-full transition-all duration-300 mb-3"
               >
                 Keluar dari akun
               </button>
@@ -421,17 +392,17 @@ const PsychiatristProfile = () => {
               <div className="grid grid-cols-1 gap-4 text-[#161F36] mt-10 ">
                 <div className="md:col-span-2">
                   <InputField
-                    label="Nama depan"
+                    label="Nama Lengkap"
                     type="text"
-                    name="firstName"
-                    value={formData.firstName}
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
                     readOnly={!isEditing}
                     className={
-                      errorFirstName ? "border-red-500" : "border-gray-900"
+                      errorName ? "border-red-500" : "border-gray-900"
                     }
                   />
-                  {errorFirstName && (
+                  {errorName && (
                     <p className="text-red-500 text-sm mt-2">
                       Nama depan tidak boleh kosong
                     </p>
@@ -439,22 +410,26 @@ const PsychiatristProfile = () => {
                 </div>
                 <div className="md:col-span-2 ">
                   <InputField
-                    label="Nama belakang"
+                    label="Specialisasi"
                     type="text"
-                    name="lastName"
-                    value={formData.lastName}
+                    name="specialization"
+                    value={formData.specialization}
                     onChange={handleChange}
                     readOnly={!isEditing}
+                    className={errorSpecialization ? "border-red-500" : "border-gray-900"}
                   />
+                  {errorSpecialization && (
+                   <p className="text-red-500 text-sm mt-2">Specialization tidak boleh kosong</p>
+                  )}
                 </div>
-                <div className="md:col-span-2 ">
+                <div className="md:col-span-2 font-medium">
                   <InputField
-                    label="Jenis Kelamin"
+                    label="Alumnus"
                     type="text"
-                    name="sex"
-                    value={formData.sex}
+                    name="alumnus"
+                    value={formData.alumnus}
                     onChange={handleChange}
-                    readOnly={true}
+                    readOnly={!isEditing}
                   />
                 </div>
               </div>
@@ -463,10 +438,10 @@ const PsychiatristProfile = () => {
                   <InputField
                     icon={<img src={calender} alt="calendar" className="" />}
                     iconPosition="left"
-                    label="Tanggal Lahir"
+                    label="Tahun Bergabung"
                     type="text"
-                    name="tanggal_lahir"
-                    value={formData.birthOfDate}
+                    name="practiceYear"
+                    value={formData.practiceYear}
                     onChange={handleChange}
                     readOnly={true}
                     className="pl-12 "
@@ -475,14 +450,14 @@ const PsychiatristProfile = () => {
                 <div className="flex gap-2 items-stretch">
                   <div className="flex-grow">
                     <InputField
-                      label="Alamat"
-                      type="text"
-                      name="address"
-                      value={formData.address}
-                      onChange={handleChange}
-                      readOnly={!isEditing}
-                      placeholder=""
-                    />
+                    label="Nomor STR"
+                    type="text"
+                    name="strNumber"
+                    value={formData.strNumber}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    
+                  /> 
                   </div>
                 </div>
                 <div>
@@ -504,6 +479,7 @@ const PsychiatristProfile = () => {
                       yang benar
                     </p>
                   )}
+        
                 </div>
               </div>
               <div className="flex justify-end items-end w-full gap-6 lg:gap-10 lg:mb-20 md:mb-5 sm:pr-10 sm:mb-5 pt-10 lg:pr-17 md:pr-10 col-span-2">
@@ -576,81 +552,94 @@ const PsychiatristProfile = () => {
       <div className="flex flex-col">
         <div className="grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
           <div className="md:col-span-2">
-            <InputField
-              label="Nama depan"
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              readOnly={!isEditing}
-              className={errorFirstName ? "border-red-500" : "border-gray-900"}
-            />
-            {errorFirstName && (
-              <p className="text-red-500 text-sm mt-2">Nama depan tidak dapat kosong</p>
-            )}
+              <InputField
+                label="Nama Lengkap"
+                type="text"
+                name="name"
+                value={formData.name}
+                onChange={handleChange}
+                readOnly={!isEditing}
+                className={
+                    errorName ? "border-red-500" : "border-gray-900"
+                  }
+                />
+                  {errorName && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Nama depan tidak boleh kosong
+                    </p>
+                  )}
           </div>
-          <div className="md:col-span-2">
-            <InputField
-              label="Nama belakang"
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              readOnly={!isEditing}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <InputField
-              label="Jenis Kelamin"
-              type="text"
-              name="sex"
-              value={formData.sex}
-              onChange={handleChange}
-              readOnly={true}
-            />
-          </div>
+          <div className="md:col-span-2 ">
+              <InputField
+                label="Specialisasi"
+                type="text"
+                name="specialization"
+                value={formData.specialization}
+                onChange={handleChange}
+                readOnly={!isEditing}
+                className={errorSpecialization ? "border-red-500" : "border-gray-900"}
+              />
+              {errorSpecialization && (
+               <p className="text-red-500 text-sm mt-2">Specialization tidak boleh kosong</p>
+              )}
+            </div>
+            <div className="md:col-span-2 font-medium">
+              <InputField
+                label="Alumnus"
+                type="text"
+                name="alumnus"
+                value={formData.alumnus}
+                onChange={handleChange}
+                readOnly={!isEditing}
+              />
+            </div>
         </div>
         <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
           <div>
             <InputField
               icon={<img src={calender} alt="calendar" className="" />}
               iconPosition="left"
-              label="Tanggal Lahir"
+              label="Tahun Bergabung"
               type="text"
-              name="tanggal_lahir"
-              value={formData.birthOfDate}
+              name="practiceYear"
+              value={formData.practiceYear}
               onChange={handleChange}
               readOnly={true}
               className="pl-12 "
-            />
-          </div>
-          <div className="flex gap-2 items-stretch">
-            <div className="flex-grow">
-              <InputField
-                label="Alamat"
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                placeholder="Your address"
-              />
+                />
             </div>
-          </div>
+            <div className="flex gap-2 items-stretch">
+              <div className="flex-grow">
+                <InputField
+                    label="Nomor STR"
+                    type="text"
+                    name="strNumber"
+                    value={formData.strNumber}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    
+                  />
+              </div>
+            </div>
           <div>
             <InputField
-              label="Nomor Telepon"
-              type="text"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              readOnly={!isEditing}
-              placeholder=""
-              className={phoneError ? "border-red-500" : "border-gray-900"}
-            />
-            {phoneError && (
-              <p className="text-red-500 text-sm mt-1">Nomor Telepon harus dimulai dengan 08</p>
-            )}
+                    label="Nomor Telepon"
+                    type="text"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    placeholder=""
+                    className={
+                      phoneError ? "border-red-500" : "border-gray-900"
+                    }
+                  />
+                  {phoneError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Nomor Telepon harus dimulai dengan 08 dan dalam format
+                      yang benar
+                    </p>
+                  )}
           </div>
         </div>
         <div className="flex justify-center items-center w-full gap-6 lg:gap-10 mb-20 mt-20 lg:-ml-20 col-span-2">
