@@ -16,6 +16,7 @@ import {
   setDoc,
 } from "firebase/firestore";
 import axios from "axios";
+import { useSearchParams } from "react-router-dom";
 
 interface Message {
   id: string;
@@ -60,6 +61,7 @@ const ChatPage: React.FC = () => {
   const [hasEnded, setHasEnded] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Scroll to bottom on new message
   useEffect(() => {
@@ -422,6 +424,24 @@ const ChatPage: React.FC = () => {
     };
   }, []);
 
+  // Set activeAppointment based on chatId param
+  useEffect(() => {
+    if (!appointments.length) return;
+    const chatId = searchParams.get("chatId");
+    if (chatId) {
+      const found = appointments.find((apt) => apt.id === chatId);
+      if (found) setActiveAppointment(found);
+    } else if (!activeAppointment && appointments.length > 0) {
+      // fallback to first available
+      const active =
+        appointments.find((a) => a.status === "Sedang berlangsung") ||
+        appointments[0];
+      setActiveAppointment(active);
+      setSearchParams({ chatId: active.id });
+    }
+    // eslint-disable-next-line
+  }, [appointments, searchParams]);
+
   return (
     <div className="flex h-screen font-sans bg-[#FDFBF6]">
       {/* Sidebar */}
@@ -453,7 +473,10 @@ const ChatPage: React.FC = () => {
                       : ""
                   }
                 `}
-                onClick={() => setActiveAppointment(apt)}
+                onClick={() => {
+                  setActiveAppointment(apt);
+                  setSearchParams({ chatId: apt.id });
+                }}
               >
                 <div className="flex flex-row items-center space-x-3">
                   {photo ? (

@@ -17,6 +17,7 @@ import {
   getDoc,
   doc,
   orderBy,
+  limit,
 } from "firebase/firestore";
 import { db } from "../config/firebase"; // Adjust the import based on your project structure
 import { HomeController } from "../controllers/HomeController";
@@ -27,61 +28,8 @@ const dashboardPsychiatrist: React.FC = () => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
 
-  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([
-    {
-      title: "Hormone Therapy Consultation",
-      patientName: "Kristina Stokes",
-      service: "Video Call",
-      date: "05 Feb, 2024",
-      time: "11:00 AM - 11:30 AM",
-      symptoms: "Hot flashes, Night sweats",
-    },
-    {
-      title: "Anti-Aging Consultation",
-      patientName: "Johnathan Mcgee",
-      service: "Chat",
-      date: "05 Feb, 2024",
-      time: "11:00 AM - 11:30 AM",
-      symptoms: "Wrinkles, Skin texture issues",
-    },
-  ]);
-  const [messages, setMessages] = useState<any[]>([
-    {
-      from: "David Brown",
-      date: "4:00 PM",
-      content: "Anda : Sampai ketemu minggu depan",
-      profileImage: foto1,
-      isRead: false,
-    },
-    {
-      from: "Regan Roberts",
-      date: "3:28 PM",
-      content: "Megan: Saya merasakan keresahan yang sangat mendalam!!!",
-      profileImage: foto2,
-      isRead: true,
-    },
-    {
-      from: "Alexander Preston",
-      date: "13:18 PM",
-      content: "Alexander: Kenapa dunia ini begitu tidak adil untuk saya???",
-      profileImage: foto3,
-      isRead: true,
-    },
-    {
-      from: "Kristina Stokes",
-      date: "12:12 PM",
-      content: "Kristina: Saya mengalami insomnia",
-      profileImage: foto4,
-      isRead: true,
-    },
-    {
-      from: "Johnathan Mcgee",
-      date: "8:11 AM",
-      content: "Anda: Cobalah untuk tidur meskipun sebentar",
-      profileImage: foto5,
-      isRead: false,
-    },
-  ]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState<any>(null);
   const [psychiatristName, setPsychiatristName] =
@@ -272,7 +220,7 @@ const dashboardPsychiatrist: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchActiveAppointments = async () => {
+    const fetchActiveAppointmentsAndChats = async () => {
       try {
         const documentId = localStorage.getItem("documentId");
         if (!documentId) return;
@@ -306,13 +254,15 @@ const dashboardPsychiatrist: React.FC = () => {
           (apt) => apt.doctorName === psychiatristName
         );
 
-        // Format for display
-        const formattedAppointments = filteredAppointments.map((apt) => {
+        // Only include Video method for "Sesi yang sedang Aktif"
+        const videoAppointments = filteredAppointments.filter(
+          (apt) => apt.method === "Video"
+        );
+
+        // Format for display (Video only)
+        const formattedAppointments = videoAppointments.map((apt) => {
           const date = new Date(apt.date);
           let time = apt.time;
-          if (apt.method === "Chat" && time === "today") {
-            time = "";
-          }
           return {
             id: apt.id,
             patientName: apt.patientName,
@@ -324,16 +274,51 @@ const dashboardPsychiatrist: React.FC = () => {
               year: "numeric",
             }),
             time,
+            patientProfileImage: apt.patientProfileImage || foto1, // fallback to foto1
           };
         });
 
         setActiveAppointments(formattedAppointments);
+
+        // Fetch latest chat message for each active chat appointment from messages subcollection
+        const chatMessages: any[] = [];
+        for (const apt of filteredAppointments) {
+          if (apt.method === "Chat") {
+            const messagesColRef = collection(db, "chats", apt.id, "messages");
+            const qMsg = query(
+              messagesColRef,
+              orderBy("timestamp", "desc"),
+              limit(1)
+            );
+            const msgSnap = await getDocs(qMsg);
+            if (!msgSnap.empty) {
+              const lastMsgDoc = msgSnap.docs[0];
+              const lastMsg = lastMsgDoc.data();
+              let senderDisplayName = lastMsg.senderName;
+              if (
+                lastMsg.senderRole === "doctor" ||
+                (lastMsg.senderName && lastMsg.senderName === psychiatristName)
+              ) {
+                senderDisplayName = "Kamu";
+              }
+              chatMessages.push({
+                id: apt.id,
+                from: apt.patientName,
+                date: lastMsg.time || apt.date,
+                content: `${senderDisplayName}: ${lastMsg.text}`,
+                profileImage: apt.patientProfileImage || foto1,
+                isRead: lastMsg.isRead || false,
+              });
+            }
+          }
+        }
+        setMessages(chatMessages);
       } catch (error) {
-        console.error("Error fetching active appointments:", error);
+        console.error("Error fetching active appointments or chats:", error);
       }
     };
 
-    fetchActiveAppointments();
+    fetchActiveAppointmentsAndChats();
   }, []);
 
   const handleLogout = () => {
@@ -367,6 +352,12 @@ const dashboardPsychiatrist: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setAppointmentToCancel(null);
+  };
+
+  // Handler for navigating to chat session
+  const handleOpenChat = (chatId: string) => {
+    console.log("Opening chat for appointment ID:", chatId);
+    navigate(`/chat?chatId=${chatId}`);
   };
 
   return (
@@ -491,14 +482,11 @@ const dashboardPsychiatrist: React.FC = () => {
                     {apt.date} {apt.time && `| ${apt.time}`}
                   </p>
                   <div className="mt-4 flex flex-col sm:flex-row gap-4 sm:gap-6">
-                    <button className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#5a7da1] transition-colors duration-300 w-full sm:w-auto">
-                      Gabung Sesi
-                    </button>
                     <button
-                      onClick={() => handleCancelAppointment(apt)}
-                      className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300 w-full sm:w-auto sm:ml-auto"
+                      className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#5a7da1] transition-colors duration-300 w-full sm:w-auto"
+                      onClick={() => navigate(`/video-call`)}
                     >
-                      Batalkan Janji Temu
+                      Gabung Sesi
                     </button>
                   </div>
                 </div>
@@ -524,14 +512,11 @@ const dashboardPsychiatrist: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex gap-4">
-                    <button className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#186ca8] transition-colors duration-300 w-auto">
-                      Gabung Sesi
-                    </button>
                     <button
-                      onClick={() => handleCancelAppointment(apt)}
-                      className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300 w-auto"
+                      className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#186ca8] transition-colors duration-300 w-auto"
+                      onClick={() => navigate(`/video-call`)}
                     >
-                      Batalkan Janji Temu
+                      Gabung Sesi
                     </button>
                   </div>
                 </div>
@@ -558,37 +543,50 @@ const dashboardPsychiatrist: React.FC = () => {
         </h1>
         <div className="bg-[#E4DCCC] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
           {messages.length > 0 ? (
-            messages.map((msg, index) => (
-              <div
-                key={index}
-                className="border-b border-gray-600 py-3 last:border-none"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden">
-                    <img
-                      src={msg.profileImage}
-                      alt={msg.from}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="flex flex-col w-full">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-xl font-bold">{msg.from}</h3>
-                        {!msg.isRead && (
-                          <span className="p-2 rounded-full bg-red-500   mr-2 mx-auto" />
-                        )}
-                      </div>
-                      <p className="text-gray-600 text-sm">{msg.date}</p>
+            messages.map((msg, index) => {
+              // Find the correct appointment for this message by matching patientName, service === "Chat", and appointment date
+              const apt = activeAppointments.find(
+                (a) =>
+                  a.patientName === msg.from &&
+                  a.service === "Chat" &&
+                  a.id === msg.id
+              );
+              const chatId = apt?.id || "";
+              return (
+                <div
+                  key={index}
+                  className="border-b border-gray-600 py-3 last:border-none hover:bg-[#e9e2d1] cursor-pointer transition"
+                  onClick={() => handleOpenChat(chatId)}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden">
+                      <img
+                        src={msg.profileImage}
+                        alt={msg.from}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
 
-                    {/* Message Content */}
-                    <p className="text-black font-medium mt-1">{msg.content}</p>
+                    <div className="flex flex-col w-full">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="text-xl font-bold">{msg.from}</h3>
+                          {!msg.isRead && (
+                            <span className="p-2 rounded-full bg-red-500   mr-2 mx-auto" />
+                          )}
+                        </div>
+                        <p className="text-gray-600 text-sm">{msg.date}</p>
+                      </div>
+
+                      {/* Message Content */}
+                      <p className="text-black font-medium mt-1">
+                        {msg.content}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <p className="text-gray-700 text-lg">
               Anda tidak memiliki pesan baru.
