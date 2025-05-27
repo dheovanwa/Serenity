@@ -296,7 +296,7 @@ const PsychiatristProfile = () => {
       console.error("Error updating profile picture in Firestore:", error);
     }
   };
-  
+
   const triggerFileInput = () => {
     fileInputRef.current?.click(); // Trigger file input click
   };
@@ -368,24 +368,28 @@ const PsychiatristProfile = () => {
 
         {/* Mobile Layout Buttons */}
         {isMobile && (
-  <div className="flex flex-row justify-center items-center mt-5 w-full gap-25">
-    {/* Profile Button */}
-    <button
-      className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${isProfileClicked ? "bg-[#BACBD8]" : ""} transition-all duration-300`}
-      onClick={handleProfileClick}
-    >
-      <h1 className="text-lg text-center ">Profile</h1>
-    </button>
+          <div className="flex flex-row justify-center items-center mt-5 w-full gap-25">
+            {/* Profile Button */}
+            <button
+              className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${
+                isProfileClicked ? "bg-[#BACBD8]" : ""
+              } transition-all duration-300`}
+              onClick={handleProfileClick}
+            >
+              <h1 className="text-lg text-center ">Profile</h1>
+            </button>
 
-    {/* Settings Button */}
-    <button
-      className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${isSettingsClicked ? "bg-[#BACBD8]" : ""} transition-all duration-300`}
-      onClick={handleSettingsClick}
-    >
-      <h1 className="text-lg text-center ">Jam Kerja</h1>
-    </button>
-  </div>
-)}
+            {/* Settings Button */}
+            <button
+              className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${
+                isSettingsClicked ? "bg-[#BACBD8]" : ""
+              } transition-all duration-300`}
+              onClick={handleSettingsClick}
+            >
+              <h1 className="text-lg text-center ">Jam Kerja</h1>
+            </button>
+          </div>
+        )}
       </div>
 
       {/*DESKTOP*/}
@@ -393,18 +397,25 @@ const PsychiatristProfile = () => {
         <div className=" bg-[#F2EDE2] flex h-screen">
           <div className="relative z-1 flex flex-col lg:flex-row w-full ">
             {/*Left*/}
-             
+
             <div className="w-full lg:w-1/4 flex flex-col xl:mr-1 lg:pt-10 lg:mr-10  ">
-             <h2 className="text-[#161F36]  mb-1 lg:text-[22px] font-regular text-left sm:ml-12 md:ml-10 lg:ml-20">Jam Kerja</h2>
-              
+              <h2 className="text-[#161F36]  mb-1 lg:text-[22px] font-regular text-left sm:ml-12 md:ml-10 lg:ml-20">
+                Jam Kerja
+              </h2>
+
               <div className="bg-transparent lg:w-[70%] md:w-[40%] sm:w-[40%] text-[#161F36] border-2 border-[#161F36] sm:ml-12 md:ml-10 md:mr-10 lg:ml-20 rounded-[6px] p-4">
-                  <div className="flex flex-col gap-2">
-          {Object.keys(workSchedule).map((day) => (
-            <div key={day} className="flex justify-between items-center ">
-              <span className="text-left text-xl flex-1">{day}, {workSchedule[day]}</span>
-            </div>
-          ))}
-        </div>
+                <div className="flex flex-col gap-2">
+                  {Object.keys(workSchedule).map((day) => (
+                    <div
+                      key={day}
+                      className="flex justify-between items-center "
+                    >
+                      <span className="text-left text-xl flex-1">
+                        {day}, {workSchedule[day]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Tombol Keluar di bawah kiri */}
@@ -570,138 +581,151 @@ const PsychiatristProfile = () => {
       )}
 
       {/*MOBILE*/}
-     {isMobile && isProfileClicked && (
-  <div className=" bg-[#F2EDE2] flex h-screen w-full ml-0 ">
-    <div className="relative z-1 flex flex-col w-full ">
-      <div className="flex flex-col">
-        <div className="grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
-          <div className="md:col-span-2">
-            <InputField
-              label="Nama depan"
-              type="text"
-              name="firstName"
-              value={formData.firstName}
-              onChange={handleChange}
-              readOnly={!isEditing}
-              className={errorFirstName ? "border-red-500" : "border-gray-900"}
-            />
-            {errorFirstName && (
-              <p className="text-red-500 text-sm mt-2">Nama depan tidak dapat kosong</p>
-            )}
-          </div>
-          <div className="md:col-span-2">
-            <InputField
-              label="Nama belakang"
-              type="text"
-              name="lastName"
-              value={formData.lastName}
-              onChange={handleChange}
-              readOnly={!isEditing}
-            />
-          </div>
-          <div className="md:col-span-2">
-            <InputField
-              label="Jenis Kelamin"
-              type="text"
-              name="sex"
-              value={formData.sex}
-              onChange={handleChange}
-              readOnly={true}
-            />
-          </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
-          <div>
-            <InputField
-              icon={<img src={calender} alt="calendar" className="" />}
-              iconPosition="left"
-              label="Tanggal Lahir"
-              type="text"
-              name="tanggal_lahir"
-              value={formData.birthOfDate}
-              onChange={handleChange}
-              readOnly={true}
-              className="pl-12 "
-            />
-          </div>
-          <div className="flex gap-2 items-stretch">
-            <div className="flex-grow">
-              <InputField
-                label="Alamat"
-                type="text"
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                placeholder="Your address"
-              />
-            </div>
-          </div>
-          <div>
-            <InputField
-              label="Nomor Telepon"
-              type="text"
-              name="phoneNumber"
-              value={formData.phoneNumber}
-              onChange={handleChange}
-              readOnly={!isEditing}
-              placeholder=""
-              className={phoneError ? "border-red-500" : "border-gray-900"}
-            />
-            {phoneError && (
-              <p className="text-red-500 text-sm mt-1">Nomor Telepon harus dimulai dengan 08</p>
-            )}
-          </div>
-        </div>
-        <div className="flex justify-center items-center w-full gap-6 lg:gap-10 mb-20 mt-20 lg:-ml-20 col-span-2">
-          <button
-            onClick={() => {
-              if (isEditing) {
-                handleCancelEdit();
-              } else {
-                setIsEditing(true);
-              }
-            }}
-            className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer"
-          >
-            {isEditing ? "Batal" : "Ubah"}
-          </button>
-          {isEditing && (
-            <div className="flex justify-center">
-              <button
-                onClick={handleSave}
-                className={`bg-[#BACBD8] text-lg text-[#161F36] py-4 px-13 rounded-md hover:bg-[#87b4fb] transition font-medium ${
-                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={!isFormValid}
-              >
-                Simpan
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-  {isMobile && isSettingsClicked && (
-  <div className=" bg-[#F2EDE2] flex h-screen w-full  ">
-    <div className="relative z-1 flex flex-col w-full ">
-      <div className="flex flex-col justify-center items-center">      
-              <div className="bg-transparent  w-[80%]  mt-10  text-[#161F36] border-2 border-[#161F36] rounded-[6px] p-4">
-                  <div className="flex flex-col gap-2">
-          {Object.keys(workSchedule).map((day) => (
-            <div key={day} className="flex justify-between items-center ">
-              <span className="text-left text-xl flex-1">{day}, {workSchedule[day]}</span>
-            </div>
-          ))}
-        </div>
+      {isMobile && isProfileClicked && (
+        <div className=" bg-[#F2EDE2] flex h-screen w-full ml-0 ">
+          <div className="relative z-1 flex flex-col w-full ">
+            <div className="flex flex-col">
+              <div className="grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
+                <div className="md:col-span-2">
+                  <InputField
+                    label="Nama depan"
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    className={
+                      errorFirstName ? "border-red-500" : "border-gray-900"
+                    }
+                  />
+                  {errorFirstName && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Nama depan tidak dapat kosong
+                    </p>
+                  )}
+                </div>
+                <div className="md:col-span-2">
+                  <InputField
+                    label="Nama belakang"
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <InputField
+                    label="Jenis Kelamin"
+                    type="text"
+                    name="sex"
+                    value={formData.sex}
+                    onChange={handleChange}
+                    readOnly={true}
+                  />
+                </div>
               </div>
-      </div>
-    </div>
-  </div>
-)}
+              <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
+                <div>
+                  <InputField
+                    icon={<img src={calender} alt="calendar" className="" />}
+                    iconPosition="left"
+                    label="Tanggal Lahir"
+                    type="text"
+                    name="tanggal_lahir"
+                    value={formData.birthOfDate}
+                    onChange={handleChange}
+                    readOnly={true}
+                    className="pl-12 "
+                  />
+                </div>
+                <div className="flex gap-2 items-stretch">
+                  <div className="flex-grow">
+                    <InputField
+                      label="Alamat"
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      readOnly={!isEditing}
+                      placeholder="Your address"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <InputField
+                    label="Nomor Telepon"
+                    type="text"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    placeholder=""
+                    className={
+                      phoneError ? "border-red-500" : "border-gray-900"
+                    }
+                  />
+                  {phoneError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Nomor Telepon harus dimulai dengan 08
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-center items-center w-full gap-6 lg:gap-10 mb-20 mt-20 lg:-ml-20 col-span-2">
+                <button
+                  onClick={() => {
+                    if (isEditing) {
+                      handleCancelEdit();
+                    } else {
+                      setIsEditing(true);
+                    }
+                  }}
+                  className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer"
+                >
+                  {isEditing ? "Batal" : "Ubah"}
+                </button>
+                {isEditing && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleSave}
+                      className={`bg-[#BACBD8] text-lg text-[#161F36] py-4 px-13 rounded-md hover:bg-[#87b4fb] transition font-medium ${
+                        !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={!isFormValid}
+                    >
+                      Simpan
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isMobile && isSettingsClicked && (
+        <div className=" bg-[#F2EDE2] flex h-screen w-full  ">
+          <div className="relative z-1 flex flex-col w-full ">
+            <div className="flex flex-col justify-center items-center">
+              <div className="bg-transparent  w-[80%]  mt-10  text-[#161F36] border-2 border-[#161F36] rounded-[6px] p-4">
+                <div className="flex flex-col gap-2">
+                  {Object.keys(workSchedule).map((day) => (
+                    <div
+                      key={day}
+                      className="flex justify-between items-center "
+                    >
+                      <span className="text-left text-xl flex-1">
+                        {day}, {workSchedule[day]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -18,12 +18,15 @@ import {
   doc,
   orderBy,
   limit,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "../config/firebase"; // Adjust the import based on your project structure
 import { HomeController } from "../controllers/HomeController";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
 
 const dashboardPsychiatrist: React.FC = () => {
+  // Add new state for dialog
+  const [showEndedDialog, setShowEndedDialog] = useState(false);
   const [userName, setUserName] = useState<string>("Loading...");
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
@@ -360,6 +363,65 @@ const dashboardPsychiatrist: React.FC = () => {
     navigate(`/chat?chatId=${chatId}`);
   };
 
+  // Add function to check if session has ended
+  const hasSessionEnded = (time: string) => {
+    const [, endTime] = time.split(" - ");
+    const [endHour, endMinute] = endTime.split(".").map(Number);
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    return (
+      currentHour > endHour ||
+      (currentHour === endHour && currentMinute > endMinute)
+    );
+  };
+
+  // Modify handleJoinVideoCall to check session time
+  const handleJoinVideoCall = async (
+    appointmentId: string,
+    sessionTime: string
+  ) => {
+    if (hasSessionEnded(sessionTime)) {
+      setShowEndedDialog(true);
+      return;
+    }
+
+    try {
+      const documentId = localStorage.getItem("documentId"); // Get psychiatrist ID
+      if (!documentId) {
+        throw new Error("No psychiatrist ID found");
+      }
+
+      // Check if there's already a call for this appointment
+      const callsRef = collection(db, "calls");
+      const q = query(callsRef, where("appointmentId", "==", appointmentId));
+      const querySnapshot = await getDocs(q);
+
+      let callId;
+      if (querySnapshot.empty) {
+        // Create new call document with psychiatrist ID as callerId
+        const newCall = await addDoc(callsRef, {
+          appointmentId: appointmentId,
+          createdAt: Date.now(),
+          status: "waiting",
+          callerId: documentId, // Using psychiatrist's documentId
+        });
+        callId = newCall.id;
+      } else {
+        // Use existing call
+        callId = querySnapshot.docs[0].id;
+      }
+
+      // Navigate to video call with the call ID
+      navigate(`/video-call/${callId}`);
+    } catch (error) {
+      console.error("Error setting up video call:", error);
+      alert("Failed to set up video call. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#F2EDE2] w-full bg-cover flex flex-col overflow-x-hidden">
       <AppointmentStatusUpdater />
@@ -514,7 +576,7 @@ const dashboardPsychiatrist: React.FC = () => {
                   <div className="flex gap-4">
                     <button
                       className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#186ca8] transition-colors duration-300 w-auto"
-                      onClick={() => navigate(`/video-call`)}
+                      onClick={() => handleJoinVideoCall(apt.id, apt.time)}
                     >
                       Gabung Sesi
                     </button>
@@ -684,6 +746,22 @@ const dashboardPsychiatrist: React.FC = () => {
           </p>
         </div>
       </footer>
+
+      {/* Add dialog for ended session */}
+      {showEndedDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+            <h3 className="text-xl font-semibold mb-4">Sesi Telah Berakhir</h3>
+            <p className="mb-6">Waktu sesi konsultasi ini telah berakhir.</p>
+            <button
+              onClick={() => setShowEndedDialog(false)}
+              className="w-full bg-[#187DA8] text-white py-2 px-4 rounded-lg hover:bg-[#1569a0] transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

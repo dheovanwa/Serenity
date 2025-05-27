@@ -88,7 +88,7 @@ const NavBarPsy: React.FC<NavBarPsyProps> = ({ isDarkMode, toggleTheme }) => {
             icon={Calendar}
           />
           <NavItem label="Chat" path="/chat" icon={MessageSquare} />
-          <NavItem label="Profil" path="/psychiatrist-profile" icon={User} />
+          <NavItem label="Profil" path="/doctor-profile" icon={User} />
         </nav>
 
         <div className="flex items-center">
