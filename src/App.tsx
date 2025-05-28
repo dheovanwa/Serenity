@@ -19,6 +19,8 @@ import ManageAppointmentPsy from "./components/ManageAppointmentPsy";
 import Layout from "./components/Layout";
 import ChatPage from "./Pages/Chat";
 import VideoCallPage from "./Pages/VideoCallPage";
+import Forum from "./Pages/Forum";
+import ForumPost from "./Pages/ForumPost";
 // import { initializeQuotaReset } from "./utils/storePsychiatrists";
 
 const App: React.FC = () => {
@@ -139,6 +141,22 @@ const App: React.FC = () => {
           element={
             <Layout>
               <VideoCallPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/forum"
+          element={
+            <Layout>
+              <Forum />
+            </Layout>
+          }
+        />
+        <Route
+          path="/forum/:forumId"
+          element={
+            <Layout>
+              <ForumPost />
             </Layout>
           }
         />

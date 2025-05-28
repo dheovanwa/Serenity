@@ -1,5 +1,11 @@
 import React, { useEffect } from "react";
-import { Home, Calendar, MessageSquare, User } from "lucide-react";
+import {
+  Home,
+  Calendar,
+  MessageSquare,
+  User,
+  MessagesSquare,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LogoLight from "../assets/Logo - Light.png";
 import LogoDark from "../assets/Logo - Dark.png";
@@ -88,6 +94,7 @@ const NavBarPsy: React.FC<NavBarPsyProps> = ({ isDarkMode, toggleTheme }) => {
             icon={Calendar}
           />
           <NavItem label="Chat" path="/chat" icon={MessageSquare} />
+          <NavItem label="Forum" path="/forum" icon={MessagesSquare} />
           <NavItem label="Profil" path="/doctor-profile" icon={User} />
         </nav>
 

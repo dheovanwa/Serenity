@@ -1,5 +1,12 @@
 import React, { useEffect } from "react";
-import { Home, Search, MessageSquare, User, Calendar } from "lucide-react";
+import {
+  Home,
+  Search,
+  MessageSquare,
+  User,
+  Calendar,
+  MessagesSquare,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LogoLight from "../assets/Logo - Light.png";
 import LogoDark from "../assets/Logo - Dark.png";
@@ -88,13 +95,14 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
         </div>
         <nav className="hidden md:flex space-x-4 lg:space-x-6 gap-15">
           <NavItem label="Halaman Utama" path="/" icon={Home} />
-          <NavItem label="Cari" path="/Search-psi" icon={Search} />
+          <NavItem label="Cari Ahli" path="/Search-psi" icon={Search} />
           <NavItem
             label="Janji Temu"
             path="/manage-appointment"
             icon={Calendar}
           />
           <NavItem label="Chat" path="/chat" icon={MessageSquare} />
+          <NavItem label="Forum" path="/forum" icon={MessagesSquare} />
           <NavItem label="Profil" path="/profile" icon={User} />
         </nav>
         <div className="flex items-center space-x-3 sm:space-x-4">
