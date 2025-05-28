@@ -10,6 +10,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 import Loading from "./Loading";
 import { generateInvoicePDF } from "../utils/invoiceGenerator";
@@ -51,6 +52,25 @@ const ManageAppointment = () => {
   const [loadingAppointmentId, setLoadingAppointmentId] = useState<
     string | null
   >(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
+  const handleOpenModal = (appointment: Appointment) => {
+  setSelectedAppointment(appointment);
+  setIsModalOpen(true);
+};
+
+const handleCloseModal = () => {
+  setIsModalOpen(false);
+  setSelectedAppointment(null);
+};
+
+const handleConfirmCancel = async () => {
+  if (selectedAppointment) {
+    await handleCancel(selectedAppointment); // Panggil handleCancel yang sudah ada
+  }
+  handleCloseModal(); // Menutup modal setelah konfirmasi
+};
+
 
   // Get current appointments
   const indexOfLastAppointment = currentPage * ITEMS_PER_PAGE;
@@ -598,7 +618,7 @@ const ManageAppointment = () => {
       return (
         <button
           className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-600"
-          onClick={() => handleCancel(appointment)}
+          onClick={() => handleOpenModal(appointment)}
         >
           Batal
         </button>
@@ -842,6 +862,30 @@ const ManageAppointment = () => {
           </div>
         </>
       )}
+
+      {isModalOpen && (
+  <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex justify-center items-center z-50">
+    <div className="bg-white p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px]">
+      <h2 className="text-xl font-semibold text-black">Konfirmasi Pembatalan</h2>
+      <p className="mt-2">Apakah Anda yakin ingin membatalkan jadwal ini?</p>
+      <div className="mt-4 flex justify-end gap-4">
+        <Button
+          variant="outline"
+          className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1"
+          onClick={handleCloseModal}
+        >
+          Batal
+        </Button>
+        <Button
+          className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1"
+          onClick={handleConfirmCancel}
+        >
+          Ya, Lanjutkan
+        </Button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 };

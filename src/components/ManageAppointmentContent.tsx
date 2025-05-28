@@ -94,6 +94,28 @@ const ManageAppointmentContent = () => {
 
   const [showCustomInput, setShowCustomInput] = React.useState(false);
   const [customSessions, setCustomSessions] = React.useState(2); // minimal 2 x 15m = 30m
+  const [showModal, setShowModal] = useState(false);
+
+  const handleCancel = () => {
+  setShowModal(true);
+};
+  const handleCloseModal = () => {
+  setShowModal(false); 
+};
+
+  const handleConfirmCancel = () => {
+    setDate(undefined);
+    setSelectedMethod(null);
+    setSelectedTime("");
+    setGejala("");
+    setTotalPrice(0);
+    setCustomSessions(2);
+    setShowModal(false);
+    // navigate("/schedule-appointment/:id?"); // Ganti dengan halaman yang sesuai
+  };
+  const handleDateSelectM = (newDate: Date | undefined) => {
+    setDate(newDate);
+  };
 
   const getTimeSlotsByDuration = (
     duration: string | null,
@@ -466,9 +488,6 @@ const ManageAppointmentContent = () => {
     }
   };
 
-  const handleCancel = () => {
-    navigate("/Search-psi");
-  };
 
   const handleDateSelect = (newDate: Date | undefined) => {
     console.log("Selected date:", newDate);
@@ -825,6 +844,34 @@ const ManageAppointmentContent = () => {
           </div>
         </div>
       </div>
+
+        {/* Modal Konfirmasi Batal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px]">
+            <h2 className="text-xl font-semibold text-black">Konfirmasi Batal</h2>
+            <p className="mt-2">Apakah Anda yakin ingin membatalkan pemesanan?</p>
+            <div className="flex justify-end gap-5 mt-5">
+              <Button
+                variant="outline"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1"
+                onClick={handleCloseModal}
+              >
+                Batal
+              </Button>
+              <Button
+                className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1"
+                onClick={handleConfirmCancel} 
+              >
+                Ya, Lanjutkan
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
     </div>
   );
 };
