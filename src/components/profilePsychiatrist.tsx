@@ -263,7 +263,7 @@ const PsychiatristProfile = () => {
       console.error("Error updating profile picture in Firestore:", error);
     }
   };
-  
+
   const triggerFileInput = () => {
     fileInputRef.current?.click(); // Trigger file input click
   };
@@ -364,18 +364,25 @@ const PsychiatristProfile = () => {
         <div className=" bg-[#F2EDE2] flex h-screen">
           <div className="relative z-1 flex flex-col lg:flex-row w-full ">
             {/*Left*/}
-             
+
             <div className="w-full lg:w-1/4 flex flex-col xl:mr-1 lg:pt-10 lg:mr-10  ">
-             <h2 className="text-[#161F36]  mb-1 lg:text-[22px] font-regular text-left sm:ml-12 md:ml-10 lg:ml-20">Jam Kerja</h2>
-              
+              <h2 className="text-[#161F36]  mb-1 lg:text-[22px] font-regular text-left sm:ml-12 md:ml-10 lg:ml-20">
+                Jam Kerja
+              </h2>
+
               <div className="bg-transparent lg:w-[70%] md:w-[40%] sm:w-[40%] text-[#161F36] border-2 border-[#161F36] sm:ml-12 md:ml-10 md:mr-10 lg:ml-20 rounded-[6px] p-4">
-                  <div className="flex flex-col gap-2">
-          {Object.keys(workSchedule).map((day) => (
-            <div key={day} className="flex justify-between items-center ">
-              <span className="text-left text-xl flex-1">{day}, {workSchedule[day]}</span>
-            </div>
-          ))}
-        </div>
+                <div className="flex flex-col gap-2">
+                  {Object.keys(workSchedule).map((day) => (
+                    <div
+                      key={day}
+                      className="flex justify-between items-center "
+                    >
+                      <span className="text-left text-xl flex-1">
+                        {day}, {workSchedule[day]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Tombol Keluar di bawah kiri */}
@@ -642,55 +649,30 @@ const PsychiatristProfile = () => {
                   )}
           </div>
         </div>
-        <div className="flex justify-center items-center w-full gap-6 lg:gap-10 mb-20 mt-20 lg:-ml-20 col-span-2">
-          <button
-            onClick={() => {
-              if (isEditing) {
-                handleCancelEdit();
-              } else {
-                setIsEditing(true);
-              }
-            }}
-            className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer"
-          >
-            {isEditing ? "Batal" : "Ubah"}
-          </button>
-          {isEditing && (
-            <div className="flex justify-center">
-              <button
-                onClick={handleSave}
-                className={`bg-[#BACBD8] text-lg text-[#161F36] py-4 px-13 rounded-md hover:bg-[#87b4fb] transition font-medium ${
-                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={!isFormValid}
-              >
-                Simpan
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
-  {isMobile && isSettingsClicked && (
-  <div className=" bg-[#F2EDE2] flex h-screen w-full  ">
-    <div className="relative z-1 flex flex-col w-full ">
-      <div className="flex flex-col justify-center items-center">      
+      {isMobile && isSettingsClicked && (
+        <div className=" bg-[#F2EDE2] flex h-screen w-full  ">
+          <div className="relative z-1 flex flex-col w-full ">
+            <div className="flex flex-col justify-center items-center">
               <div className="bg-transparent  w-[80%]  mt-10  text-[#161F36] border-2 border-[#161F36] rounded-[6px] p-4">
-                  <div className="flex flex-col gap-2">
-          {Object.keys(workSchedule).map((day) => (
-            <div key={day} className="flex justify-between items-center ">
-              <span className="text-left text-xl flex-1">{day}, {workSchedule[day]}</span>
-            </div>
-          ))}
-        </div>
+                <div className="flex flex-col gap-2">
+                  {Object.keys(workSchedule).map((day) => (
+                    <div
+                      key={day}
+                      className="flex justify-between items-center "
+                    >
+                      <span className="text-left text-xl flex-1">
+                        {day}, {workSchedule[day]}
+                      </span>
+                    </div>
+                  ))}
+                </div>
               </div>
-      </div>
-    </div>
-  </div>
-)}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

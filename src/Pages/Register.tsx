@@ -214,9 +214,9 @@ const SignUp = () => {
                   className="w-4 h-4 text-[#8DAABF] border-gray-300 rounded focus:ring-[#8DAABF]"
                 />
                 <label htmlFor="terms" className="text-sm text-gray-600">
-                  I accept the{" "}
+                  Saya menyetujui{" "}
                   <a href="/terms" className="text-[#8DAABF] hover:underline">
-                    Terms of Service
+                    Syarat dan Ketentuan
                   </a>
                 </label>
               </div>

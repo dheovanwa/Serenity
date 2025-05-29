@@ -1,53 +1,33 @@
-import React, { useEffect } from "react";
-import { Home, Calendar, MessageSquare, User } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import sunIcon from "../assets/Sun.svg";
+import moonIcon from "../assets/Do not Disturb iOS.svg";
+import {
+  Home,
+  Calendar,
+  MessageSquare,
+  User,
+  MessagesSquare,
+} from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LogoLight from "../assets/Logo - Light.png";
-import LogoDark from "../assets/Logo - Dark.png";
-import Moon from "../assets/Do not Disturb iOS.svg";
-import Sun from "../assets/Sun.svg";
 
-// Props that NavBarPsy expects from its parent (ChatPage)
-interface NavBarPsyProps {
-  isDarkMode: boolean;
-  toggleTheme: () => void;
-}
+const NavBarPsy: React.FC = () => {
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
-const NavBarPsy: React.FC<NavBarPsyProps> = ({ isDarkMode, toggleTheme }) => {
-  const location = useLocation();
-  const navigate = useNavigate();
+  useEffect(() => {
+    const storedTheme = localStorage.getItem("theme");
+    const prefersDark =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
 
-  // NavBarPsy's own theme colors, driven by the isDarkMode prop from ChatPage
-  const navSpecificThemeColors = {
-    bgNav: isDarkMode ? "bg-[#161F36]" : "bg-[#BACBD8]", // Navbar background itself
-    textNav: isDarkMode ? "text-[#E6E6E6]" : "text-gray-700", // Nav items text
-    textNavActive: isDarkMode ? "text-[#161F36]" : "text-[#E6E6E6]", // Active nav item text
-    bgNavButtonActive: isDarkMode ? "bg-[#BACBD8]" : "bg-[#161F36]", // Active nav item background
-    logoColor: isDarkMode ? LogoDark : LogoLight,
-    toggleBg: isDarkMode ? "bg-[#4A4A4A]" : "bg-[#E6E6E6]",
-  };
-
-  const NavItem: React.FC<{
-    label: string;
-    path: string;
-    icon?: React.ElementType;
-  }> = ({ label, path, icon: Icon }) => {
-    const isActive = location.pathname === path;
-
-    return (
-      <button
-        onClick={() => navigate(path)}
-        className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors
-          ${
-            isActive
-              ? `${navSpecificThemeColors.bgNavButtonActive} ${navSpecificThemeColors.textNavActive}`
-              : `${navSpecificThemeColors.textNav} hover:${navSpecificThemeColors.bgNavButtonActive}`
-          }`}
-      >
-        {Icon && <Icon size={18} className="mr-2" />}
-        {label}
-      </button>
-    );
-  };
+    if (storedTheme === "dark" || (!storedTheme && prefersDark)) {
+      setIsDarkMode(true);
+      document.documentElement.classList.add("dark");
+    } else {
+      setIsDarkMode(false);
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
 
   useEffect(() => {
     if (isDarkMode) {
@@ -59,55 +39,77 @@ const NavBarPsy: React.FC<NavBarPsyProps> = ({ isDarkMode, toggleTheme }) => {
     }
   }, [isDarkMode]);
 
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const logoLight = LogoLight;
 
   return (
-    <header
-      className={`${navSpecificThemeColors.bgNav} py-2 px-6 mt-6 mx-2 sm:mx-8 rounded-lg shadow-md transition-colors duration-300 mb-5`}
-    >
+    <header className="bg-[#BACBD8] dark:bg-[#161F36] py-4 px-6 mt-6 mx-2 sm:mx-8 rounded-lg shadow-md transition-colors duration-300">
       <div className="w-full flex justify-between items-center">
         <div className="flex items-center">
-          <img
-            src={navSpecificThemeColors.logoColor}
-            alt="Logo"
-            className="h-8 sm:h-10"
-          />
+          <img src={logoLight} alt="Logo" className="h-8 sm:h-10" />{" "}
         </div>
-
-        <nav className="hidden md:flex space-x-4 lg:space-x-6">
-          <NavItem label="Halaman Utama" path="/dashboard" icon={Home} />
-          <NavItem
-            label="Janji Temu"
-            path="/psy-manage-appointment"
-            icon={Calendar}
-          />
-          <NavItem label="Chat" path="/chat" icon={MessageSquare} />
-          <NavItem label="Profil" path="/psychiatrist-profile" icon={User} />
-        </nav>
-
-        <div className="flex items-center">
-          <button
-            onClick={toggleTheme}
-            className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors focus:outline-none shadow-inner ${navSpecificThemeColors.toggleBg}`}
+        <nav className="hidden md:flex space-x-4 lg:space-x-6 text-[#161F36] dark:text-gray-200 gap-15">
+          <a
+            href="/"
+            className="font-medium hover:text-opacity-80 dark:hover:text-opacity-88"
           >
-            <span
-              className={`absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white dark:bg-gray-700 rounded-full shadow-md transform transition-transform duration-300 ${
-                isDarkMode ? "translate-x-6" : "translate-x-1"
+            Halaman Utama
+          </a>
+          <a
+            href="/psy-manage-appointment"
+            className="font-medium hover:text-opacity-80 dark:hover:text-opacity-80"
+          >
+            Janji Temu
+          </a>
+          <a
+            href="/chat"
+            className="font-medium relative hover:text-opacity-80 dark:hover:text-opacity-80"
+          >
+            Chat
+            <span className="absolute -top-0.5 -right-2.5 bg-red-500 text-white text-xs rounded-full w-2 h-2 flex items-center justify-center p-1"></span>
+          </a>
+          <a
+            href="/doctor-profile"
+            className="font-medium hover:text-opacity-80 dark:hover:text-opacity-80"
+          >
+            Profil
+          </a>
+        </nav>
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="relative hidden sm:block"> </div>
+
+          <div className="flex items-center">
+            <button
+              onClick={toggleTheme}
+              className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${
+                isDarkMode ? "bg-[#4A4A4A]" : "bg-[#E6E6E6]"
               }`}
+              aria-label="Toggle theme"
             >
-              <img
-                src={isDarkMode ? Moon : Sun}
-                alt={isDarkMode ? "Moon" : "Sun"}
-                className="w-4 h-4 m-auto absolute inset-0"
-              />
-            </span>
-          </button>
+              <span
+                className={`absolute left-1 top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white dark:bg-[#161F36] rounded-full shadow-md transform transition-transform duration-300 ${
+                  isDarkMode ? "translate-x-5" : "translate-x-0"
+                }`}
+              >
+                {isDarkMode ? (
+                  <img
+                    src={moonIcon}
+                    alt="Moon Icon"
+                    className="w-4 h-4 m-auto absolute inset-0"
+                  />
+                ) : (
+                  <img
+                    src={sunIcon}
+                    alt="Sun Icon"
+                    className="w-4 h-4 m-auto absolute inset-0"
+                  />
+                )}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
     </header>

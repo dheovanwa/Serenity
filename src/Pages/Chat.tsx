@@ -62,7 +62,7 @@ const ChatPage: React.FC = () => {
   const [summary, setSummary] = useState<string | null>(null);
   const [showSummary, setShowSummary] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [isConfirmingEnd, setIsConfirmingEnd] = useState(false); 
+  const [isConfirmingEnd, setIsConfirmingEnd] = useState(false);
 
   const handleEndConversationClick = () => {
     setIsConfirmingEnd(true); // Tampilkan pop-up konfirmasi
@@ -85,7 +85,7 @@ const ChatPage: React.FC = () => {
     setIsEnding(false);
     setIsConfirmingEnd(false); // Menutup pop-up konfirmasi setelah selesai
   };
-   const cancelEndConversation = () => {
+  const cancelEndConversation = () => {
     setIsConfirmingEnd(false); // Menutup pop-up tanpa melakukan apapun
   };
   // Scroll to bottom on new message
@@ -274,9 +274,7 @@ const ChatPage: React.FC = () => {
     console.log("Listening to messages for appointment:", activeAppointment.id);
     const chatId = activeAppointment.id;
     const chatRef = collection(db, "chats", chatId, "messages");
-    const q = query(chatRef, orderBy("timestamp", "asc"));
-
-    // Remove gejalaSent and gejala auto-send logic
+    const q = query(chatRef, orderBy("timeCreated", "asc"));
 
     const unsub = onSnapshot(q, async (snap) => {
       const msgs: Message[] = [];
@@ -403,7 +401,7 @@ const ChatPage: React.FC = () => {
       text: newMessage,
       senderId: userId,
       senderName: userName,
-      timestamp: serverTimestamp(),
+      timeCreated: serverTimestamp(),
       time: new Date().toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
@@ -581,12 +579,14 @@ const ChatPage: React.FC = () => {
               )}
           </div>
         </header>
-                
+
         {isConfirmingEnd && (
           <div className="fixed inset-0 bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-80">
               <h3 className="text-xl font-semibold mb-4">Konfirmasi</h3>
-              <p className="mb-6">Apakah Anda yakin ingin menyelesaikan percakapan?</p>
+              <p className="mb-6">
+                Apakah Anda yakin ingin menyelesaikan percakapan?
+              </p>
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={cancelEndConversation}
@@ -605,7 +605,6 @@ const ChatPage: React.FC = () => {
           </div>
         )}
 
-      
         {loading ? (
           <div className="flex items-center justify-center flex-1">
             <span>Loading chat...</span>
