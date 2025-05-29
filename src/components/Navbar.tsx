@@ -1,10 +1,12 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Home,
   Search,
   MessageSquare,
   User,
   Calendar,
+  Menu,
+  X,
   MessagesSquare,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -13,24 +15,21 @@ import LogoDark from "../assets/Logo - Dark.png";
 import Moon from "../assets/Do not Disturb iOS.svg";
 import Sun from "../assets/Sun.svg";
 
-// Props that NavBar expects from its parent (ChatPage)
 interface NavBarProps {
   isDarkMode: boolean;
   toggleTheme: () => void;
-  // themeColors: any; // From ChatPage, if NavBar needs ChatPage's specific theme color strings.
-  // However, NavBar defines its own themeColors based on the isDarkMode prop.
 }
 
 const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // NavBar's own theme colors, driven by the isDarkMode prop from ChatPage
   const navSpecificThemeColors = {
-    bgNav: isDarkMode ? "bg-[#161F36]" : "bg-[#BACBD8]", // Navbar background itself
-    textNav: isDarkMode ? "text-[#E6E6E6]" : "text-gray-700", // Nav items text
-    textNavActive: isDarkMode ? "text-[#161F36]" : "text-[#E6E6E6]", // Active nav item text
-    bgNavButtonActive: isDarkMode ? "bg-[#BACBD8]" : "bg-[#161F36]", // Active nav item background
+    bgNav: isDarkMode ? "bg-[#161F36]" : "bg-[#BACBD8]",
+    textNav: isDarkMode ? "text-[#E6E6E6]" : "text-gray-700",
+    textNavActive: isDarkMode ? "text-[#161F36]" : "text-[#E6E6E6]",
+    bgNavButtonActive: isDarkMode ? "bg-[#BACBD8]" : "bg-[#161F36]",
     logoPlaceholderColor: isDarkMode ? "text-black" : "text-black",
     toggleBg: isDarkMode ? "bg-[#4A4A4A]" : "bg-[#E6E6E6]",
     toggleIconColor: isDarkMode ? Moon : Sun,
@@ -41,18 +40,27 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
     label: string;
     path: string;
     icon?: React.ElementType;
-  }> = ({ label, path, icon: Icon }) => {
+    onClick?: () => void;
+  }> = ({ label, path, icon: Icon, onClick }) => {
     const isActive = location.pathname === path;
+
+    const handleClick = () => {
+      navigate(path);
+      if (onClick) {
+        onClick();
+      }
+    };
 
     return (
       <button
-        onClick={() => navigate(path)}
+        onClick={handleClick}
         className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors
           ${
             isActive
               ? `${navSpecificThemeColors.bgNavButtonActive} ${navSpecificThemeColors.textNavActive}`
-              : `${navSpecificThemeColors.textNav} hover:${navSpecificThemeColors.bgNavButtonActive} hover:${navSpecificThemeColors.textNavActive}`
+              : `${navSpecificThemeColors.textNav} `
           }
+          whitespace-nowrap w-full md:w-auto
         `}
       >
         {Icon && <Icon size={18} className="mr-2" />}
@@ -71,29 +79,29 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
     }
   }, [isDarkMode]);
 
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
+  const headerRoundedClasses = `
+    rounded-lg
+    md:rounded-lg
+    ${isMobileMenuOpen ? "rounded-b-none" : "rounded-b-lg"}
+    md:rounded-b-lg
+  `;
 
   return (
     <header
-      className={`${navSpecificThemeColors.bgNav} py-2 px-6 mt-6 mx-2 sm:mx-8 rounded-lg shadow-md transition-colors duration-300 mb-5`}
+      className={`${navSpecificThemeColors.bgNav} py-2 px-2 sm:px-4 mt-6 mx-2 sm:mx-8 shadow-md transition-colors duration-300 mb-5 relative
+        ${headerRoundedClasses}
+      `}
     >
-      <div className="w-full flex justify-between items-center">
-        <div className="flex items-center">
-          <div className="flex items-center">
-            <img
-              src={navSpecificThemeColors.logoColor}
-              alt="Logo"
-              className="h-8 sm:h-10"
-            />{" "}
-          </div>
+      <div className="w-full flex items-center justify-between">
+        <div className="flex-shrink-0">
+          <img
+            src={navSpecificThemeColors.logoColor}
+            alt="Logo"
+            className="h-8 sm:h-10"
+          />
         </div>
-        <nav className="hidden md:flex space-x-4 lg:space-x-6 gap-15">
+
+        <nav className="hidden md:flex flex-grow justify-center gap-5">
           <NavItem label="Halaman Utama" path="/" icon={Home} />
           <NavItem label="Cari Ahli" path="/Search-psi" icon={Search} />
           <NavItem
@@ -105,10 +113,11 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
           <NavItem label="Forum" path="/forum" icon={MessagesSquare} />
           <NavItem label="Profil" path="/profile" icon={User} />
         </nav>
-        <div className="flex items-center space-x-3 sm:space-x-4">
+
+        <div className="flex items-center gap-x-3 sm:gap-x-4 flex-shrink-0">
           <div className="flex items-center">
             <button
-              onClick={toggleTheme} // Uses toggleTheme from ChatPage props
+              onClick={toggleTheme}
               className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${navSpecificThemeColors.toggleBg}`}
               aria-label="Toggle theme"
             >
@@ -116,7 +125,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
                 className={`absolute top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white dark:bg-gray-700 rounded-full shadow-md transform transition-transform duration-300 ${
                   isDarkMode
                     ? "translate-x-6 left-0.5"
-                    : "translate-x-0.5 left-0.5" // Adjusted translate for better positioning
+                    : "translate-x-0.5 left-0.5"
                 }`}
               >
                 {isDarkMode ? (
@@ -135,8 +144,57 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
               </span>
             </button>
           </div>
+
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`${navSpecificThemeColors.textNav} focus:outline-none h-7 w-7 flex items-center justify-center`}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
+
+      {isMobileMenuOpen && (
+        <div
+          className={`md:hidden absolute top-full left-0 w-full ${navSpecificThemeColors.bgNav} border-t border-gray-600 shadow-lg py-4 px-4 z-50 rounded-b-lg`}
+        >
+          <nav className="flex flex-col space-y-2 items-center">
+            <NavItem
+              label="Halaman Utama"
+              path="/"
+              icon={Home}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <NavItem
+              label="Cari"
+              path="/Search-psi"
+              icon={Search}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <NavItem
+              label="Janji Temu"
+              path="/manage-appointment"
+              icon={Calendar}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <NavItem
+              label="Chat"
+              path="/chat"
+              icon={MessageSquare}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <NavItem
+              label="Profil"
+              path="/profile"
+              icon={User}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          </nav>
+        </div>
+      )}
     </header>
   );
 };
