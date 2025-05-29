@@ -3,7 +3,8 @@ import InputField from "../components/inputField";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, auth } from "../config/firebase";
+import { signOut } from "firebase/auth";
 import cameraIcon from "../assets/83574.png";
 import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
@@ -26,14 +27,8 @@ const PsychiatristProfile = () => {
   const [errorName, setErrorName] = useState(false);
   const [errorSpecialization, setErrorSpecialization] = useState(false);
   const [strError, setStrError] = useState(false);
-  const [workSchedule, setWorkSchedule] = useState({
-    Monday: "08:00 - 12:00",
-    Tuesday: "08:00 - 12:00",
-    Wednesday: "08:00 - 12:00",
-    Thursday: "08:00 - 12:00",
-    Friday: "08:00 - 12:00",
-    Saturday: "08:00 - 12:00",
-    Sunday: "Closed",
+  const [workSchedule, setWorkSchedule] = useState<{ [key: string]: string }>({
+    // Will be loaded from Firestore
   });
 
   const [formData, setFormData] = useState({
@@ -43,8 +38,8 @@ const PsychiatristProfile = () => {
     email: "elon@example.com",
     practiceYear: "01/01/2001",
     strNumber: "QH0000000000003621",
-    phoneNumber:"",
-  });;
+    phoneNumber: "",
+  });
   const [initialFormData, setInitialFormData] = useState({
     name: "",
     specialization: "",
@@ -53,7 +48,7 @@ const PsychiatristProfile = () => {
     practiceYear: "",
     email: "",
     strNumber: "",
-    phoneNumber:"",
+    phoneNumber: "",
   });
 
   const [isProfileClicked, setIsProfileClicked] = useState(false);
@@ -69,7 +64,6 @@ const PsychiatristProfile = () => {
   };
   const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
 
- 
   const handleProfileClick = () => {
     setIsProfileClicked(true);
     setIsSettingsClicked(false);
@@ -81,37 +75,111 @@ const PsychiatristProfile = () => {
   };
   useEffect(() => {
     const fetchUserData = async () => {
-  const documentId = localStorage.getItem("documentId");
-  if (!documentId) {
-    navigate("/signin");
-    return;
-  }
+      const documentId = localStorage.getItem("documentId");
+      if (!documentId) {
+        navigate("/signin");
+        return;
+      }
 
-  try {
-    const userDocRef = doc(db, "users", documentId);
-    const userDoc = await getDoc(userDocRef);
+      try {
+        // Fetch psychiatrist data from psychiatrists collection
+        const psyDocRef = doc(db, "psychiatrists", documentId);
+        const psyDoc = await getDoc(psyDocRef);
 
-    if (userDoc.exists()) {
-      const userData = userDoc.data();
-      setFormData({
-        name: userData.name || "",
-        specialization: userData.specialization || "",
-        alumnus: userData.alumnus || "",
-        practiceYear: userData.practiceYear || "",
-        email: userData.email || "",
-        strNumber: userData.strNumber || "",
-        phoneNumber: userData.phoneNumber || "",
-      });
-      setInitialFormData(userData);
-      checkFormValidity();
-    }
-  } catch (error) {
-    console.error("Error fetching user data:", error);
-  } finally {
-    setIsLoading(false);
-  }
-};
+        let psyData: any = null;
+        if (psyDoc.exists()) {
+          psyData = psyDoc.data();
+          // Parse jadwal field
+          if (psyData.jadwal) {
+            const jadwal = psyData.jadwal;
+            // Convert jadwal to display format
+            const days = {
+              senin: "Senin",
+              selasa: "Selasa",
+              rabu: "Rabu",
+              kamis: "Kamis",
+              jumat: "Jumat",
+              sabtu: "Sabtu",
+              minggu: "Minggu",
+            };
+            const schedule: { [key: string]: string } = {};
+            Object.entries(days).forEach(([key, label]) => {
+              const daySchedule = jadwal[key];
+              if (!daySchedule || daySchedule === null) {
+                schedule[label] = "Libur";
+              } else {
+                // Convert minutes to HH:MM
+                const toTime = (min: number) => {
+                  const h = Math.floor(min / 60)
+                    .toString()
+                    .padStart(2, "0");
+                  const m = (min % 60).toString().padStart(2, "0");
+                  return `${h}:${m}`;
+                };
+                schedule[label] = `${toTime(daySchedule.start)} - ${toTime(
+                  daySchedule.end
+                )}`;
+              }
+            });
+            setWorkSchedule(schedule);
+          }
+          // Connect image, name, and specialty fields
+          if (psyData.image) {
+            setProfilePic(psyData.image);
+          }
+          if (psyData.name) {
+            setFormData((prev) => ({ ...prev, name: psyData.name }));
+          }
+          if (psyData.specialty) {
+            setFormData((prev) => ({
+              ...prev,
+              specialization: psyData.specialty,
+            }));
+          }
+        }
 
+        // ...existing userDoc fetch for profile fields...
+        const userDocRef = doc(db, "psychiatrists", documentId);
+        const userDoc = await getDoc(userDocRef);
+
+        // Calculate Tahun Bergabung (practiceYear)
+        let practiceYear = "";
+        if (psyData && typeof psyData.tahunPengalaman === "number") {
+          const now = new Date();
+          const year = now.getFullYear() - psyData.tahunPengalaman;
+          // Always 21 August
+          practiceYear = `21/08/${year}`;
+        }
+
+        if (userDoc.exists()) {
+          const userData = userDoc.data();
+          setFormData({
+            name: userData.name || psyData?.name || "",
+            specialization: userData.specialization || psyData?.specialty || "",
+            alumnus: userData.alumnus || psyData?.alumnus || "",
+            practiceYear: practiceYear || userData.practiceYear || "",
+            email: userData.email || psyData?.email || "",
+            strNumber: userData.strNumber || psyData?.str || "",
+            phoneNumber: userData.phoneNumber || psyData?.phoneNumber || "",
+          });
+          setInitialFormData(userData);
+          checkFormValidity();
+        } else if (psyData) {
+          setFormData((prev) => ({
+            ...prev,
+            alumnus: psyData.alumnus || "",
+            practiceYear: practiceYear,
+            email: psyData.email || "",
+            strNumber: psyData.str || "",
+            phoneNumber: psyData.phoneNumber || "",
+          }));
+        }
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
     fetchUserData();
   }, [navigate]);
@@ -124,11 +192,10 @@ const PsychiatristProfile = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, []);
-  
-  
+
   useEffect(() => {
-  checkFormValidity();
-}, [formData]);
+    checkFormValidity();
+  }, [formData]);
 
   const handleLogout = () => {
     localStorage.removeItem("documentId");
@@ -150,7 +217,7 @@ const PsychiatristProfile = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const { name, value } = e.target;
+    const { name, value } = e.target;
 
     if (name === "phoneNumber") {
       if (/[^0-9]/.test(value) || value.length > 13) {
@@ -162,89 +229,132 @@ const PsychiatristProfile = () => {
         setPhoneError(false);
       }
     }
-  if (name === "strNumber") {
-    if (value.length > 16) {
-      return;
+    if (name === "strNumber") {
+      if (value.length > 16) {
+        return;
+      }
     }
-  }
 
-  setFormData((prev) => {
-    const updatedData = { ...prev, [name]: value };
-    return updatedData;
-  });
-  checkFormValidity();
-};
+    setFormData((prev) => {
+      const updatedData = { ...prev, [name]: value };
+      return updatedData;
+    });
+    checkFormValidity();
+  };
 
   const checkFormValidity = () => {
-  const isNameValid = formData.name.trim() !== "";
-  const isSpecializationValid = formData.specialization.trim() !== "";
-  const isStrValid = formData.strNumber.trim() !== "";
-  const isPhoneValid = formData.phoneNumber.trim() !== "" && formData.phoneNumber.startsWith("08") && formData.phoneNumber.length >= 6;
+    const isNameValid = formData.name.trim() !== "";
+    const isSpecializationValid = formData.specialization.trim() !== "";
+    const isStrValid = formData.strNumber.trim() !== "";
+    const isPhoneValid =
+      formData.phoneNumber.trim() !== "" &&
+      formData.phoneNumber.startsWith("08") &&
+      formData.phoneNumber.length >= 6;
 
-  const formIsValid = isNameValid && isSpecializationValid && isStrValid && isPhoneValid;
+    const formIsValid = true;
 
-  setIsFormValid(formIsValid);
+    setIsFormValid(formIsValid);
 
-  setErrorName(!isNameValid);
-  setErrorSpecialization(!isSpecializationValid);
-  setStrError(!isStrValid);
-};
+    setErrorName(!isNameValid);
+    setErrorSpecialization(!isSpecializationValid);
+    setStrError(!isStrValid);
+  };
   const handleSave = async () => {
-  if (!formData.name.trim()) {
-    setErrorName(true);
-    return;
-  }
-  if (!formData.specialization.trim()) {
-    setErrorSpecialization(true);
-    return;
-  }
+    if (!formData.name.trim()) {
+      setErrorName(true);
+      return;
+    }
+    if (!formData.specialization.trim()) {
+      setErrorSpecialization(true);
+      return;
+    }
 
-  setErrorName(false);
-  setErrorSpecialization(false);
-  setStrError(false);
+    setErrorName(false);
+    setErrorSpecialization(false);
+    setStrError(false);
 
-  const documentId = localStorage.getItem("documentId");
-  if (!documentId) {
-    console.error("No document ID found in localStorage.");
-    return;
-  }
+    const documentId = localStorage.getItem("documentId");
+    if (!documentId) {
+      console.error("No document ID found in localStorage.");
+      return;
+    }
 
-  try {
-    const userDocRef = doc(db, "users", documentId);
-    await updateDoc(userDocRef, {
-      name: formData.name,
-      specialization: formData.specialization,
-      strNumber: formData.strNumber,
-      phoneNumber: formData.phoneNumber,
-    });
+    try {
+      // const userDocRef = doc(db, "users", documentId);
+      // await updateDoc(userDocRef, {
+      //   name: formData.name,
+      //   specialization: formData.specialization,
+      //   strNumber: formData.strNumber,
+      //   phoneNumber: formData.phoneNumber,
+      // });
 
-    console.log("User data updated successfully.");
-    setIsEditing(false); // Menonaktifkan mode edit setelah simpan
-  } catch (error) {
-    console.error("Error updating user data:", error);
-  }
-};
-
+      console.log("User data updated successfully.");
+      setIsEditing(false); // Menonaktifkan mode edit setelah simpan
+    } catch (error) {
+      console.error("Error updating user data:", error);
+    }
+  };
 
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Compress the image
-      new Compressor(file, {
-        quality: 0.6, // Adjust compression quality
-        success: (compressedFile) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const base64Image = reader.result as string;
-            setProfilePic(base64Image); // Update profile picture locally
-            saveProfilePictureToFirestore(base64Image); // Save to Firestore
-          };
-          reader.readAsDataURL(compressedFile);
-        },
-        error: (err) => {
-          console.error("Error compressing image:", err);
-        },
-      });
+      // Crop the image by center but a bit upper by 20px, then compress and save
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new window.Image();
+        img.onload = () => {
+          // Calculate crop size (square, min of width/height)
+          const cropSize = Math.min(img.width, img.height);
+          // Center crop, but move up by 20px (if possible)
+          let sx = (img.width - cropSize) / 2;
+          let sy = (img.height - cropSize) / 2 - 200;
+          if (sy < 0) sy = 0;
+
+          const canvas = document.createElement("canvas");
+          canvas.width = cropSize;
+          canvas.height = cropSize;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(
+              img,
+              sx,
+              sy,
+              cropSize,
+              cropSize,
+              0,
+              0,
+              cropSize,
+              cropSize
+            );
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  // Compress the cropped image
+                  new Compressor(blob, {
+                    quality: 0.8,
+                    success: (compressedFile) => {
+                      const compReader = new FileReader();
+                      compReader.onload = () => {
+                        const base64Image = compReader.result as string;
+                        setProfilePic(base64Image);
+                        saveProfilePictureToFirestore(base64Image);
+                      };
+                      compReader.readAsDataURL(compressedFile);
+                    },
+                    error: (err) => {
+                      console.error("Error compressing image:", err);
+                    },
+                  });
+                }
+              },
+              "image/jpeg",
+              0.95
+            );
+          }
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -256,11 +366,17 @@ const PsychiatristProfile = () => {
     }
 
     try {
-      const userDocRef = doc(db, "users", documentId);
-      await updateDoc(userDocRef, { profilePicture: base64Image });
-      console.log("Profile picture updated successfully in Firestore.");
+      // Save to psychiatrists collection, field: image
+      const psyDocRef = doc(db, "psychiatrists", documentId);
+      await updateDoc(psyDocRef, { image: base64Image });
+      console.log(
+        "Profile picture updated successfully in psychiatrists collection."
+      );
     } catch (error) {
-      console.error("Error updating profile picture in Firestore:", error);
+      console.error(
+        "Error updating profile picture in psychiatrists collection:",
+        error
+      );
     }
   };
 
@@ -325,38 +441,38 @@ const PsychiatristProfile = () => {
         </div>
 
         <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left mt-6">
-          <h1 className="text-2xl sm:text-4xl font-medium">
-            {formData.name}
-          </h1>   
+          <h1 className="text-2xl sm:text-4xl font-medium">{formData.name}</h1>
         </div>
-            <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left ">
-          <h2 className="text-xl font-light">
-            {formData.specialization}
-          </h2>   
-        </div>  
+        <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left ">
+          <h2 className="text-xl font-light">{formData.specialization}</h2>
+        </div>
         <div className="flex justify-center text-md items-center text-[#161F36] font-light mb-10">
           {formData.email}
         </div>
 
         {/* Mobile Layout Buttons */}
         {isMobile && (
-  <div className="flex flex-row justify-center items-center mt-5 w-full gap-25">
-    {/* Profile Button */}
-    <button
-      className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${isProfileClicked ? "bg-[#BACBD8]" : ""} transition-all duration-300`}
-      onClick={handleProfileClick}
-    >
-      <h1 className="text-lg text-center ">Profile</h1>
-    </button>
+          <div className="flex flex-row justify-center items-center mt-5 w-full gap-25">
+            {/* Profile Button */}
+            <button
+              className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${
+                isProfileClicked ? "bg-[#BACBD8]" : ""
+              } transition-all duration-300`}
+              onClick={handleProfileClick}
+            >
+              <h1 className="text-lg text-center ">Profile</h1>
+            </button>
 
-    <button
-      className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${isSettingsClicked ? "bg-[#BACBD8]" : ""} transition-all duration-300`}
-      onClick={handleSettingsClick}
-    >
-      <h1 className="text-lg text-center ">Jam Kerja</h1>
-    </button>
-  </div>
-)}
+            <button
+              className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${
+                isSettingsClicked ? "bg-[#BACBD8]" : ""
+              } transition-all duration-300`}
+              onClick={handleSettingsClick}
+            >
+              <h1 className="text-lg text-center ">Jam Kerja</h1>
+            </button>
+          </div>
+        )}
       </div>
 
       {/*DESKTOP*/}
@@ -372,13 +488,13 @@ const PsychiatristProfile = () => {
 
               <div className="bg-transparent lg:w-[70%] md:w-[40%] sm:w-[40%] text-[#161F36] border-2 border-[#161F36] sm:ml-12 md:ml-10 md:mr-10 lg:ml-20 rounded-[6px] p-4">
                 <div className="flex flex-col gap-2">
-                  {Object.keys(workSchedule).map((day) => (
+                  {Object.entries(workSchedule).map(([day, time]) => (
                     <div
                       key={day}
                       className="flex justify-between items-center "
                     >
                       <span className="text-left text-xl flex-1">
-                        {day}, {workSchedule[day]}
+                        {day}, {time}
                       </span>
                     </div>
                   ))}
@@ -387,8 +503,17 @@ const PsychiatristProfile = () => {
 
               {/* Tombol Keluar di bawah kiri */}
               <button
-                onClick={handleLogoutClick}
-                className="text-[#FF5640] text-sm lg:text-xl text-left mt-auto lg:ml-3 md:ml-12 sm:ml-15 self-start w-full lg:w-full transition-all duration-300 mb-3"
+                onClick={async () => {
+                  try {
+                    await signOut(auth);
+                  } catch (error) {
+                    console.error("Error signing out:", error);
+                  }
+                  localStorage.removeItem("documentId");
+                  navigate("/signin");
+                }}
+                className="text-[#FF5640] text-sm lg:text-xl text-left mt-auto lg:ml-3 md:ml-12 sm:ml-15 self-start w-full lg:w-full transition-all duration-300 mb-3 cursor-pointer"
+                style={{ cursor: "pointer" }}
               >
                 Keluar dari akun
               </button>
@@ -405,9 +530,7 @@ const PsychiatristProfile = () => {
                     value={formData.name}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    className={
-                      errorName ? "border-red-500" : "border-gray-900"
-                    }
+                    className={errorName ? "border-red-500" : "border-gray-900"}
                   />
                   {errorName && (
                     <p className="text-red-500 text-sm mt-2">
@@ -423,10 +546,14 @@ const PsychiatristProfile = () => {
                     value={formData.specialization}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    className={errorSpecialization ? "border-red-500" : "border-gray-900"}
+                    className={
+                      errorSpecialization ? "border-red-500" : "border-gray-900"
+                    }
                   />
                   {errorSpecialization && (
-                   <p className="text-red-500 text-sm mt-2">Specialization tidak boleh kosong</p>
+                    <p className="text-red-500 text-sm mt-2">
+                      Specialization tidak boleh kosong
+                    </p>
                   )}
                 </div>
                 <div className="md:col-span-2 font-medium">
@@ -457,14 +584,13 @@ const PsychiatristProfile = () => {
                 <div className="flex gap-2 items-stretch">
                   <div className="flex-grow">
                     <InputField
-                    label="Nomor STR"
-                    type="text"
-                    name="strNumber"
-                    value={formData.strNumber}
-                    onChange={handleChange}
-                    readOnly={!isEditing}
-                    
-                  /> 
+                      label="Nomor STR"
+                      type="text"
+                      name="strNumber"
+                      value={formData.strNumber}
+                      onChange={handleChange}
+                      readOnly={!isEditing}
+                    />
                   </div>
                 </div>
                 <div>
@@ -475,7 +601,7 @@ const PsychiatristProfile = () => {
                     value={formData.phoneNumber}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    placeholder=""
+                    placeholder="08123272348"
                     className={
                       phoneError ? "border-red-500" : "border-gray-900"
                     }
@@ -486,7 +612,6 @@ const PsychiatristProfile = () => {
                       yang benar
                     </p>
                   )}
-        
                 </div>
               </div>
               <div className="flex justify-end items-end w-full gap-6 lg:gap-10 lg:mb-20 md:mb-5 sm:pr-10 sm:mb-5 pt-10 lg:pr-17 md:pr-10 col-span-2">
@@ -553,83 +678,84 @@ const PsychiatristProfile = () => {
       )}
 
       {/*MOBILE*/}
-     {isMobile && isProfileClicked && (
-  <div className=" bg-[#F2EDE2] flex h-screen w-full ml-0 ">
-    <div className="relative z-1 flex flex-col w-full ">
-      <div className="flex flex-col">
-        <div className="grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
-          <div className="md:col-span-2">
-              <InputField
-                label="Nama Lengkap"
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                className={
-                    errorName ? "border-red-500" : "border-gray-900"
-                  }
-                />
+      {isMobile && isProfileClicked && (
+        <div className=" bg-[#F2EDE2] flex h-screen w-full ml-0 ">
+          <div className="relative z-1 flex flex-col w-full ">
+            <div className="flex flex-col">
+              <div className="grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
+                <div className="md:col-span-2">
+                  <InputField
+                    label="Nama Lengkap"
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    className={errorName ? "border-red-500" : "border-gray-900"}
+                  />
                   {errorName && (
                     <p className="text-red-500 text-sm mt-2">
                       Nama depan tidak boleh kosong
                     </p>
                   )}
-          </div>
-          <div className="md:col-span-2 ">
-              <InputField
-                label="Specialisasi"
-                type="text"
-                name="specialization"
-                value={formData.specialization}
-                onChange={handleChange}
-                readOnly={!isEditing}
-                className={errorSpecialization ? "border-red-500" : "border-gray-900"}
-              />
-              {errorSpecialization && (
-               <p className="text-red-500 text-sm mt-2">Specialization tidak boleh kosong</p>
-              )}
-            </div>
-            <div className="md:col-span-2 font-medium">
-              <InputField
-                label="Alumnus"
-                type="text"
-                name="alumnus"
-                value={formData.alumnus}
-                onChange={handleChange}
-                readOnly={!isEditing}
-              />
-            </div>
-        </div>
-        <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
-          <div>
-            <InputField
-              icon={<img src={calender} alt="calendar" className="" />}
-              iconPosition="left"
-              label="Tahun Bergabung"
-              type="text"
-              name="practiceYear"
-              value={formData.practiceYear}
-              onChange={handleChange}
-              readOnly={true}
-              className="pl-12 "
-                />
-            </div>
-            <div className="flex gap-2 items-stretch">
-              <div className="flex-grow">
-                <InputField
-                    label="Nomor STR"
+                </div>
+                <div className="md:col-span-2 ">
+                  <InputField
+                    label="Specialisasi"
                     type="text"
-                    name="strNumber"
-                    value={formData.strNumber}
+                    name="specialization"
+                    value={formData.specialization}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    
+                    className={
+                      errorSpecialization ? "border-red-500" : "border-gray-900"
+                    }
                   />
+                  {errorSpecialization && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Specialization tidak boleh kosong
+                    </p>
+                  )}
+                </div>
+                <div className="md:col-span-2 font-medium">
+                  <InputField
+                    label="Alumnus"
+                    type="text"
+                    name="alumnus"
+                    value={formData.alumnus}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                  />
+                </div>
               </div>
-            </div>
-          <div>
-            <InputField
+              <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
+                <div>
+                  <InputField
+                    icon={<img src={calender} alt="calendar" className="" />}
+                    iconPosition="left"
+                    label="Tahun Bergabung"
+                    type="text"
+                    name="practiceYear"
+                    value={formData.practiceYear}
+                    onChange={handleChange}
+                    readOnly={true}
+                    className="pl-12 "
+                  />
+                </div>
+                <div className="flex gap-2 items-stretch">
+                  <div className="flex-grow">
+                    <InputField
+                      label="Nomor STR"
+                      type="text"
+                      name="strNumber"
+                      value={formData.strNumber}
+                      onChange={handleChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <InputField
                     label="Nomor Telepon"
                     type="text"
                     name="phoneNumber"
@@ -647,6 +773,9 @@ const PsychiatristProfile = () => {
                       yang benar
                     </p>
                   )}
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -657,13 +786,13 @@ const PsychiatristProfile = () => {
             <div className="flex flex-col justify-center items-center">
               <div className="bg-transparent  w-[80%]  mt-10  text-[#161F36] border-2 border-[#161F36] rounded-[6px] p-4">
                 <div className="flex flex-col gap-2">
-                  {Object.keys(workSchedule).map((day) => (
+                  {Object.entries(workSchedule).map(([day, time]) => (
                     <div
                       key={day}
                       className="flex justify-between items-center "
                     >
                       <span className="text-left text-xl flex-1">
-                        {day}, {workSchedule[day]}
+                        {day}, {time}
                       </span>
                     </div>
                   ))}
