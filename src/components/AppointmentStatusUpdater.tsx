@@ -4,100 +4,168 @@ import {
   query,
   where,
   getDocs,
-  doc,
   updateDoc,
+  doc,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
 const AppointmentStatusUpdater = () => {
   useEffect(() => {
-    const checkAndUpdateAppointments = async () => {
+    const checkAndUpdateAppointmentStatuses = async () => {
       try {
-        // Get current time in minutes since start of day
         const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-        const todayStr = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+        // Use local timezone date instead of UTC
+        const today =
+          now.getFullYear() +
+          "-" +
+          String(now.getMonth() + 1).padStart(2, "0") +
+          "-" +
+          String(now.getDate()).padStart(2, "0");
 
-        // Query active appointments for today
+        // Query all "Terjadwal" appointments
         const appointmentsRef = collection(db, "appointments");
-        const q = query(
-          appointmentsRef,
-          where("status", "in", ["Terjadwal", "Sedang berlangsung"])
-        );
+        const q = query(appointmentsRef, where("status", "==", "Terjadwal"));
 
         const querySnapshot = await getDocs(q);
-        querySnapshot.forEach(async (docSnap) => {
+
+        for (const docSnap of querySnapshot.docs) {
           const appointment = docSnap.data();
-          const appointmentDate = new Date(appointment.date)
-            .toISOString()
-            .split("T")[0];
+          const appointmentDate = new Date(appointment.date);
 
-          // Only process today's appointments
-          if (appointmentDate === todayStr) {
-            // For Video appointments, check time frame
-            if (appointment.method === "Video" && appointment.time) {
-              const [timeRange] = appointment.time.split(" - ");
-              const [endTime] = appointment.time.split(" - ")[1].split(".");
-              const [endHour, endMinute] = endTime.split(".").map(Number);
-              const [startHour, startMinute] = timeRange.split(".").map(Number);
+          // Check if appointment is today - use local timezone
+          const appointmentDateStr =
+            appointmentDate.getFullYear() +
+            "-" +
+            String(appointmentDate.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(appointmentDate.getDate()).padStart(2, "0");
 
-              const startTimeMinutes = startHour * 60 + (startMinute || 0);
-              const endTimeMinutes = endHour * 60 + (endMinute || 0);
+          if (appointmentDateStr === today) {
+            if (
+              appointment.method === "Video" &&
+              appointment.time !== "today"
+            ) {
+              // Parse time range for video appointments
+              const timeRange = appointment.time;
+              const [startTime, endTime] = timeRange.split(" - ");
 
-              // Update to "Sedang berlangsung" if within time frame
-              if (
-                currentMinutes >= startTimeMinutes &&
-                currentMinutes < endTimeMinutes
-              ) {
-                if (appointment.status !== "Sedang berlangsung") {
-                  console.log(
-                    `Updating appointment ${docSnap.id} to "Sedang berlangsung" due to current time`
-                  );
+              if (startTime && endTime) {
+                const [startHour, startMinute] = startTime
+                  .split(".")
+                  .map(Number);
+                const [endHour, endMinute] = endTime.split(".").map(Number);
+
+                const currentHour = now.getHours();
+                const currentMinute = now.getMinutes();
+
+                // Convert to minutes for easier comparison
+                const currentTotalMinutes = currentHour * 60 + currentMinute;
+                const startTotalMinutes = startHour * 60 + (startMinute || 0);
+                const endTotalMinutes = endHour * 60 + (endMinute || 0);
+
+                // Check if current time is within appointment range
+                if (
+                  currentTotalMinutes >= startTotalMinutes &&
+                  currentTotalMinutes <= endTotalMinutes
+                ) {
+                  // Update appointment status to "Sedang berlangsung"
                   await updateDoc(doc(db, "appointments", docSnap.id), {
                     status: "Sedang berlangsung",
                   });
+                  console.log(
+                    `Updated video appointment ${docSnap.id} to "Sedang berlangsung"`
+                  );
+                } else if (currentTotalMinutes > endTotalMinutes) {
+                  // Update to "Selesai" if current time is past the end time
+                  await updateDoc(doc(db, "appointments", docSnap.id), {
+                    status: "Selesai",
+                  });
+                  console.log(
+                    `Updated video appointment ${docSnap.id} to "Selesai"`
+                  );
                 }
               }
-              // Update to "Selesai" only if past end time
-              else if (
-                currentMinutes >= endTimeMinutes &&
-                appointment.status !== "Selesai"
-              ) {
-                console.log(
-                  `Updating appointment ${docSnap.id} to "Selesai" as time frame has ended`
-                );
-                await updateDoc(doc(db, "appointments", docSnap.id), {
-                  status: "Selesai",
-                });
-              }
-            }
-            // For Chat appointments, only update to "Sedang berlangsung"
-            else if (
+            } else if (
               appointment.method === "Chat" &&
-              appointment.status === "Terjadwal"
+              appointment.time === "today"
             ) {
-              console.log(
-                `Updating chat appointment ${docSnap.id} to "Sedang berlangsung"`
-              );
+              // For chat appointments scheduled for today, immediately set to "Sedang berlangsung"
               await updateDoc(doc(db, "appointments", docSnap.id), {
                 status: "Sedang berlangsung",
               });
+              console.log(
+                `Updated chat appointment ${docSnap.id} to "Sedang berlangsung"`
+              );
             }
           }
-        });
+        }
+
+        // Also check "Sedang berlangsung" video appointments to see if they should be "Selesai"
+        const ongoingQuery = query(
+          appointmentsRef,
+          where("status", "==", "Sedang berlangsung"),
+          where("method", "==", "Video")
+        );
+
+        const ongoingSnapshot = await getDocs(ongoingQuery);
+
+        for (const docSnap of ongoingSnapshot.docs) {
+          const appointment = docSnap.data();
+          const appointmentDate = new Date(appointment.date);
+          const appointmentDateStr =
+            appointmentDate.getFullYear() +
+            "-" +
+            String(appointmentDate.getMonth() + 1).padStart(2, "0") +
+            "-" +
+            String(appointmentDate.getDate()).padStart(2, "0");
+
+          if (appointmentDateStr === today && appointment.time !== "today") {
+            const timeRange = appointment.time;
+            const [, endTime] = timeRange.split(" - ");
+
+            if (endTime) {
+              const [endHour, endMinute] = endTime.split(".").map(Number);
+              const currentHour = now.getHours();
+              const currentMinute = now.getMinutes();
+
+              const currentTotalMinutes = currentHour * 60 + currentMinute;
+              const endTotalMinutes = endHour * 60 + (endMinute || 0);
+
+              // If current time is past the end time, mark as completed
+              if (currentTotalMinutes > endTotalMinutes) {
+                await updateDoc(doc(db, "appointments", docSnap.id), {
+                  status: "Selesai",
+                });
+                console.log(
+                  `Updated ongoing appointment ${docSnap.id} to "Selesai"`
+                );
+              }
+            }
+          }
+        }
       } catch (error) {
-        console.error("Error updating appointment statuses:", error);
+        console.error(
+          "Error checking and updating appointment statuses:",
+          error
+        );
       }
     };
 
-    // Run check immediately and then every minute
-    checkAndUpdateAppointments();
-    const interval = setInterval(checkAndUpdateAppointments, 60000);
+    // Run the check immediately
+    checkAndUpdateAppointmentStatuses();
 
-    return () => clearInterval(interval);
+    // Set up interval to check every minute
+    const statusCheckInterval = setInterval(
+      checkAndUpdateAppointmentStatuses,
+      60000
+    );
+
+    return () => {
+      clearInterval(statusCheckInterval);
+    };
   }, []);
 
-  return null;
+  return null; // This component doesn't render anything
 };
 
 export default AppointmentStatusUpdater;

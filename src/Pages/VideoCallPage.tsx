@@ -9,7 +9,7 @@ const VideoCallPage: React.FC = () => {
   const navigate = useNavigate();
   const [isValidSession, setIsValidSession] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isCaller, setIsCaller] = useState(false); // Add this state
+  const [isCaller, setIsCaller] = useState(false);
 
   useEffect(() => {
     const validateSession = async () => {
@@ -22,6 +22,23 @@ const VideoCallPage: React.FC = () => {
       if (!userId || !userType) {
         navigate("/");
         return;
+      }
+
+      // Check microphone permissions before starting call
+      try {
+        const permissions = await navigator.permissions.query({
+          name: "microphone" as PermissionName,
+        });
+        console.log("Microphone permission:", permissions.state);
+
+        if (permissions.state === "denied") {
+          console.warn("Microphone permission denied");
+          alert(
+            "Microphone access is required for video calls. Please enable it in your browser settings."
+          );
+        }
+      } catch (error) {
+        console.log("Permission query not supported, proceeding anyway");
       }
 
       try {
@@ -77,6 +94,14 @@ const VideoCallPage: React.FC = () => {
     validateSession();
   }, [callId, navigate]);
 
+  // Add cleanup effect for page-level navigation
+  useEffect(() => {
+    return () => {
+      console.log("VideoCallPage unmounting - ensuring cleanup");
+      // Additional cleanup can be added here if needed
+    };
+  }, []);
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -89,8 +114,11 @@ const VideoCallPage: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#F2EDE2]">
       <VideoCall
         callId={callId}
-        isCaller={isCaller} // Pass the determined isCaller state
-        onEnd={() => navigate("/")}
+        isCaller={isCaller}
+        onEnd={() => {
+          console.log("VideoCall ended, navigating away");
+          navigate("/");
+        }}
       />
     </div>
   );

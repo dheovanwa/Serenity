@@ -4,7 +4,7 @@ import Register from "./Pages/Register";
 import Login from "./Pages/Login";
 import Verif from "./components/verifyEmail";
 import ForgotPassword from "./Pages/forgotPassword";
-// import UserProfile from "./components/profileUser";
+import UserProfile from "./components/profileUser";
 import Homepage from "./Pages/Homepage";
 import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";

@@ -10,8 +10,11 @@ import {
   getDoc,
   addDoc,
   collection,
+  serverTimestamp,
+  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { shouldRemovePost } from "../utils/profanityFilter";
 
 interface ForumPost {
   id: string;
@@ -99,25 +102,44 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
 
     setIsSubmitting(true);
     try {
-      // Add report to reports collection
-      await addDoc(collection(db, "reports"), {
-        postId: post.id,
+      // Store the report in a subcollection of the forum post
+      const reportsRef = collection(db, "forum", post.id, "reports");
+      await addDoc(reportsRef, {
+        reportContent: reportReason,
         reportedBy: userId,
-        reason: reportReason,
-        postTitle: post.title,
-        postContent: post.content,
-        createdAt: new Date(),
-        status: "pending", // pending, reviewed, resolved
+        timestamp: serverTimestamp(),
       });
+
+      // Check if post contains profanity
+      if (shouldRemovePost(post)) {
+        try {
+          // Delete the post if it contains profanity
+          await deleteDoc(doc(db, "forum", post.id));
+
+          // Add to removed posts collection for audit
+          await addDoc(collection(db, "removedPosts"), {
+            originalId: post.id,
+            title: post.title,
+            content: post.content,
+            userId: post.userId,
+            removedAt: serverTimestamp(),
+            reason: "Automatic removal due to profanity",
+            reportReason: reportReason,
+          });
+
+          // Redirect to forum home if post is deleted
+          navigate("/forum");
+        } catch (error) {
+          console.error("Error deleting inappropriate post:", error);
+        }
+      }
 
       // Close modal and reset state
       setShowReportModal(false);
       setReportReason("");
-      alert("Laporan telah dikirim. Terima kasih atas kontribusi Anda.");
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error submitting report:", error);
-      alert("Gagal mengirim laporan. Silakan coba lagi.");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -285,7 +307,33 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
                 onClick={submitReport}
                 disabled={!reportReason.trim() || isSubmitting}
               >
-                {isSubmitting ? "Mengirim..." : "Kirim Laporan"}
+                {isSubmitting ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36]"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Mengirim...
+                  </span>
+                ) : (
+                  "Kirim Laporan"
+                )}
               </button>
             </div>
           </div>

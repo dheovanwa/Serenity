@@ -44,6 +44,7 @@ const Forum = () => {
   const [visiblePosts, setVisiblePosts] = useState<number>(5); // Initially show 5 posts
   const [userPosts, setUserPosts] = useState<ForumPost[]>([]);
   const [visibleUserPosts, setVisibleUserPosts] = useState<number>(5);
+  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const loadMoreUserPostsRef = useRef<HTMLDivElement | null>(null);
@@ -258,6 +259,56 @@ const Forum = () => {
     });
   };
 
+  // Modified filter and sort function to prioritize title matches
+  const filterAndSortPosts = (posts: ForumPost[]) => {
+    // First filter by search query if one exists
+    let filtered = posts;
+
+    if (searchQuery.trim() !== "") {
+      const normalizedQuery = searchQuery.toLowerCase().trim();
+
+      // First, find posts where title matches the query
+      const titleMatches = filtered.filter((post) =>
+        post.title.toLowerCase().includes(normalizedQuery)
+      );
+
+      // Then, find posts where only content matches (but title doesn't)
+      const contentOnlyMatches = filtered.filter(
+        (post) =>
+          !post.title.toLowerCase().includes(normalizedQuery) &&
+          post.content.toLowerCase().includes(normalizedQuery)
+      );
+
+      // Combine them with title matches first
+      filtered = [...titleMatches, ...contentOnlyMatches];
+    }
+
+    // Then sort by selected criteria
+    return filtered.sort((a, b) => {
+      const multiplier = sortOrder === "ascending" ? 1 : -1;
+      switch (selectedSort) {
+        case "Like":
+          return (a.likeCount - b.likeCount) * multiplier;
+        case "Waktu":
+          return (a.timeCreated.seconds - b.timeCreated.seconds) * multiplier;
+        default:
+          return b.timeCreated.seconds - a.timeCreated.seconds;
+      }
+    });
+  };
+
+  // Use filtered and sorted posts with user posts removed
+  const userId = localStorage.getItem("documentId");
+  const filteredPosts = filterAndSortPosts(posts)
+    .filter((post) => post.userId !== userId)
+    .slice(0, visiblePosts);
+
+  // Also update for user posts section
+  const filteredUserPosts = filterAndSortPosts(userPosts).slice(
+    0,
+    visibleUserPosts
+  );
+
   // Implement infinite scroll with Intersection Observer
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
@@ -309,12 +360,8 @@ const Forum = () => {
 
   // Get sorted posts but limit the number displayed
   // Filter out current user's posts from "Semua Diskusi" section
-  const userId = localStorage.getItem("documentId");
-  const displayedPosts = sortPosts(posts)
-    .filter((post) => post.userId !== userId) // Filter out current user's posts
-    .slice(0, visiblePosts);
-
-  const displayedUserPosts = sortPosts(userPosts).slice(0, visibleUserPosts);
+  const displayedPosts = filteredPosts;
+  const displayedUserPosts = filteredUserPosts;
 
   // Add function to handle "View More" button click
   const handleViewMoreUserPosts = () => {
@@ -505,6 +552,8 @@ const Forum = () => {
           type="text"
           placeholder="Cari diskusi..."
           className="flex-grow p-2 rounded-lg border border-gray-300 bg-white"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
         />
 
         {/* Sort Controls */}
@@ -595,18 +644,24 @@ const Forum = () => {
         <h2 className="text-2xl font-bold text-[#161F36] mb-4">
           Semua Diskusi
         </h2>
-        <div className="space-y-4">
-          {displayedPosts.map((post) => (
-            <ForumPostCard key={post.id} post={post} />
-          ))}
+        {filteredPosts.length > 0 ? (
+          <div className="space-y-4">
+            {filteredPosts.map((post) => (
+              <ForumPostCard key={post.id} post={post} />
+            ))}
 
-          {/* Loading indicator and load more trigger */}
-          <div ref={loadMoreRef} className="py-4 flex justify-center">
-            {visiblePosts < posts.length && (
-              <div className="text-gray-500">Loading more posts...</div>
-            )}
+            {/* Loading indicator and load more trigger */}
+            <div ref={loadMoreRef} className="py-4 flex justify-center">
+              {visiblePosts < posts.length && (
+                <div className="text-gray-500">Loading more posts...</div>
+              )}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white p-6 rounded-lg text-center">
+            <p className="text-gray-600">Tidak ada diskusi yang ditemukan</p>
+          </div>
+        )}
       </div>
 
       <CreatePostModal

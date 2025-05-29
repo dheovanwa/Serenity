@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
 import { MessageSquare, ThumbsUp, Clock, Send, User, Flag } from "lucide-react";
 import {
   doc,
@@ -14,8 +14,10 @@ import {
   arrayUnion,
   arrayRemove,
   setDoc,
+  increment,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { containsProfanity } from "../utils/profanityFilter";
 
 const ForumPost = () => {
   const { forumId } = useParams();
@@ -36,6 +38,11 @@ const ForumPost = () => {
   const [showReportModal, setShowReportModal] = useState(false);
   const [reportReason, setReportReason] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showReplyReportModal, setShowReplyReportModal] = useState(false);
+  const [reportReplyReason, setReportReplyReason] = useState("");
+  const [isReplyReportSubmitting, setIsReplyReportSubmitting] = useState(false);
+  const [selectedReplyId, setSelectedReplyId] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   // Function to calculate age from birthOfDate
   const calculateAge = (birthOfDate: string | Date): number => {
@@ -383,26 +390,101 @@ const ForumPost = () => {
 
     setIsSubmitting(true);
     try {
-      // Add report to reports collection
-      await addDoc(collection(db, "reports"), {
-        postId: forumId,
+      // Add report to reports subcollection of the forum post
+      const reportsRef = collection(db, "forum", forumId, "reports");
+      await addDoc(reportsRef, {
+        reportContent: reportReason,
         reportedBy: userId,
-        reason: reportReason,
-        postTitle: post?.title || "",
-        postContent: post?.content || "",
-        createdAt: new Date(),
-        status: "pending", // pending, reviewed, resolved
+        timestamp: serverTimestamp(),
       });
+
+      // Check if post contains profanity
+      if (post && containsProfanity(post)) {
+        try {
+          // Delete the post if it contains profanity
+          await deleteDoc(doc(db, "forum", forumId));
+
+          // Add to removed posts collection for audit
+          await addDoc(collection(db, "removedPosts"), {
+            originalId: forumId,
+            title: post.title,
+            content: post.content,
+            userId: post.userId,
+            removedAt: serverTimestamp(),
+            reason: "Automatic removal due to profanity",
+            reportReason: reportReason,
+          });
+
+          // Redirect to forum home if post is deleted
+          navigate("/forum");
+          return;
+        } catch (error) {
+          console.error("Error deleting inappropriate post:", error);
+        }
+      }
 
       // Close modal and reset state
       setShowReportModal(false);
       setReportReason("");
-      alert("Laporan telah dikirim. Terima kasih atas kontribusi Anda.");
+      setIsSubmitting(false);
     } catch (error) {
       console.error("Error submitting report:", error);
-      alert("Gagal mengirim laporan. Silakan coba lagi.");
-    } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  // Add a function to handle reply reporting
+  const handleReplyReport = (replyId: string) => {
+    setSelectedReplyId(replyId);
+    setShowReplyReportModal(true);
+  };
+
+  // Add function to submit reply report
+  const submitReplyReport = async () => {
+    if (!reportReplyReason.trim() || !userId || !forumId || !selectedReplyId)
+      return;
+
+    setIsReplyReportSubmitting(true);
+    try {
+      // Get the reply content
+      const replyRef = doc(db, "forum", forumId, "reply", selectedReplyId);
+      const replySnap = await getDoc(replyRef);
+
+      if (!replySnap.exists()) {
+        throw new Error("Reply not found");
+      }
+
+      const replyData = replySnap.data();
+      const replyContent = replyData.content || "";
+
+      // Check if reply contains profanity
+      const isProfane = containsProfanity(replyContent);
+
+      // Store the report in a subcollection of the reply
+      const reportsRef = collection(replyRef, "reports");
+      await addDoc(reportsRef, {
+        reportContent: reportReplyReason,
+        reportedBy: userId,
+        timestamp: serverTimestamp(),
+      });
+
+      // If profane, mark as violation immediately
+      if (isProfane) {
+        await updateDoc(replyRef, {
+          isViolation: true,
+          reportedBy: userId,
+          reportedAt: serverTimestamp(),
+        });
+      }
+
+      // Close modal and reset state
+      setShowReplyReportModal(false);
+      setReportReplyReason("");
+      setSelectedReplyId(null);
+    } catch (error) {
+      console.error("Error submitting reply report:", error);
+    } finally {
+      setIsReplyReportSubmitting(false);
     }
   };
 
@@ -527,7 +609,7 @@ const ForumPost = () => {
                   <User className="w-6 h-6 text-[#161F36]" />
                 </div>
               )}
-              <div>
+              <div className="flex-1">
                 <h4 className="font-semibold text-[#161F36] text-sm">
                   {getDisplayName(reply.author)}
                 </h4>
@@ -538,16 +620,34 @@ const ForumPost = () => {
                     </span>
                   )}
               </div>
+
+              {/* Add Report Button for Reply */}
+              <button
+                onClick={() => handleReplyReport(reply.id)}
+                className="p-2 text-gray-500 hover:text-red-500 transition-colors"
+                title="Laporkan balasan ini"
+              >
+                <Flag size={14} />
+              </button>
             </div>
 
-            <p className="text-gray-800 mb-2">{reply.content}</p>
+            {/* Reply content - only show warning if marked as violation */}
+            {reply.isViolation ? (
+              <p className="text-gray-500 italic mb-2">
+                Informasi yang diberikan oleh pengguna ini menyalahgunakan
+                syarat dan ketentuan dari penggunaan forum diskusi
+              </p>
+            ) : (
+              <p className="text-gray-800 mb-2">{reply.content}</p>
+            )}
+
             <div className="flex justify-between items-center text-sm text-gray-600">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => handleReplyLike(reply.id)}
-                  className="flex items-center gap-1"
+                  className={`flex items-center gap-1`}
                 >
-                  <div className="flex items-center">
+                  <div className="flex items-center bg-[#F8F0E0] rounded-md px-2 py-1">
                     <ThumbsUp
                       size={16}
                       className="mr-1"
@@ -606,7 +706,100 @@ const ForumPost = () => {
                 onClick={submitReport}
                 disabled={!reportReason.trim() || isSubmitting}
               >
-                {isSubmitting ? "Mengirim..." : "Kirim Laporan"}
+                {isSubmitting ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36]"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Mengirim...
+                  </span>
+                ) : (
+                  "Kirim Laporan"
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Report Modal for Reply */}
+      {showReplyReportModal && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          onClick={() => setShowReplyReportModal(false)}
+        >
+          <div
+            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3 className="text-xl font-bold mb-4">Laporkan Balasan</h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Silakan berikan alasan mengapa Anda ingin melaporkan balasan ini.
+            </p>
+
+            <textarea
+              className="w-full border border-gray-300 rounded-md p-2 mb-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#BACBD8]"
+              placeholder="Tuliskan alasan laporan..."
+              value={reportReplyReason}
+              onChange={(e) => setReportReplyReason(e.target.value)}
+            ></textarea>
+
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                onClick={() => setShowReplyReportModal(false)}
+              >
+                Batal
+              </button>
+              <button
+                className="px-4 py-2 bg-[#BACBD8] text-[#161F36] rounded-md hover:bg-[#9FB6C6] transition-colors disabled:opacity-50"
+                onClick={submitReplyReport}
+                disabled={!reportReplyReason.trim() || isReplyReportSubmitting}
+              >
+                {isReplyReportSubmitting ? (
+                  <span className="flex items-center">
+                    <svg
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36]"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Mengirim...
+                  </span>
+                ) : (
+                  "Kirim Laporan"
+                )}
               </button>
             </div>
           </div>
