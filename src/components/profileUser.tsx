@@ -355,84 +355,15 @@ const UserProfile = () => {
         <div className="flex justify-center text-lg items-center text-[#161F36] font-light">
           {formData.email}
         </div>
-
-        {/* Mobile Layout Buttons */}
-        {isMobile && (
-          <div className="flex flex-row justify-center items-center mt-5 w-full gap-25">
-            {/* Profile Button */}
-            <button
-              className={`flex justify-center items-center rounded-lg  w-[30%] h-[40px] ${
-                isProfileClicked ? "bg-[#BACBD8]" : ""
-              }    transition-all duration-300`}
-              onClick={handleProfileClick}
-            >
-              <h1 className="text-lg text-center ">Profile</h1>
-            </button>
-
-            {/* Settings Button */}
-            <button
-              className={`flex justify-center items-center rounded-lg w-[30%] h-[40px]  ${
-                isSettingsClicked ? "bg-[#BACBD8]" : ""
-              }  transition-all duration-300`}
-              onClick={handleSettingsClick}
-            >
-              <h1 className="text-lg text-center ">Settings</h1>
-            </button>
-
-            {/* Logout Button */}
-            {/* <button
-            onClick={handleLogoutClick}
-            className="text-[#FF5640] text-sm lg:text-xl text-left mt-auto ml-2 mb-2 self-start w-full lg:w-full transition-all duration-300"
-          >
-            Keluar dari akun
-          </button> */}
-          </div>
-        )}
       </div>
 
       {/*DESKTOP*/}
       {!isMobile && (
-        <div className=" bg-[#F2EDE2] flex h-screen">
+        <div className=" bg-[#F2EDE2] flex h-screen ">
           <div className="relative z-1 flex flex-col lg:flex-row gap-8 w-full ">
-            {/*Left*/}
-            <div className="w-full lg:w-1/6 flex flex-col items-start lg:border-r border-black pl-3 lg:pt-1 h-full">
-              {/* Tombol Profile */}
-              <button
-                className={`flex items-center rounded-lg mt-5 w-full h-[8%] text-left 
-            ${isProfileClicked ? "bg-[#BACBD8]" : "bg-transparent"} 
-            text-sm md:w-[15%] sm:w-[20%] sm:h-[30%] lg:text-xl xl:w-[85%] lg:w-[90%] md:h-[30%] lg:h-[10%] lg:py-2 lg:px-1 transition-all duration-300`}
-                onClick={handleProfileClick}
-              >
-                <img src={user} alt="user" className="w-10 h-10 mt-1 ml-2" />
-                <h1 className="mt-2 ml-3 text-sm lg:text-xl">Profile</h1>
-              </button>
-
-              {/* Tombol Settings */}
-              <button
-                className={`flex items-center rounded-lg w-full h-[8%] mt-5 text-left 
-            ${isSettingsClicked ? "bg-[#BACBD8]" : "bg-transparent"} 
-            text-sm md:w-[15%] lg:text-xl sm:w-[20%] sm:h-[30%] xl:w-[85%] lg:w-[90%] md:h-[30%] lg:h-[10%] lg:py-2 lg:px-2 transition-all duration-300`}
-                onClick={handleSettingsClick}
-              >
-                <img
-                  src={setting}
-                  alt="setting"
-                  className="w-10 h-10 mt-1 ml-1"
-                />
-                <h1 className="mt-2 ml-3 text-sm lg:text-xl">Settings</h1>
-              </button>
-
-              {/* Tombol Keluar di bawah kiri */}
-              <button
-                onClick={handleLogoutClick}
-                className="text-[#FF5640] text-sm lg:text-xl text-left mt-auto ml-2 mb-2 self-start w-full lg:w-full transition-all duration-300"
-              >
-                Keluar dari akun
-              </button>
-            </div>
 
             {/*middle */}
-            <div className="grid grid-cols-2 lg:w-3/4 col-span-4 ">
+            <div className="grid grid-cols-2 lg:w-full col-span-4 pl-60 pr-60">
               <div className="grid grid-cols-1 w-full gap-4 text-[#161F36] mt-10 ml-5">
                 <div className="md:col-span-2">
                   <InputField
@@ -521,7 +452,7 @@ const UserProfile = () => {
                   )}
                 </div>
               </div>
-              <div className="flex justify-center items-center w-full gap-6 lg:gap-10  mb-20 mt-20 lg:-ml-5 col-span-2">
+              <div className="flex justify-center items-center w-full gap-6 lg:gap-10  mb-20 mt-20 lg:-mr-7 col-span-2">
                 <button
                   onClick={() => {
                     if (isEditing) {
@@ -549,7 +480,15 @@ const UserProfile = () => {
                 )}
               </div>
             </div>
+              <button
+              onClick={handleLogoutClick}
+              className="absolute bottom-4 left-4 text-[#FF5640] text-sm lg:text-xl text-left self-start transition-all duration-300"
+            >
+              Keluar dari akun
+            </button>
           </div>
+
+          
           {isOverlayVisible && (
             <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
               <div className="bg-[#F2EDE2] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
@@ -586,8 +525,8 @@ const UserProfile = () => {
 
       {/*MOBILE*/}
       {isMobile && (
-        <div className=" bg-[#F2EDE2] flex h-screen w-full ml-0 ">
-          <div className="relative z-1 flex flex-col w-full ">
+        <div className="bg-[#F2EDE2] flex h-screen w-full px-4 ml-2">
+          <div className="relative z-1 flex flex-col w-full max-w-screen-sm mx-auto overflow-hidden">
             {/*middle */}
             <div className="flex flex-col">
               <div className=" grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
