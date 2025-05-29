@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import cameraIcon from "../assets/83574.png";
-import ProfilePic from "../assets/Logo.jpg";
+import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
 
 const profilePsychiatrist = () => {

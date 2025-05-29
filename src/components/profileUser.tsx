@@ -5,12 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import cameraIcon from "../assets/83574.png";
-import ProfilePic from "../assets/Logo.jpg";
+import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
-import user from "../assets/User.png";
-import setting from "../assets/Settings.png";
+import user from "../assets/User.svg";
+import setting from "../assets/Settings.svg";
 import chevronDownIcon from "../assets/con1.png";
-import calender from "../assets/Calendar.png";
+import calender from "../assets/Calendar.svg";
 import { Separator } from "../components/Seperator";
 
 const UserProfile = () => {

@@ -10,6 +10,7 @@ import { CarouselDemo } from "../components/RecommendedPsychiatrist";
 import RadarChart from "../components/RadarChart";
 import TopBar from "../components/TopBar";
 import type { RadarDataPoint, ChartData } from "../models/HomeModel";
+import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
 
 const Homepage: React.FC = () => {
   const [userName, setUserName] = useState<string>("Loading...");
@@ -59,6 +60,8 @@ const Homepage: React.FC = () => {
 
     checkAuth();
   }, [navigate]);
+
+  AppointmentStatusUpdater();
 
   const handleLogout = () => {
     controller.handleLogout();

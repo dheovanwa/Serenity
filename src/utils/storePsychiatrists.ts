@@ -1,119 +1,57 @@
-import { collection, addDoc } from "firebase/firestore";
+import { collection, addDoc, getDocs, updateDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
+import psychiatristsDataJson from "./psychiatristsData.json";
 import Compressor from "compressorjs";
 
-// Import all doctor images
-import doctor1 from "../assets/D1.png";
-import doctor2 from "../assets/D2.png";
-import doctor3 from "../assets/D3.png";
-import doctor4 from "../assets/D4.png";
-import doctor5 from "../assets/D5.png";
-import doctor6 from "../assets/D6.png";
-import doctor7 from "../assets/D7.png";
-import doctor8 from "../assets/D8.png";
-import doctor9 from "../assets/D9.png";
-import doctor10 from "../assets/D10.png";
-import doctor11 from "../assets/D11.png";
-import doctor12 from "../assets/D12.png";
+export interface TimeRange {
+  start: number; // 24-hour format in minutes from midnight
+  end: number;
+}
 
-const psychiatristsData = [
-  {
-    name: "Titin Sulaiman",
-    specialty: "Anxiety & Depression Specialist",
-    price: "$24.99",
-    rating: 5,
-    sessions: 7,
-    imageSrc: doctor1,
-  },
-  {
-    name: "Martin Luther",
-    specialty: "PTSD & Trauma Specialist",
-    price: "$25.99",
-    rating: 3,
-    sessions: 7,
-    imageSrc: doctor2,
-  },
-  {
-    name: "Virle Syahroks",
-    specialty: "Bipolar Disorder Specialist",
-    price: "$28.99",
-    rating: 4,
-    sessions: 7,
-    imageSrc: doctor3,
-  },
-  {
-    name: "Yorkiv Gizlkenzix",
-    specialty: "Personality Disorders Specialist",
-    price: "$34.99",
-    rating: 5,
-    sessions: 7,
-    imageSrc: doctor4,
-  },
-  {
-    name: "Robert Ukerliznes",
-    specialty: "Sleep Disorders Psychiatrist",
-    price: "$27.99",
-    rating: 5,
-    sessions: 7,
-    imageSrc: doctor5,
-  },
-  {
-    name: "Tariots Survfig",
-    specialty: "Eating Disorders Psychiatrist",
-    price: "$29.90",
-    rating: 5,
-    sessions: 7,
-    imageSrc: doctor6,
-  },
-  {
-    name: "John Doe",
-    specialty: "Sleep Disorders Specialist",
-    price: "$20.99",
-    rating: 4,
-    sessions: 6,
-    imageSrc: doctor7,
-  },
-  {
-    name: "Jane Smith",
-    specialty: "Anxiety Specialist",
-    price: "$22.99",
-    rating: 4,
-    sessions: 5,
-    imageSrc: doctor8,
-  },
-  {
-    name: "Alice Brown",
-    specialty: "Depression Specialist",
-    price: "$27.50",
-    rating: 5,
-    sessions: 8,
-    imageSrc: doctor9,
-  },
-  {
-    name: "David Clark",
-    specialty: "PTSD Specialist",
-    price: "$30.00",
-    rating: 5,
-    sessions: 6,
-    imageSrc: doctor10,
-  },
-  {
-    name: "Michael White",
-    specialty: "Personality Disorder Specialist",
-    price: "$35.00",
-    rating: 4,
-    sessions: 7,
-    imageSrc: doctor11,
-  },
-  {
-    name: "Ralieyz Baxckz",
-    specialty: "Bipolar Disorder Specialist",
-    price: "$26.50",
-    rating: 4,
-    sessions: 5,
-    imageSrc: doctor12,
-  },
-];
+export interface Psychiatrist {
+  id: string;
+  name: string;
+  specialty: string;
+  image: string;
+  price: number;
+  basePrice: number;
+  rating: number;
+  tahunPengalaman: number;
+  jadwal: {
+    [key: string]: TimeRange | null;
+  };
+}
+
+// Add debug logging
+const debugData = psychiatristsDataJson;
+console.log("Raw JSON data:", debugData);
+
+// Export the data with better error handling and default data
+export const psychiatristsData: Psychiatrist[] = (() => {
+  try {
+    if (!psychiatristsDataJson || !psychiatristsDataJson.psychiatrists) {
+      console.error(
+        "Invalid psychiatrists data format:",
+        psychiatristsDataJson
+      );
+      return [];
+    }
+
+    const data = psychiatristsDataJson.psychiatrists;
+    console.log("Parsed psychiatrists data:", data);
+
+    if (!Array.isArray(data)) {
+      console.error("Psychiatrists data is not an array:", data);
+      return [];
+    }
+
+    return data;
+  } catch (error) {
+    console.error("Error parsing psychiatrists data:", error);
+    return [];
+  }
+})();
+
 const convertImageToBase64 = async (imageUrl: string): Promise<string> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -185,20 +123,79 @@ export const storePsychiatrists = async () => {
   const psychiatristsRef = collection(db, "psychiatrists");
 
   try {
-    for (const psych of psychiatristsData) {
-      // Convert and compress image to base64
-      const base64Image = await convertImageToBase64(psych.imageSrc);
+    console.log("Starting storePsychiatrists with data:", psychiatristsData);
 
-      // Store in Firestore with both base64 and original imageSrc
-      await addDoc(psychiatristsRef, {
-        ...psych,
-        image: base64Image,
-      });
+    // Add validation for required fields
+    const validPsychiatrists = psychiatristsData.filter(
+      (psych) => psych.name && psych.specialty
+    );
 
-      console.log(`Stored psychiatrist: ${psych.name}`);
+    if (validPsychiatrists.length === 0) {
+      throw new Error("No valid psychiatrists data available");
+    }
+
+    const psychiatristsToStore = validPsychiatrists.map((psych) => ({
+      ...psych,
+      chatPatientQuota: 5, // Add default quota
+    }));
+
+    for (const psych of psychiatristsToStore) {
+      try {
+        // Convert and compress image to base64
+        // const base64Image = await convertImageToBase64(psych.image);
+
+        // Store in Firestore with base64 image
+        await addDoc(psychiatristsRef, {
+          ...psych,
+          // image: base64Image,
+        });
+
+        console.log(`Stored psychiatrist: ${psych.name}`);
+      } catch (error) {
+        console.error(`Error storing psychiatrist ${psych.name}:`, error);
+        // Continue with next psychiatrist even if one fails
+        continue;
+      }
     }
     console.log("All psychiatrists stored successfully!");
   } catch (error) {
     console.error("Error storing psychiatrists:", error);
+    throw error; // Re-throw to let caller handle the error
   }
+};
+
+export const resetDailyQuotas = async () => {
+  try {
+    const psychiatristsRef = collection(db, "psychiatrists");
+    const querySnapshot = await getDocs(psychiatristsRef);
+
+    // Reset each psychiatrist's quota to their original value
+    const resetPromises = querySnapshot.docs.map((doc) => {
+      return updateDoc(doc.ref, {
+        chatPatientQuota: 5, // Reset to default value
+      });
+    });
+
+    await Promise.all(resetPromises);
+    console.log("Successfully reset all psychiatrists' chat quotas");
+  } catch (error) {
+    console.error("Error resetting chat quotas:", error);
+  }
+};
+
+// Add this to App.tsx or a suitable initialization point
+export const initializeQuotaReset = () => {
+  const now = new Date();
+  const tomorrow = new Date(now);
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+
+  const timeUntilReset = tomorrow.getTime() - now.getTime();
+
+  // Set initial timeout to run at midnight
+  setTimeout(() => {
+    resetDailyQuotas();
+    // Then set it to run daily
+    setInterval(resetDailyQuotas, 24 * 60 * 60 * 1000);
+  }, timeUntilReset);
 };
