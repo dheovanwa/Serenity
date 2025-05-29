@@ -17,71 +17,22 @@ import {
   getDoc,
   doc,
   orderBy,
+  limit,
+  addDoc,
 } from "firebase/firestore";
 import { db } from "../config/firebase"; // Adjust the import based on your project structure
 import { HomeController } from "../controllers/HomeController";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
 
 const dashboardPsychiatrist: React.FC = () => {
+  // Add new state for dialog
+  const [showEndedDialog, setShowEndedDialog] = useState(false);
   const [userName, setUserName] = useState<string>("Loading...");
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
 
-  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([
-    {
-      title: "Hormone Therapy Consultation",
-      patientName: "Kristina Stokes",
-      service: "Video Call",
-      date: "05 Feb, 2024",
-      time: "11:00 AM - 11:30 AM",
-      symptoms: "Hot flashes, Night sweats",
-    },
-    {
-      title: "Anti-Aging Consultation",
-      patientName: "Johnathan Mcgee",
-      service: "Chat",
-      date: "05 Feb, 2024",
-      time: "11:00 AM - 11:30 AM",
-      symptoms: "Wrinkles, Skin texture issues",
-    },
-  ]);
-  const [messages, setMessages] = useState<any[]>([
-    {
-      from: "David Brown",
-      date: "4:00 PM",
-      content: "Anda : Sampai ketemu minggu depan",
-      profileImage: foto1,
-      isRead: false,
-    },
-    {
-      from: "Regan Roberts",
-      date: "3:28 PM",
-      content: "Megan: Saya merasakan keresahan yang sangat mendalam!!!",
-      profileImage: foto2,
-      isRead: true,
-    },
-    {
-      from: "Alexander Preston",
-      date: "13:18 PM",
-      content: "Alexander: Kenapa dunia ini begitu tidak adil untuk saya???",
-      profileImage: foto3,
-      isRead: true,
-    },
-    {
-      from: "Kristina Stokes",
-      date: "12:12 PM",
-      content: "Kristina: Saya mengalami insomnia",
-      profileImage: foto4,
-      isRead: true,
-    },
-    {
-      from: "Johnathan Mcgee",
-      date: "8:11 AM",
-      content: "Anda: Cobalah untuk tidur meskipun sebentar",
-      profileImage: foto5,
-      isRead: false,
-    },
-  ]);
+  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
+  const [messages, setMessages] = useState<any[]>([]);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState<any>(null);
   const [psychiatristName, setPsychiatristName] =
@@ -272,7 +223,7 @@ const dashboardPsychiatrist: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const fetchActiveAppointments = async () => {
+    const fetchActiveAppointmentsAndChats = async () => {
       try {
         const documentId = localStorage.getItem("documentId");
         if (!documentId) return;
@@ -306,13 +257,15 @@ const dashboardPsychiatrist: React.FC = () => {
           (apt) => apt.doctorName === psychiatristName
         );
 
-        // Format for display
-        const formattedAppointments = filteredAppointments.map((apt) => {
+        // Only include Video method for "Sesi yang sedang Aktif"
+        const videoAppointments = filteredAppointments.filter(
+          (apt) => apt.method === "Video"
+        );
+
+        // Format for display (Video only)
+        const formattedAppointments = videoAppointments.map((apt) => {
           const date = new Date(apt.date);
           let time = apt.time;
-          if (apt.method === "Chat" && time === "today") {
-            time = "";
-          }
           return {
             id: apt.id,
             patientName: apt.patientName,
@@ -324,16 +277,51 @@ const dashboardPsychiatrist: React.FC = () => {
               year: "numeric",
             }),
             time,
+            patientProfileImage: apt.patientProfileImage || foto1, // fallback to foto1
           };
         });
 
         setActiveAppointments(formattedAppointments);
+
+        // Fetch latest chat message for each active chat appointment from messages subcollection
+        const chatMessages: any[] = [];
+        for (const apt of filteredAppointments) {
+          if (apt.method === "Chat") {
+            const messagesColRef = collection(db, "chats", apt.id, "messages");
+            const qMsg = query(
+              messagesColRef,
+              orderBy("timestamp", "desc"),
+              limit(1)
+            );
+            const msgSnap = await getDocs(qMsg);
+            if (!msgSnap.empty) {
+              const lastMsgDoc = msgSnap.docs[0];
+              const lastMsg = lastMsgDoc.data();
+              let senderDisplayName = lastMsg.senderName;
+              if (
+                lastMsg.senderRole === "doctor" ||
+                (lastMsg.senderName && lastMsg.senderName === psychiatristName)
+              ) {
+                senderDisplayName = "Kamu";
+              }
+              chatMessages.push({
+                id: apt.id,
+                from: apt.patientName,
+                date: lastMsg.time || apt.date,
+                content: `${senderDisplayName}: ${lastMsg.text}`,
+                profileImage: apt.patientProfileImage || foto1,
+                isRead: lastMsg.isRead || false,
+              });
+            }
+          }
+        }
+        setMessages(chatMessages);
       } catch (error) {
-        console.error("Error fetching active appointments:", error);
+        console.error("Error fetching active appointments or chats:", error);
       }
     };
 
-    fetchActiveAppointments();
+    fetchActiveAppointmentsAndChats();
   }, []);
 
   const handleLogout = () => {
@@ -367,6 +355,71 @@ const dashboardPsychiatrist: React.FC = () => {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setAppointmentToCancel(null);
+  };
+
+  // Handler for navigating to chat session
+  const handleOpenChat = (chatId: string) => {
+    console.log("Opening chat for appointment ID:", chatId);
+    navigate(`/chat?chatId=${chatId}`);
+  };
+
+  // Add function to check if session has ended
+  const hasSessionEnded = (time: string) => {
+    const [, endTime] = time.split(" - ");
+    const [endHour, endMinute] = endTime.split(".").map(Number);
+
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+
+    return (
+      currentHour > endHour ||
+      (currentHour === endHour && currentMinute > endMinute)
+    );
+  };
+
+  // Modify handleJoinVideoCall to check session time
+  const handleJoinVideoCall = async (
+    appointmentId: string,
+    sessionTime: string
+  ) => {
+    if (hasSessionEnded(sessionTime)) {
+      setShowEndedDialog(true);
+      return;
+    }
+
+    try {
+      const documentId = localStorage.getItem("documentId"); // Get psychiatrist ID
+      if (!documentId) {
+        throw new Error("No psychiatrist ID found");
+      }
+
+      // Check if there's already a call for this appointment
+      const callsRef = collection(db, "calls");
+      const q = query(callsRef, where("appointmentId", "==", appointmentId));
+      const querySnapshot = await getDocs(q);
+
+      let callId;
+      if (querySnapshot.empty) {
+        // Create new call document with psychiatrist ID as callerId
+        const newCall = await addDoc(callsRef, {
+          appointmentId: appointmentId,
+          createdAt: Date.now(),
+          status: "waiting",
+          callerId: documentId, // Using psychiatrist's documentId
+        });
+        callId = newCall.id;
+      } else {
+        // Use existing call
+        callId = querySnapshot.docs[0].id;
+      }
+
+      // Navigate to video call with the call ID
+      navigate(`/video-call/${callId}`);
+    } catch (error) {
+      console.error("Error setting up video call:", error);
+      alert("Failed to set up video call. Please try again.");
+    }
   };
 
   return (
@@ -491,14 +544,11 @@ const dashboardPsychiatrist: React.FC = () => {
                     {apt.date} {apt.time && `| ${apt.time}`}
                   </p>
                   <div className="mt-4 flex flex-col sm:flex-row gap-4 sm:gap-6">
-                    <button className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#5a7da1] transition-colors duration-300 w-full sm:w-auto">
-                      Gabung Sesi
-                    </button>
                     <button
-                      onClick={() => handleCancelAppointment(apt)}
-                      className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300 w-full sm:w-auto sm:ml-auto"
+                      className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#5a7da1] transition-colors duration-300 w-full sm:w-auto"
+                      onClick={() => navigate(`/video-call`)}
                     >
-                      Batalkan Janji Temu
+                      Gabung Sesi
                     </button>
                   </div>
                 </div>
@@ -524,14 +574,11 @@ const dashboardPsychiatrist: React.FC = () => {
                     </p>
                   </div>
                   <div className="flex gap-4">
-                    <button className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#186ca8] transition-colors duration-300 w-auto">
-                      Gabung Sesi
-                    </button>
                     <button
-                      onClick={() => handleCancelAppointment(apt)}
-                      className="px-6 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 transition-colors duration-300 w-auto"
+                      className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#186ca8] transition-colors duration-300 w-auto"
+                      onClick={() => handleJoinVideoCall(apt.id, apt.time)}
                     >
-                      Batalkan Janji Temu
+                      Gabung Sesi
                     </button>
                   </div>
                 </div>
@@ -558,37 +605,50 @@ const dashboardPsychiatrist: React.FC = () => {
         </h1>
         <div className="bg-[#E4DCCC] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
           {messages.length > 0 ? (
-            messages.map((msg, index) => (
-              <div
-                key={index}
-                className="border-b border-gray-600 py-3 last:border-none"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden">
-                    <img
-                      src={msg.profileImage}
-                      alt={msg.from}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-
-                  <div className="flex flex-col w-full">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center space-x-2">
-                        <h3 className="text-xl font-bold">{msg.from}</h3>
-                        {!msg.isRead && (
-                          <span className="p-2 rounded-full bg-red-500   mr-2 mx-auto" />
-                        )}
-                      </div>
-                      <p className="text-gray-600 text-sm">{msg.date}</p>
+            messages.map((msg, index) => {
+              // Find the correct appointment for this message by matching patientName, service === "Chat", and appointment date
+              const apt = activeAppointments.find(
+                (a) =>
+                  a.patientName === msg.from &&
+                  a.service === "Chat" &&
+                  a.id === msg.id
+              );
+              const chatId = apt?.id || "";
+              return (
+                <div
+                  key={index}
+                  className="border-b border-gray-600 py-3 last:border-none hover:bg-[#e9e2d1] cursor-pointer transition"
+                  onClick={() => handleOpenChat(chatId)}
+                >
+                  <div className="flex items-center space-x-4">
+                    <div className="w-10 h-10 bg-gray-300 rounded-full overflow-hidden">
+                      <img
+                        src={msg.profileImage}
+                        alt={msg.from}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
 
-                    {/* Message Content */}
-                    <p className="text-black font-medium mt-1">{msg.content}</p>
+                    <div className="flex flex-col w-full">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center space-x-2">
+                          <h3 className="text-xl font-bold">{msg.from}</h3>
+                          {!msg.isRead && (
+                            <span className="p-2 rounded-full bg-red-500   mr-2 mx-auto" />
+                          )}
+                        </div>
+                        <p className="text-gray-600 text-sm">{msg.date}</p>
+                      </div>
+
+                      {/* Message Content */}
+                      <p className="text-black font-medium mt-1">
+                        {msg.content}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           ) : (
             <p className="text-gray-700 text-lg">
               Anda tidak memiliki pesan baru.
@@ -686,6 +746,22 @@ const dashboardPsychiatrist: React.FC = () => {
           </p>
         </div>
       </footer>
+
+      {/* Add dialog for ended session */}
+      {showEndedDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl max-w-sm w-full mx-4">
+            <h3 className="text-xl font-semibold mb-4">Sesi Telah Berakhir</h3>
+            <p className="mb-6">Waktu sesi konsultasi ini telah berakhir.</p>
+            <button
+              onClick={() => setShowEndedDialog(false)}
+              className="w-full bg-[#187DA8] text-white py-2 px-4 rounded-lg hover:bg-[#1569a0] transition-colors"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

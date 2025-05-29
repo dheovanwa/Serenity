@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from "react";
 import sunIcon from "../assets/Sun.svg";
 import moonIcon from "../assets/Do not Disturb iOS.svg";
+import {
+  Home,
+  Calendar,
+  MessageSquare,
+  User,
+  MessagesSquare,
+} from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
 import LogoLight from "../assets/Logo - Light.png";
 
 const NavBarPsy: React.FC = () => {
@@ -51,20 +59,20 @@ const NavBarPsy: React.FC = () => {
             Halaman Utama
           </a>
           <a
-            href="#"
+            href="/psy-manage-appointment"
             className="font-medium hover:text-opacity-80 dark:hover:text-opacity-80"
           >
             Janji Temu
           </a>
           <a
-            href="#"
+            href="/chat"
             className="font-medium relative hover:text-opacity-80 dark:hover:text-opacity-80"
           >
             Chat
             <span className="absolute -top-0.5 -right-2.5 bg-red-500 text-white text-xs rounded-full w-2 h-2 flex items-center justify-center p-1"></span>
           </a>
           <a
-            href="/profile"
+            href="/doctor-profile"
             className="font-medium hover:text-opacity-80 dark:hover:text-opacity-80"
           >
             Profil

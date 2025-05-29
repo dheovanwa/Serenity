@@ -4,97 +4,96 @@ import {
   query,
   where,
   getDocs,
-  orderBy,
-  updateDoc,
   doc,
-  getDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 
-const STATUS_FILTER = ["Terjadwal", "Sedang berlangsung", "Selesai"];
-
 const AppointmentStatusUpdater = () => {
   useEffect(() => {
-    const updateStatuses = async () => {
-      const userType = localStorage.getItem("userType");
-      const documentId = localStorage.getItem("documentId");
-      if (!documentId) return;
+    const checkAndUpdateAppointments = async () => {
+      try {
+        // Get current time in minutes since start of day
+        const now = new Date();
+        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const todayStr = now.toISOString().split("T")[0]; // YYYY-MM-DD format
 
-      let q;
-      if (userType === "psychiatrist") {
-        q = query(
-          collection(db, "appointments"),
-          where("psychiatristId", "==", documentId),
-          where("status", "in", STATUS_FILTER),
-          orderBy("date", "asc")
+        // Query active appointments for today
+        const appointmentsRef = collection(db, "appointments");
+        const q = query(
+          appointmentsRef,
+          where("status", "in", ["Terjadwal", "Sedang berlangsung"])
         );
-      } else {
-        q = query(
-          collection(db, "appointments"),
-          where("patientId", "==", documentId),
-          where("status", "in", STATUS_FILTER),
-          orderBy("date", "asc")
-        );
-      }
 
-      const querySnapshot = await getDocs(q);
-      const now = new Date();
-      const nowMinutes = now.getHours() * 60 + now.getMinutes();
-      const todayStr = now.toLocaleDateString("id-ID");
+        const querySnapshot = await getDocs(q);
+        querySnapshot.forEach(async (docSnap) => {
+          const appointment = docSnap.data();
+          const appointmentDate = new Date(appointment.date)
+            .toISOString()
+            .split("T")[0];
 
-      for (const docSnap of querySnapshot.docs) {
-        const apt = docSnap.data();
-        const aptDate = new Date(apt.date);
-        const aptDateStr = aptDate.toLocaleDateString("id-ID");
-        let status = apt.status;
+          // Only process today's appointments
+          if (appointmentDate === todayStr) {
+            // For Video appointments, check time frame
+            if (appointment.method === "Video" && appointment.time) {
+              const [timeRange] = appointment.time.split(" - ");
+              const [endTime] = appointment.time.split(" - ")[1].split(".");
+              const [endHour, endMinute] = endTime.split(".").map(Number);
+              const [startHour, startMinute] = timeRange.split(".").map(Number);
 
-        // Do not change status if already "Selesai"
-        if (apt.status === "Selesai") continue;
+              const startTimeMinutes = startHour * 60 + (startMinute || 0);
+              const endTimeMinutes = endHour * 60 + (endMinute || 0);
 
-        // Prevent changing status if chat hasEnded is true
-        if (apt.method === "Chat") {
-          // Check if chat document has hasEnded = true
-          try {
-            const chatDocRef = doc(db, "chats", docSnap.id);
-            const chatDoc = await getDoc(chatDocRef);
-            if (chatDoc.exists() && chatDoc.data().hasEnded) {
-              continue; // Do not update status if chat ended
+              // Update to "Sedang berlangsung" if within time frame
+              if (
+                currentMinutes >= startTimeMinutes &&
+                currentMinutes < endTimeMinutes
+              ) {
+                if (appointment.status !== "Sedang berlangsung") {
+                  console.log(
+                    `Updating appointment ${docSnap.id} to "Sedang berlangsung" due to current time`
+                  );
+                  await updateDoc(doc(db, "appointments", docSnap.id), {
+                    status: "Sedang berlangsung",
+                  });
+                }
+              }
+              // Update to "Selesai" only if past end time
+              else if (
+                currentMinutes >= endTimeMinutes &&
+                appointment.status !== "Selesai"
+              ) {
+                console.log(
+                  `Updating appointment ${docSnap.id} to "Selesai" as time frame has ended`
+                );
+                await updateDoc(doc(db, "appointments", docSnap.id), {
+                  status: "Selesai",
+                });
+              }
             }
-          } catch (e) {
-            // Ignore errors, fallback to normal logic
+            // For Chat appointments, only update to "Sedang berlangsung"
+            else if (
+              appointment.method === "Chat" &&
+              appointment.status === "Terjadwal"
+            ) {
+              console.log(
+                `Updating chat appointment ${docSnap.id} to "Sedang berlangsung"`
+              );
+              await updateDoc(doc(db, "appointments", docSnap.id), {
+                status: "Sedang berlangsung",
+              });
+            }
           }
-        }
-
-        if (apt.method === "Chat" && aptDateStr === todayStr) {
-          status = "Sedang berlangsung";
-        } else if (
-          apt.method === "Video" &&
-          aptDateStr === todayStr &&
-          apt.time
-        ) {
-          // Parse time range "HH.MM - HH.MM"
-          const [start, end] = apt.time.split(" - ");
-          const [startH, startM] = start.split(".").map(Number);
-          const [endH, endM] = end.split(".").map(Number);
-          const startMinutes = startH * 60 + (startM || 0);
-          const endMinutes = endH * 60 + (endM || 0);
-          if (nowMinutes >= startMinutes && nowMinutes < endMinutes) {
-            status = "Sedang berlangsung";
-            console.log(
-              `Updating appointment ${docSnap.id} to "Sedang berlangsung" due to current time`
-            );
-          }
-        }
-
-        if (status !== apt.status) {
-          await updateDoc(doc(db, "appointments", docSnap.id), { status });
-        }
+        });
+      } catch (error) {
+        console.error("Error updating appointment statuses:", error);
       }
     };
 
-    updateStatuses();
-    // Optionally, run every minute to keep statuses up-to-date
-    const interval = setInterval(updateStatuses, 60 * 1000);
+    // Run check immediately and then every minute
+    checkAndUpdateAppointments();
+    const interval = setInterval(checkAndUpdateAppointments, 60000);
+
     return () => clearInterval(interval);
   }, []);
 
