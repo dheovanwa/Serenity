@@ -100,8 +100,6 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
           />
         </div>
 
-        {/* Main Navigation (Desktop Only) - Tombol tetap di tengah */}
-        {/* Mengurangi gap secara default, dan menambah gap di breakpoint lg */}
         <nav className="hidden md:flex flex-grow justify-center gap-5">
           <NavItem label="Halaman Utama" path="/" icon={Home} />
           <NavItem label="Cari" path="/Search-psi" icon={Search} />
@@ -114,9 +112,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
           <NavItem label="Profil" path="/profile" icon={User} />
         </nav>
 
-        {/* Container for Theme Toggle and Hamburger */}
         <div className="flex items-center gap-x-3 sm:gap-x-4 flex-shrink-0">
-          {/* Tombol Toggle Tema */}
           <div className="flex items-center">
             <button
               onClick={toggleTheme}
@@ -147,7 +143,6 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
             </button>
           </div>
 
-          {/* Hamburger Button (Mobile Only) */}
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -160,7 +155,6 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
         </div>
       </div>
 
-      {/* Mobile Menu (Hidden/Shown) */}
       {isMobileMenuOpen && (
         <div
           className={`md:hidden absolute top-full left-0 w-full ${navSpecificThemeColors.bgNav} border-t border-gray-600 shadow-lg py-4 px-4 z-50 rounded-b-lg`}
