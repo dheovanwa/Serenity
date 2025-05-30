@@ -1,33 +1,72 @@
-import React, { useState, useEffect } from "react";
-import sunIcon from "../assets/Sun.svg";
-import moonIcon from "../assets/Do not Disturb iOS.svg";
+import React, { useEffect, useState } from "react";
 import {
   Home,
-  Calendar,
   MessageSquare,
   User,
+  Calendar,
+  Menu,
+  X,
   MessagesSquare,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LogoLight from "../assets/Logo - Light.png";
+import LogoDark from "../assets/Logo - Dark.png";
+import Moon from "../assets/Do not Disturb iOS.svg";
+import Sun from "../assets/Sun.svg";
 
-const NavBarPsy: React.FC = () => {
-  const [isDarkMode, setIsDarkMode] = useState(false);
+interface NavBarProps {
+  isDarkMode: boolean;
+  toggleTheme: () => void;
+}
 
-  useEffect(() => {
-    const storedTheme = localStorage.getItem("theme");
-    const prefersDark =
-      window.matchMedia &&
-      window.matchMedia("(prefers-color-scheme: dark)").matches;
+const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-    if (storedTheme === "dark" || (!storedTheme && prefersDark)) {
-      setIsDarkMode(true);
-      document.documentElement.classList.add("dark");
-    } else {
-      setIsDarkMode(false);
-      document.documentElement.classList.remove("dark");
-    }
-  }, []);
+  const navSpecificThemeColors = {
+    bgNav: isDarkMode ? "bg-[#161F36]" : "bg-[#BACBD8]",
+    textNav: isDarkMode ? "text-[#E6E6E6]" : "text-gray-700",
+    textNavActive: isDarkMode ? "text-[#161F36]" : "text-[#E6E6E6]",
+    bgNavButtonActive: isDarkMode ? "bg-[#BACBD8]" : "bg-[#161F36]",
+    logoPlaceholderColor: isDarkMode ? "text-black" : "text-black",
+    toggleBg: isDarkMode ? "bg-[#4A4A4A]" : "bg-[#E6E6E6]",
+    toggleIconColor: isDarkMode ? Moon : Sun,
+    logoColor: isDarkMode ? LogoDark : LogoLight,
+  };
+
+  const NavItem: React.FC<{
+    label: string;
+    path: string;
+    icon?: React.ElementType;
+    onClick?: () => void;
+  }> = ({ label, path, icon: Icon, onClick }) => {
+    const isActive = location.pathname === path;
+
+    const handleClick = () => {
+      navigate(path);
+      if (onClick) {
+        onClick();
+      }
+    };
+
+    return (
+      <button
+        onClick={handleClick}
+        className={`flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors
+          ${
+            isActive
+              ? `${navSpecificThemeColors.bgNavButtonActive} ${navSpecificThemeColors.textNavActive}`
+              : `${navSpecificThemeColors.textNav} `
+          }
+          whitespace-nowrap w-full md:w-auto
+        `}
+      >
+        {Icon && <Icon size={18} className="mr-2" />}
+        {label}
+      </button>
+    );
+  };
 
   useEffect(() => {
     if (isDarkMode) {
@@ -39,70 +78,63 @@ const NavBarPsy: React.FC = () => {
     }
   }, [isDarkMode]);
 
-  const toggleTheme = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
-  const logoLight = LogoLight;
+  const headerRoundedClasses = `
+    rounded-lg
+    md:rounded-lg
+    ${isMobileMenuOpen ? "rounded-b-none" : "rounded-b-lg"}
+    md:rounded-b-lg
+  `;
 
   return (
-    <header className="bg-[#BACBD8] dark:bg-[#161F36] py-4 px-6 mt-6 mx-2 sm:mx-8 rounded-lg shadow-md transition-colors duration-300">
-      <div className="w-full flex justify-between items-center">
-        <div className="flex items-center">
-          <img src={logoLight} alt="Logo" className="h-8 sm:h-10" />{" "}
+    <header
+      className={`${navSpecificThemeColors.bgNav} py-2 px-2 sm:px-4 mt-6 mx-2 sm:mx-8 shadow-md transition-colors duration-300 mb-5 relative
+        ${headerRoundedClasses}
+      `}
+    >
+      <div className="w-full flex items-center justify-between">
+        <div className="flex-shrink-0">
+          <img
+            src={navSpecificThemeColors.logoColor}
+            alt="Logo"
+            className="h-8 sm:h-10"
+          />
         </div>
-        <nav className="hidden md:flex space-x-4 lg:space-x-6 text-[#161F36] dark:text-gray-200 gap-15">
-          <a
-            href="/"
-            className="font-medium hover:text-opacity-80 dark:hover:text-opacity-88"
-          >
-            Halaman Utama
-          </a>
-          <a
-            href="/psy-manage-appointment"
-            className="font-medium hover:text-opacity-80 dark:hover:text-opacity-80"
-          >
-            Janji Temu
-          </a>
-          <a
-            href="/chat"
-            className="font-medium relative hover:text-opacity-80 dark:hover:text-opacity-80"
-          >
-            Chat
-            <span className="absolute -top-0.5 -right-2.5 bg-red-500 text-white text-xs rounded-full w-2 h-2 flex items-center justify-center p-1"></span>
-          </a>
-          <a
-            href="/doctor-profile"
-            className="font-medium hover:text-opacity-80 dark:hover:text-opacity-80"
-          >
-            Profil
-          </a>
-        </nav>
-        <div className="flex items-center space-x-3 sm:space-x-4">
-          <div className="relative hidden sm:block"> </div>
 
+        <nav className="hidden md:flex flex-grow justify-center gap-5">
+          <NavItem label="Halaman Utama" path="/" icon={Home} />
+          <NavItem
+            label="Janji Temu"
+            path="/manage-appointment"
+            icon={Calendar}
+          />
+          <NavItem label="Chat" path="/chat" icon={MessageSquare} />
+          <NavItem label="Forum" path="/forum" icon={MessagesSquare} />
+          <NavItem label="Profil" path="/profile" icon={User} />
+        </nav>
+
+        <div className="flex items-center gap-x-3 sm:gap-x-4 flex-shrink-0">
           <div className="flex items-center">
             <button
               onClick={toggleTheme}
-              className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${
-                isDarkMode ? "bg-[#4A4A4A]" : "bg-[#E6E6E6]"
-              }`}
+              className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${navSpecificThemeColors.toggleBg}`}
               aria-label="Toggle theme"
             >
               <span
-                className={`absolute left-1 top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white dark:bg-[#161F36] rounded-full shadow-md transform transition-transform duration-300 ${
-                  isDarkMode ? "translate-x-5" : "translate-x-0"
+                className={`absolute top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white dark:bg-gray-700 rounded-full shadow-md transform transition-transform duration-300 ${
+                  isDarkMode
+                    ? "translate-x-6 left-0.5"
+                    : "translate-x-0.5 left-0.5"
                 }`}
               >
                 {isDarkMode ? (
                   <img
-                    src={moonIcon}
+                    src={Moon}
                     alt="Moon Icon"
                     className="w-4 h-4 m-auto absolute inset-0"
                   />
                 ) : (
                   <img
-                    src={sunIcon}
+                    src={Sun}
                     alt="Sun Icon"
                     className="w-4 h-4 m-auto absolute inset-0"
                   />
@@ -110,10 +142,53 @@ const NavBarPsy: React.FC = () => {
               </span>
             </button>
           </div>
+
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              className={`${navSpecificThemeColors.textNav} focus:outline-none h-7 w-7 flex items-center justify-center`}
+              aria-label="Toggle mobile menu"
+            >
+              {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
+
+      {isMobileMenuOpen && (
+        <div
+          className={`md:hidden absolute top-full left-0 w-full ${navSpecificThemeColors.bgNav} border-t border-gray-600 shadow-lg py-4 px-4 z-50 rounded-b-lg`}
+        >
+          <nav className="flex flex-col space-y-2 items-center">
+            <NavItem
+              label="Halaman Utama"
+              path="/"
+              icon={Home}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <NavItem
+              label="Janji Temu"
+              path="/manage-appointment"
+              icon={Calendar}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <NavItem
+              label="Chat"
+              path="/chat"
+              icon={MessageSquare}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            <NavItem
+              label="Profil"
+              path="/profile"
+              icon={User}
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+          </nav>
+        </div>
+      )}
     </header>
   );
 };
 
-export default NavBarPsy;
+export default NavBar;
