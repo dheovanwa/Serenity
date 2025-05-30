@@ -20,6 +20,7 @@ import {
   limit,
   onSnapshot,
   setDoc,
+  addDoc,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../config/firebase"; // Adjust the import based on your project structure

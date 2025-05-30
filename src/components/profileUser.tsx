@@ -1,17 +1,13 @@
-import TopBar from "../components/TopBar";
 import InputField from "../components/inputField";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, auth } from "../config/firebase";
+import { signOut } from "firebase/auth";
 import cameraIcon from "../assets/83574.png";
 import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
-import user from "../assets/User.svg";
-import setting from "../assets/Settings.svg";
-import chevronDownIcon from "../assets/con1.png";
 import calender from "../assets/Calendar.svg";
-import { Separator } from "../components/Seperator";
 
 const UserProfile = () => {
   const [userName, setUserName] = useState("Loading...");
@@ -50,8 +46,15 @@ const UserProfile = () => {
   const [isSettingsClicked, setIsSettingsClicked] = useState(false);
   const navigate = useNavigate();
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
-  const handleLogoutClick = () => {
+  const handleLogoutClick = async () => {
     setIsOverlayVisible(true);
+    try {
+      await signOut(auth);
+      localStorage.removeItem("documentId");
+      navigate("/signin");
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
   };
 
   const handleCloseOverlay = () => {
@@ -361,7 +364,6 @@ const UserProfile = () => {
       {!isMobile && (
         <div className=" bg-[#F2EDE2] flex h-screen ">
           <div className="relative z-1 flex flex-col lg:flex-row gap-8 w-full ">
-
             {/*middle */}
             <div className="grid grid-cols-2 lg:w-full col-span-4 pl-60 pr-60">
               <div className="grid grid-cols-1 w-full gap-4 text-[#161F36] mt-10 ml-5">
@@ -480,7 +482,7 @@ const UserProfile = () => {
                 )}
               </div>
             </div>
-              <button
+            <button
               onClick={handleLogoutClick}
               className="absolute bottom-4 left-4 text-[#FF5640] text-sm lg:text-xl text-left self-start transition-all duration-300"
             >
@@ -488,7 +490,6 @@ const UserProfile = () => {
             </button>
           </div>
 
-          
           {isOverlayVisible && (
             <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
               <div className="bg-[#F2EDE2] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">

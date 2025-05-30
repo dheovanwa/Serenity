@@ -9,7 +9,6 @@ export interface TimeRange {
 }
 
 export interface Psychiatrist {
-  id: string;
   name: string;
   specialty: string;
   image: string;
