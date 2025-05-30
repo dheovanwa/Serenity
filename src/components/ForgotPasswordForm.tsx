@@ -109,7 +109,7 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
           <p className="text-sm text-black dark:text-gray-300">
             Sudah ingat password Anda?{" "}
             <a
-              href="/login"
+              href="/signin"
               className="font-bold text-[#8DAABF] hover:text-white cursor-pointer dark:text-blue-400 dark:hover:text-blue-300" // Link Login
             >
               Masuk

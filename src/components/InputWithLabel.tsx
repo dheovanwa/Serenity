@@ -440,7 +440,7 @@ export function InputWithLabelPass({
   };
 
   return (
-    <div className="grid w-full max-w-sm items-center gap-1.5 mt-10 text-black">
+    <div className="grid w-full max-w-sm items-center gap-1.5 mt-10 text-black dark:text-[#E6E6E6]">
       <Label htmlFor="password">Kata Sandi</Label>
       <div className="relative">
         <Input

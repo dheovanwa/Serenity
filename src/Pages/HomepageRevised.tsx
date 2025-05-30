@@ -6,6 +6,7 @@ import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater"; /
 import Footer from "../components/Footer";
 import send from "../assets/send.svg";
 import { db } from "../config/firebase";
+import { Send } from "lucide-react";
 import {
   collection,
   query,
@@ -324,7 +325,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
         <h2 className="text-3xl font-semibold mb-4 text-[#161F36] w-full max-w-4xl xl:max-w-6xl">
           Sesi yang sedang Aktif
         </h2>
-        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4">
+        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
           {loadingSessions ? (
             <div className="text-center text-gray-500 text-lg">
               Memuat sesi aktif...
@@ -337,7 +338,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
             activeSessions.map((session) => (
               <div
                 key={session.id}
-                className="flex items-center pb-6 mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition"
+                className="flex items-center pb-6 mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
                 onClick={() => navigate(`/video-call/${session.id}`)}
                 tabIndex={0}
                 role="button"
@@ -357,7 +358,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                 />
                 <div className="flex-1">
                   <div className="flex items-center">
-                    <p className="text-xl font-semibold text-gray-900">
+                    <p className="text-xl font-semibold text-gray-900 dark:text-[#E6E6E6]">
                       {session.psychiatristName}
                     </p>
                   </div>
@@ -391,7 +392,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                   <img
                     src={send}
                     alt="Send icon"
-                    className="h-8 w-8 ml-2 object-contain"
+                    className="h-8 w-8 ml-2 object-contain dark:invert"
                   />
                 </button>
               </div>
@@ -399,11 +400,11 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
           )}
         </div>
       </div>
-      <div className="flex justify-center p-4 my-8 flex-col items-center">
+      <div className="flex justify-center p-4 my-8 flex-col items-center ">
         <h2 className="text-3xl font-semibold mb-4 text-[#161F36] w-full max-w-4xl xl:max-w-6xl">
           Sesi chat yang sedang aktif
         </h2>
-        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4">
+        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
           {loadingChats ? (
             <div className="text-center text-gray-500 text-lg">
               Memuat sesi chat...
@@ -416,7 +417,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
             activeChats.map((chat) => (
               <div
                 key={chat.id}
-                className="flex items-center pb-6 mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition"
+                className="flex items-center pb-6 mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
                 onClick={() => navigate(`/chat?chatId=${chat.id}`)}
                 tabIndex={0}
                 role="button"
@@ -436,7 +437,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                 />
                 <div className="flex-1">
                   <div className="flex items-center">
-                    <p className="text-xl font-semibold text-gray-900">
+                    <p className="text-xl font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                       {chat.psychiatristName}
                     </p>
                     {!chat.latestReceiverRead && (
@@ -446,10 +447,12 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                       ></span>
                     )}
                   </div>
-                  <p className="text-lg text-[#161F36]">{chat.latestMessage}</p>
+                  <p className="text-lg text-[#161F36] dark:text-[#E6E6E6]">
+                    {chat.latestMessage}
+                  </p>
                 </div>
                 <button
-                  className="flex items-center text-[#161F36] font-bold text-2xl ml-6"
+                  className="flex items-center text-[#161F36] dark:text-white font-bold text-2xl ml-6"
                   tabIndex={-1}
                   type="button"
                   style={{ pointerEvents: "none", opacity: 0.7 }}
@@ -459,7 +462,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                   <img
                     src={send}
                     alt="Send icon"
-                    className="h-8 w-8 ml-2 object-contain"
+                    className="h-8 w-8 ml-2 object-contain dark:invert"
                   />
                 </button>
               </div>
@@ -472,7 +475,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
         <h2 className="text-3xl font-semibold mb-4 text-[#161F36] w-full max-w-4xl xl:max-w-6xl">
           Sesi pertemuan mendatang
         </h2>
-        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4">
+        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
           {loadingUpcoming ? (
             <div className="text-center text-gray-500 text-lg">
               Memuat sesi pertemuan...
