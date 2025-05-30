@@ -75,7 +75,7 @@ const PsychiatristSearchProfile: React.FC<PsychiatristProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center bg-[#F8F0E0] p-4 rounded-lg shadow-xl hover:shadow-lg hover:bg-[#E4DCCC] hover:border-2 transition-all duration-300 focus:outline-none">
+    <div className="flex flex-col items-center bg-[#F8F0E0] p-4 rounded-lg shadow-xl hover:shadow-lg hover:bg-[#E4DCCC] hover:border-2 transition-all duration-300 focus:outline-none w-90 pt-10 pb-10">
       <img
         src={image ? image : "https://via.placeholder.com/213"}
         alt={name}

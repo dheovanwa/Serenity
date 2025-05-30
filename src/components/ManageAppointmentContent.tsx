@@ -9,6 +9,8 @@ import { useParams, useNavigate } from "react-router-dom";
 // import { db } from "../config/firebase";
 import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
+import starIcon from "../assets/star.svg";
+import briefcase from "../assets/briefcase.svg";
 // import { psychiatristsData } from "../utils/storePsychiatrists";
 
 import { cn } from "@/lib/utils";
@@ -92,6 +94,28 @@ const ManageAppointmentContent = () => {
 
   const [showCustomInput, setShowCustomInput] = React.useState(false);
   const [customSessions, setCustomSessions] = React.useState(2); // minimal 2 x 15m = 30m
+  const [showModal, setShowModal] = useState(false);
+
+  const handleCancel = () => {
+  setShowModal(true);
+};
+  const handleCloseModal = () => {
+  setShowModal(false); 
+};
+
+  const handleConfirmCancel = () => {
+    setDate(undefined);
+    setSelectedMethod(null);
+    setSelectedTime("");
+    setGejala("");
+    setTotalPrice(0);
+    setCustomSessions(2);
+    setShowModal(false);
+    // navigate("/schedule-appointment/:id?"); // Ganti dengan halaman yang sesuai
+  };
+  const handleDateSelectM = (newDate: Date | undefined) => {
+    setDate(newDate);
+  };
 
   const getTimeSlotsByDuration = (
     duration: string | null,
@@ -464,9 +488,6 @@ const ManageAppointmentContent = () => {
     }
   };
 
-  const handleCancel = () => {
-    navigate("/Search-psi");
-  };
 
   const handleDateSelect = (newDate: Date | undefined) => {
     console.log("Selected date:", newDate);
@@ -522,6 +543,25 @@ const ManageAppointmentContent = () => {
     return isBeforeToday;
   };
 
+  // Add function to check if form is valid based on method
+  const isFormValid = () => {
+    if (!selectedMethod) return false;
+
+    if (selectedMethod === "Chat") {
+      return !!date; // Only need date for Chat
+    }
+
+    if (selectedMethod === "Video") {
+      return (
+        !!date &&
+        (!!selectedDuration || (showCustomInput && customSessions >= 2)) &&
+        !!selectedTime
+      );
+    }
+
+    return false;
+  };
+
   return (
     <div className="w-full flex flex-col items-center px-4">
       <h1 className="w-full max-w-[1200px] text-left text-4xl sm:text-5xl font-bold text-[#161F36] mb-6 mt-6">
@@ -544,12 +584,31 @@ const ManageAppointmentContent = () => {
               {psychiatrist?.specialty}
             </p>
             <div className="flex gap-2 mt-2 items-center">
-              <span className="bg-[#BACBD8] text-gray-700 px-2 py-1 rounded text-xs">
-                {psychiatrist?.tahunPengalaman} tahun
-              </span>
-              <span className="bg-[#BACBD8] text-gray-700 px-2 py-1 rounded text-xs">
-                ⭐ {psychiatrist?.rating}
-              </span>
+              <div className="flex mt-2 bg-[#BACBD8] rounded-md justify-start w-27 pl-2 pt-1">
+                <img
+                  src={briefcase}
+                  alt="icon"
+                  className="w-4 h-4 mr-2 mt-0.5"
+                />
+                <span> {psychiatrist?.tahunPengalaman} Tahun</span>
+              </div>
+              <div className="flex mt-2 bg-[#BACBD8] rounded-md w-17 pl-2 pt-1">
+                {Array.from({ length: 1 }).map((_, index) => (
+                  <img
+                    key={index}
+                    src={starIcon}
+                    alt="star"
+                    className={`${
+                      index < psychiatrist?.rating
+                        ? "text-[#161F36]"
+                        : "text-gray-400"
+                    } w-4 h-4 mb-0.5`}
+                  />
+                ))}
+                <span className="ml-2 text-[#161F36]">
+                  {psychiatrist?.rating}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -584,6 +643,7 @@ const ManageAppointmentContent = () => {
           {/* Method */}
           <div>
             <p className="text-xl font-semibold text-black">Metode</p>
+            {/* Method buttons */}
             <div className="flex gap-2 mt-2 flex-wrap">
               {["Chat", "Video"].map((method) => (
                 <Button
@@ -592,7 +652,9 @@ const ManageAppointmentContent = () => {
                   onClick={() => setSelectedMethod(method)}
                   className={cn(
                     "py-2 px-6 text-sm sm:text-base bg-[#F2F2E2]",
-                    selectedMethod === method && "bg-[#187DA8] text-white"
+                    selectedMethod === method
+                      ? "bg-[#BACBD8] text-black"
+                      : "hover:bg-[#BACBD8] hover:text-black"
                   )}
                 >
                   {method}
@@ -601,121 +663,137 @@ const ManageAppointmentContent = () => {
             </div>
           </div>
 
-          {selectedMethod === "Video" && (
+          {/* Only show other sections if a method is selected */}
+          {selectedMethod && (
             <>
-              {/* Duration */}
+              {/* Date - Moved here and only show for both Chat and Video */}
               <div>
-                <p className="text-xl font-semibold text-black">Durasi</p>
-                <div className="flex gap-2 mt-2 flex-wrap">
-                  {["30m", "45m", "1h", "Custom"].map((duration) => (
+                <p className="text-xl font-semibold text-black">Tanggal</p>
+                <Popover>
+                  <PopoverTrigger asChild>
                     <Button
-                      key={duration}
                       variant="outline"
-                      onClick={() => {
-                        if (duration === "Custom") {
-                          setShowCustomInput(true);
-                          setSelectedDuration(null);
-                          setSelectedTime("");
-                        } else {
-                          setShowCustomInput(false);
-                          setSelectedDuration(duration);
-                        }
-                      }}
                       className={cn(
-                        "py-2 px-6 text-sm sm:text-base bg-[#F2F2E2]",
-                        (selectedDuration === duration ||
-                          (duration === "Custom" && showCustomInput)) &&
-                          "bg-[#187DA8] text-white"
+                        "w-full justify-start text-left font-normal py-5 text-sm sm:text-base mt-2 bg-[#F2F2E2] ",
+                        !date && "text-muted-foreground"
                       )}
                     >
-                      {duration}
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? (
+                        format(date, "PPP")
+                      ) : (
+                        <span>Pilih tanggal konsultasi</span>
+                      )}
                     </Button>
-                  ))}
-                </div>
-
-                {showCustomInput && (
-                  <div className="mt-4">
-                    <label className="block text-black font-semibold mb-2">
-                      Masukkan jumlah sesi (15 menit per sesi, minimal 2 sesi):
-                    </label>
-                    <input
-                      type="number"
-                      min={2}
-                      step={1}
-                      value={customSessions}
-                      onChange={(e) => {
-                        const val = Math.max(2, Number(e.target.value));
-                        setCustomSessions(val);
-                      }}
-                      className="border border-gray-300 rounded px-3 py-2 w-24 bg-[#F2F2E2]"
+                  </PopoverTrigger>
+                  <PopoverContent
+                    className="w-auto p-0 bg-[#F2F2E2]"
+                    align="start"
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={handleDateSelect}
+                      initialFocus
+                      disabled={isDateDisabled}
+                      dateFormat="dd/MM/YYYY"
                     />
-                    <p className="mt-2 text-gray-700">
-                      Total durasi:{" "}
-                      {customSessions * 15 < 60
-                        ? `${customSessions * 15} menit`
-                        : `${Math.floor((customSessions * 15) / 60)} jam ${
-                            (customSessions * 15) % 60
-                          } menit`}{" "}
-                      ({customSessions} x 15 menit)
-                    </p>
-                  </div>
-                )}
+                  </PopoverContent>
+                </Popover>
               </div>
 
-              {/* Time */}
-              <div className="mt-1">
-                <p className="text-xl font-semibold text-black">Waktu</p>
-                <Select onValueChange={setSelectedTime} value={selectedTime}>
-                  <SelectTrigger className="w-full mt-2 bg-[#F2F2E2] py-5">
-                    <SelectValue placeholder="Pilih jam konsultasi" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60 overflow-y-auto bg-[#F2F2E2]">
-                    {getTimeSlotsByDuration(
-                      selectedDuration,
-                      showCustomInput ? customSessions * 15 : undefined,
-                      date // Pass the selected date
-                    ).map((slot) => (
-                      <SelectItem key={slot} value={slot}>
-                        {slot}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {/* Video-specific sections */}
+              {selectedMethod === "Video" && (
+                <>
+                  {/* Duration */}
+                  <div>
+                    <p className="text-xl font-semibold text-black">Durasi</p>
+                    {/* Duration buttons */}
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                      {["30m", "45m", "1h", "Custom"].map((duration) => (
+                        <Button
+                          key={duration}
+                          variant="outline"
+                          onClick={() => {
+                            if (duration === "Custom") {
+                              setShowCustomInput(true);
+                              setSelectedDuration(null);
+                              setSelectedTime("");
+                            } else {
+                              setShowCustomInput(false);
+                              setSelectedDuration(duration);
+                            }
+                          }}
+                          className={cn(
+                            "py-2 px-6 text-sm sm:text-base bg-[#F2F2E2]",
+                            selectedDuration === duration ||
+                              (duration === "Custom" && showCustomInput)
+                              ? "bg-[#BACBD8] text-black"
+                              : "hover:bg-[#BACBD8] hover:text-black"
+                          )}
+                        >
+                          {duration}
+                        </Button>
+                      ))}
+                    </div>
+
+                    {showCustomInput && (
+                      <div className="mt-4">
+                        <label className="block text-black font-semibold mb-2">
+                          Masukkan jumlah sesi (15 menit per sesi, minimal 2
+                          sesi):
+                        </label>
+                        <input
+                          type="number"
+                          min={2}
+                          step={1}
+                          value={customSessions}
+                          onChange={(e) => {
+                            const val = Math.max(2, Number(e.target.value));
+                            setCustomSessions(val);
+                          }}
+                          className="border border-gray-300 rounded px-3 py-2 w-24 bg-[#F2F2E2]"
+                        />
+                        <p className="mt-2 text-gray-700">
+                          Total durasi:{" "}
+                          {customSessions * 15 < 60
+                            ? `${customSessions * 15} menit`
+                            : `${Math.floor((customSessions * 15) / 60)} jam ${
+                                (customSessions * 15) % 60
+                              } menit`}{" "}
+                          ({customSessions} x 15 menit)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Time */}
+                  <div className="mt-1">
+                    <p className="text-xl font-semibold text-black">Waktu</p>
+                    <Select
+                      onValueChange={setSelectedTime}
+                      value={selectedTime}
+                    >
+                      <SelectTrigger className="w-full mt-2 bg-[#F2F2E2] py-5">
+                        <SelectValue placeholder="Pilih jam konsultasi" />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60 overflow-y-auto bg-[#F2F2E2]">
+                        {getTimeSlotsByDuration(
+                          selectedDuration,
+                          showCustomInput ? customSessions * 15 : undefined,
+                          date // Pass the selected date
+                        ).map((slot) => (
+                          <SelectItem key={slot} value={slot}>
+                            {slot}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
             </>
           )}
-
-          {/* Date */}
-          <div>
-            <p className="text-xl font-semibold text-black">Tanggal</p>
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "w-full justify-start text-left font-normal py-5 text-sm sm:text-base mt-2 bg-[#F2F2E2] ",
-                    !date && "text-muted-foreground"
-                  )}
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {date ? (
-                    format(date, "PPP")
-                  ) : (
-                    <span>Pilih tanggal konsultasi</span>
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-[#F2F2E2]" align="start">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={handleDateSelect}
-                  initialFocus
-                  disabled={isDateDisabled}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
         </div>
 
         {/* Right Section */}
@@ -742,17 +820,23 @@ const ManageAppointmentContent = () => {
                 Rp{totalPrice.toLocaleString("id-ID")}
               </span>
             </p>
+            {/* Bottom buttons */}
             <div className="flex gap-4 mt-4 flex-wrap">
               <Button
                 variant="outline"
-                className="bg-[#187DA8] text-white hover:bg-sky-600"
+                className="bg-[#BACBD8] text-black hover:bg-[#9FB6C6]"
                 onClick={handleCancel}
               >
                 Batal
               </Button>
               <Button
-                className="bg-[#187DA8] text-white hover:bg-sky-600"
+                className={`${
+                  isFormValid()
+                    ? "bg-[#BACBD8] text-black hover:bg-[#9FB6C6]"
+                    : "bg-gray-400 text-white cursor-not-allowed"
+                }`}
                 onClick={handleSaveAppointment}
+                disabled={!isFormValid()}
               >
                 Lanjut
               </Button>
@@ -760,6 +844,34 @@ const ManageAppointmentContent = () => {
           </div>
         </div>
       </div>
+
+        {/* Modal Konfirmasi Batal */}
+      {showModal && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px]">
+            <h2 className="text-xl font-semibold text-black">Konfirmasi Batal</h2>
+            <p className="mt-2">Apakah Anda yakin ingin membatalkan pemesanan?</p>
+            <div className="flex justify-end gap-5 mt-5">
+              <Button
+                variant="outline"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1"
+                onClick={handleCloseModal}
+              >
+                Batal
+              </Button>
+              <Button
+                className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1"
+                onClick={handleConfirmCancel} 
+              >
+                Ya, Lanjutkan
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+
     </div>
   );
 };

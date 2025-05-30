@@ -7,6 +7,7 @@ import {
   Calendar,
   Menu,
   X,
+  MessagesSquare,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LogoLight from "../assets/Logo - Light.png";
@@ -102,13 +103,14 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
 
         <nav className="hidden md:flex flex-grow justify-center gap-5">
           <NavItem label="Halaman Utama" path="/" icon={Home} />
-          <NavItem label="Cari" path="/Search-psi" icon={Search} />
+          <NavItem label="Cari Ahli" path="/Search-psi" icon={Search} />
           <NavItem
             label="Janji Temu"
             path="/manage-appointment"
             icon={Calendar}
           />
           <NavItem label="Chat" path="/chat" icon={MessageSquare} />
+          <NavItem label="Forum" path="/forum" icon={MessagesSquare} />
           <NavItem label="Profil" path="/profile" icon={User} />
         </nav>
 

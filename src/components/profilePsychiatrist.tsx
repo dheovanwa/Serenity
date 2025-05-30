@@ -1,46 +1,78 @@
-import TopBar from "./TopBar";
-import InputField from "./inputField";
+import TopBar from "../components/TopBar";
+import InputField from "../components/inputField";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, auth } from "../config/firebase";
+import { signOut } from "firebase/auth";
 import cameraIcon from "../assets/83574.png";
 import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
+import user from "../assets/User.svg";
+import setting from "../assets/Settings.svg";
+import chevronDownIcon from "../assets/con1.png";
+import calender from "../assets/Calendar.svg";
+import { Separator } from "../components/Seperator";
 
-const profilePsychiatrist = () => {
+const PsychiatristProfile = () => {
   const [userName, setUserName] = useState("Loading...");
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [errorFirstName, setErrorFirstName] = useState(false);
   const [isFormValid, setIsFormValid] = useState(true);
   const [profilePic, setProfilePic] = useState(ProfilePic); // State for profile picture
   const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref for file input
+  const [phoneError, setPhoneError] = useState(false);
+  const [errorName, setErrorName] = useState(false);
+  const [errorSpecialization, setErrorSpecialization] = useState(false);
+  const [strError, setStrError] = useState(false);
+  const [workSchedule, setWorkSchedule] = useState<{ [key: string]: string }>({
+    // Will be loaded from Firestore
+  });
 
   const [formData, setFormData] = useState({
-    firstName: "Coolit",
-    lastName: "Heytame",
-    address: "Jl. Anggrek No. 5",
-    sex: "",
-    education: "Bachelor, Master, etc",
-    email: "heytame@example.com",
+    name: "dr. Elon Musk",
+    specialization: "Sp, Kejiwaan Konsultan",
+    alumnus: "Universitas Indonesia",
+    email: "elon@example.com",
+    practiceYear: "01/01/2001",
+    strNumber: "QH0000000000003621",
     phoneNumber: "",
-    country: "Indonesia",
-    city: "Jakarta",
   });
   const [initialFormData, setInitialFormData] = useState({
-    firstName: "",
-    lastName: "",
-    address: "",
-    sex: "",
-    education: "",
+    name: "",
+    specialization: "",
+    practiceAddress: "",
+    alumnus: "",
+    practiceYear: "",
     email: "",
+    strNumber: "",
     phoneNumber: "",
-    country: "",
-    city: "",
   });
-  const navigate = useNavigate();
 
+  const [isProfileClicked, setIsProfileClicked] = useState(false);
+  const [isSettingsClicked, setIsSettingsClicked] = useState(false);
+  const navigate = useNavigate();
+  const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  const handleLogoutClick = () => {
+    setIsOverlayVisible(true);
+  };
+
+  const handleCloseOverlay = () => {
+    setIsOverlayVisible(false);
+  };
+  const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+
+  const handleProfileClick = () => {
+    setIsProfileClicked(true);
+    setIsSettingsClicked(false);
+  };
+
+  const handleSettingsClick = () => {
+    setIsSettingsClicked(true);
+    setIsProfileClicked(false);
+  };
   useEffect(() => {
     const fetchUserData = async () => {
       const documentId = localStorage.getItem("documentId");
@@ -50,36 +82,102 @@ const profilePsychiatrist = () => {
       }
 
       try {
-        const userDocRef = doc(db, "users", documentId);
+        // Fetch psychiatrist data from psychiatrists collection
+        const psyDocRef = doc(db, "psychiatrists", documentId);
+        const psyDoc = await getDoc(psyDocRef);
+
+        let psyData: any = null;
+        if (psyDoc.exists()) {
+          psyData = psyDoc.data();
+          // Parse jadwal field
+          if (psyData.jadwal) {
+            const jadwal = psyData.jadwal;
+            // Convert jadwal to display format
+            const days = {
+              senin: "Senin",
+              selasa: "Selasa",
+              rabu: "Rabu",
+              kamis: "Kamis",
+              jumat: "Jumat",
+              sabtu: "Sabtu",
+              minggu: "Minggu",
+            };
+            const schedule: { [key: string]: string } = {};
+            Object.entries(days).forEach(([key, label]) => {
+              const daySchedule = jadwal[key];
+              if (!daySchedule || daySchedule === null) {
+                schedule[label] = "Libur";
+              } else {
+                // Convert minutes to HH:MM
+                const toTime = (min: number) => {
+                  const h = Math.floor(min / 60)
+                    .toString()
+                    .padStart(2, "0");
+                  const m = (min % 60).toString().padStart(2, "0");
+                  return `${h}:${m}`;
+                };
+                schedule[label] = `${toTime(daySchedule.start)} - ${toTime(
+                  daySchedule.end
+                )}`;
+              }
+            });
+            setWorkSchedule(schedule);
+          }
+          // Connect image, name, and specialty fields
+          if (psyData.image) {
+            setProfilePic(psyData.image);
+          }
+          if (psyData.name) {
+            setFormData((prev) => ({ ...prev, name: psyData.name }));
+          }
+          if (psyData.specialty) {
+            setFormData((prev) => ({
+              ...prev,
+              specialization: psyData.specialty,
+            }));
+          }
+        }
+
+        // ...existing userDoc fetch for profile fields...
+        const userDocRef = doc(db, "psychiatrists", documentId);
         const userDoc = await getDoc(userDocRef);
+
+        // Calculate Tahun Bergabung (practiceYear)
+        let practiceYear = "";
+        if (psyData && typeof psyData.tahunPengalaman === "number") {
+          const now = new Date();
+          const year = now.getFullYear() - psyData.tahunPengalaman;
+          // Always 21 August
+          practiceYear = `21/08/${year}`;
+        }
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
           setFormData({
-            firstName: userData.firstName || "",
-            lastName: userData.lastName || "",
-            address: userData.address || "",
-            sex: userData.sex || "",
-            education: userData.education || "",
-            email: userData.email || "",
-            phoneNumber: userData.phoneNumber || "",
-            country: userData.country || "",
-            city: userData.city || "",
+            name: userData.name || psyData?.name || "",
+            specialization: userData.specialization || psyData?.specialty || "",
+            alumnus: userData.alumnus || psyData?.alumnus || "",
+            practiceYear: practiceYear || userData.practiceYear || "",
+            email: userData.email || psyData?.email || "",
+            strNumber: userData.strNumber || psyData?.str || "",
+            phoneNumber: userData.phoneNumber || psyData?.phoneNumber || "",
           });
           setInitialFormData(userData);
-
-          // Load profile picture from Firestore
-          if (userData.profilePicture) {
-            setProfilePic(userData.profilePicture);
-          }
-
           checkFormValidity();
-          console.log("User data fetched:", userData);
+        } else if (psyData) {
+          setFormData((prev) => ({
+            ...prev,
+            alumnus: psyData.alumnus || "",
+            practiceYear: practiceYear,
+            email: psyData.email || "",
+            strNumber: psyData.str || "",
+            phoneNumber: psyData.phoneNumber || "",
+          }));
         }
       } catch (error) {
         console.error("Error fetching user data:", error);
       } finally {
-        setIsLoading(false); // Stop loading
+        setIsLoading(false);
       }
     };
 
@@ -87,28 +185,17 @@ const profilePsychiatrist = () => {
   }, [navigate]);
 
   useEffect(() => {
-    const fetchUserName = async () => {
-      const documentId = localStorage.getItem("documentId");
-      if (!documentId) return;
-
-      try {
-        const userDocRef = doc(db, "users", documentId);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUserName(
-            `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching user name:", error);
-        setUserName("User");
-      }
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 720);
     };
-
-    fetchUserName();
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
+
+  useEffect(() => {
+    checkFormValidity();
+  }, [formData]);
 
   const handleLogout = () => {
     localStorage.removeItem("documentId");
@@ -118,29 +205,32 @@ const profilePsychiatrist = () => {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setFormData(initialFormData);
+    setStrError(false);
+    setPhoneError(false);
+    setErrorFirstName(false);
+    setIsFormValid(true);
+    if (initialFormData.profilePicture) {
+      setProfilePic(initialFormData.profilePicture);
+    } else {
+      setProfilePic(ProfilePic);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
 
-    if (
-      (name === "firstName" ||
-        name === "lastName" ||
-        name === "country" ||
-        name === "city") &&
-      /[^a-zA-Z\s]/.test(value)
-    ) {
-      return;
-    }
-
-    if (name === "nationalCode") {
-      if (/[^0-9]/.test(value) || value.length > 16) {
-        return;
-      }
-    }
-
     if (name === "phoneNumber") {
       if (/[^0-9]/.test(value) || value.length > 13) {
+        return;
+      }
+      if ((value && !value.startsWith("08")) || value.length < 6) {
+        setPhoneError(true);
+      } else {
+        setPhoneError(false);
+      }
+    }
+    if (name === "strNumber") {
+      if (value.length > 16) {
         return;
       }
     }
@@ -151,18 +241,38 @@ const profilePsychiatrist = () => {
     });
     checkFormValidity();
   };
+
   const checkFormValidity = () => {
-    const isFirstNameValid = formData.firstName.trim() !== "";
-    setIsFormValid(isFirstNameValid);
-    setErrorFirstName(!isFirstNameValid);
+    const isNameValid = formData.name.trim() !== "";
+    const isSpecializationValid = formData.specialization.trim() !== "";
+    const isStrValid = formData.strNumber.trim() !== "";
+    const isPhoneValid =
+      formData.phoneNumber.trim() !== "" &&
+      formData.phoneNumber.startsWith("08") &&
+      formData.phoneNumber.length >= 6;
+
+    const formIsValid = true;
+
+    setIsFormValid(formIsValid);
+
+    setErrorName(!isNameValid);
+    setErrorSpecialization(!isSpecializationValid);
+    setStrError(!isStrValid);
   };
   const handleSave = async () => {
-    if (!formData.firstName.trim()) {
-      setErrorFirstName(true);
+    if (!formData.name.trim()) {
+      setErrorName(true);
+      return;
+    }
+    if (!formData.specialization.trim()) {
+      setErrorSpecialization(true);
       return;
     }
 
-    setErrorFirstName(false);
+    setErrorName(false);
+    setErrorSpecialization(false);
+    setStrError(false);
+
     const documentId = localStorage.getItem("documentId");
     if (!documentId) {
       console.error("No document ID found in localStorage.");
@@ -170,21 +280,16 @@ const profilePsychiatrist = () => {
     }
 
     try {
-      const userDocRef = doc(db, "users", documentId);
-
-      await updateDoc(userDocRef, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        address: formData.address,
-        sex: formData.sex,
-        education: formData.education, // Corrected key
-        phoneNumber: formData.phoneNumber,
-        country: formData.country,
-        city: formData.city,
-      });
+      // const userDocRef = doc(db, "users", documentId);
+      // await updateDoc(userDocRef, {
+      //   name: formData.name,
+      //   specialization: formData.specialization,
+      //   strNumber: formData.strNumber,
+      //   phoneNumber: formData.phoneNumber,
+      // });
 
       console.log("User data updated successfully.");
-      setIsEditing(false);
+      setIsEditing(false); // Menonaktifkan mode edit setelah simpan
     } catch (error) {
       console.error("Error updating user data:", error);
     }
@@ -193,22 +298,63 @@ const profilePsychiatrist = () => {
   const handleProfilePicChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      // Compress the image
-      new Compressor(file, {
-        quality: 0.6, // Adjust compression quality
-        success: (compressedFile) => {
-          const reader = new FileReader();
-          reader.onload = () => {
-            const base64Image = reader.result as string;
-            setProfilePic(base64Image); // Update profile picture locally
-            saveProfilePictureToFirestore(base64Image); // Save to Firestore
-          };
-          reader.readAsDataURL(compressedFile);
-        },
-        error: (err) => {
-          console.error("Error compressing image:", err);
-        },
-      });
+      // Crop the image by center but a bit upper by 20px, then compress and save
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new window.Image();
+        img.onload = () => {
+          // Calculate crop size (square, min of width/height)
+          const cropSize = Math.min(img.width, img.height);
+          // Center crop, but move up by 20px (if possible)
+          let sx = (img.width - cropSize) / 2;
+          let sy = (img.height - cropSize) / 2 - 200;
+          if (sy < 0) sy = 0;
+
+          const canvas = document.createElement("canvas");
+          canvas.width = cropSize;
+          canvas.height = cropSize;
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(
+              img,
+              sx,
+              sy,
+              cropSize,
+              cropSize,
+              0,
+              0,
+              cropSize,
+              cropSize
+            );
+            canvas.toBlob(
+              (blob) => {
+                if (blob) {
+                  // Compress the cropped image
+                  new Compressor(blob, {
+                    quality: 0.8,
+                    success: (compressedFile) => {
+                      const compReader = new FileReader();
+                      compReader.onload = () => {
+                        const base64Image = compReader.result as string;
+                        setProfilePic(base64Image);
+                        saveProfilePictureToFirestore(base64Image);
+                      };
+                      compReader.readAsDataURL(compressedFile);
+                    },
+                    error: (err) => {
+                      console.error("Error compressing image:", err);
+                    },
+                  });
+                }
+              },
+              "image/jpeg",
+              0.95
+            );
+          }
+        };
+        img.src = reader.result as string;
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -220,19 +366,29 @@ const profilePsychiatrist = () => {
     }
 
     try {
-      const userDocRef = doc(db, "users", documentId);
-      await updateDoc(userDocRef, { profilePicture: base64Image });
-      console.log("Profile picture updated successfully in Firestore.");
+      // Save to psychiatrists collection, field: image
+      const psyDocRef = doc(db, "psychiatrists", documentId);
+      await updateDoc(psyDocRef, { image: base64Image });
+      console.log(
+        "Profile picture updated successfully in psychiatrists collection."
+      );
     } catch (error) {
-      console.error("Error updating profile picture in Firestore:", error);
+      console.error(
+        "Error updating profile picture in psychiatrists collection:",
+        error
+      );
     }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click(); // Trigger file input click
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#b5e9ff] text-white">
-        <div className="w-1/2 h-2 bg-white rounded-full overflow-hidden">
-          <div className="h-full bg-[#6ec2fa] animate-loading-bar"></div>
+      <div className="min-h-screen flex items-center justify-center bg-[#f2f3d9] text-[#161F36]">
+        <div className="w-1/2 h-2 bg-gray-300 rounded-full overflow-hidden">
+          <div className="h-full bg-[#161F36] animate-loading-bar"></div>
         </div>
         <style>
           {`
@@ -251,210 +407,403 @@ const profilePsychiatrist = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#95cefd] text-white flex flex-col">
-      <TopBar userName={userName} onLogout={handleLogout} />
-      <div className="w-full px-6 py-4">
-        <button
-          onClick={() => navigate("/")}
-          className="bg-[#41729b] text-white py-2 px-4 rounded-md hover:bg-[#48657c] transition font-semibold cursor-pointer"
-        >
-          ← Back to Home
-        </button>
-      </div>
-
-      <div className="w-full px-6 py-15 bg-[#6cbdff]">
-        <div className="flex items-center gap-6 flex-col sm:flex-row">
-          <div className="relative w-24 h-24 sm:w-45 sm:h-45 rounded-full overflow-hidden group">
+    <div className="w-full h-screen flex flex-col">
+      <div className="w-full bg-white items-center justify-center mt-40 ">
+        <div className="flex items-center justify-center">
+          <div className="relative w-24 h-24 sm:w-55 sm:h-55 rounded-full overflow-hidden">
             <img
               src={profilePic}
               alt="Profile"
-              className="w-full h-full object-cover transition duration-300"
+              className={`w-full h-full object-cover transition duration-300 ${
+                isEditing ? "opacity-70 group-hover:opacity-50" : ""
+              }`}
+            />
+            {isEditing && (
+              <div
+                onClick={triggerFileInput}
+                className="absolute inset-0 flex justify-center items-center transition duration-300 cursor-pointer"
+              >
+                <img
+                  src={cameraIcon}
+                  alt="Camera Icon"
+                  className="w-10 h-10 opacity-80 group-hover:opacity-100"
+                />
+              </div>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept="image/*"
+              className="hidden"
+              onChange={handleProfilePicChange}
             />
           </div>
+        </div>
 
-          <div className="text-center sm:text-left max-w-7xl">
-            <div className="flex items-center gap-4">
-              <h1 className="text-3xl sm:text-5xl font-extrabold mb-2">
-                dr. {formData.firstName} {formData.lastName}
-              </h1>
+        <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left mt-6">
+          <h1 className="text-2xl sm:text-4xl font-medium">{formData.name}</h1>
+        </div>
+        <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left ">
+          <h2 className="text-xl font-light">{formData.specialization}</h2>
+        </div>
+        <div className="flex justify-center text-md items-center text-[#161F36] font-light mb-10">
+          {formData.email}
+        </div>
 
-              {/* Box with stars and experience */}
-              <div className="flex items-center gap-3">
-                <div className="flex items-center">
-                  {/* Star Rating */}
-                  <span className="text-yellow-500">★★★★★</span>
-                </div>
-                <div className="bg-transparent border-2 text-white font-semibold rounded-sm px-3 py-1">
-                  2 Years Experience in Serenity
-                </div>
-              </div>
-            </div>
-            <p className="text-lg sm:text-2xl font-bold">
-              I’m dr. Coolit Heytame, a psychiatrist with years of experience in
-              treating a variety of mental health conditions. I focus on
-              creating a supportive environment where patients can heal and
-              grow, using evidence-based therapies and an empathetic approach to
-              help them regain emotional balance.
-            </p>
+        {/* Mobile Layout Buttons */}
+        {isMobile && (
+          <div className="flex flex-row justify-center items-center mt-5 w-full gap-25">
+            {/* Profile Button */}
+            <button
+              className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${
+                isProfileClicked ? "bg-[#BACBD8]" : ""
+              } transition-all duration-300`}
+              onClick={handleProfileClick}
+            >
+              <h1 className="text-lg text-center ">Profile</h1>
+            </button>
 
             <button
-              onClick={() => {
-                if (isEditing) {
-                  handleCancelEdit();
-                } else {
-                  setIsEditing(true);
-                }
-              }}
-              className="mt-4 bg-[#41729b] text-white py-2 px-6 rounded-md hover:bg-[#48657c] transition font-semibold cursor-pointer"
+              className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${
+                isSettingsClicked ? "bg-[#BACBD8]" : ""
+              } transition-all duration-300`}
+              onClick={handleSettingsClick}
             >
-              {isEditing ? "Cancel Edit" : "Edit Profile"}
+              <h1 className="text-lg text-center ">Jam Kerja</h1>
             </button>
           </div>
-        </div>
+        )}
       </div>
 
-      <div className="bg-[#4b80ac] flex-1">
-        <div className="max-w-6xl mx-auto pt-10 py-10 px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-white">
-                Personal
+      {/*DESKTOP*/}
+      {!isMobile && (
+        <div className=" bg-[#F2EDE2] flex h-screen">
+          <div className="relative z-1 flex flex-col lg:flex-row w-full ">
+            {/*Left*/}
+
+            <div className="w-full lg:w-1/4 flex flex-col xl:mr-1 lg:pt-10 lg:mr-10  ">
+              <h2 className="text-[#161F36]  mb-1 lg:text-[22px] font-regular text-left sm:ml-12 md:ml-10 lg:ml-20">
+                Jam Kerja
               </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+
+              <div className="bg-transparent lg:w-[70%] md:w-[40%] sm:w-[40%] text-[#161F36] border-2 border-[#161F36] sm:ml-12 md:ml-10 md:mr-10 lg:ml-20 rounded-[6px] p-4">
+                <div className="flex flex-col gap-2">
+                  {Object.entries(workSchedule).map(([day, time]) => (
+                    <div
+                      key={day}
+                      className="flex justify-between items-center "
+                    >
+                      <span className="text-left text-xl flex-1">
+                        {day}, {time}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tombol Keluar di bawah kiri */}
+              <button
+                onClick={async () => {
+                  try {
+                    await signOut(auth);
+                  } catch (error) {
+                    console.error("Error signing out:", error);
+                  }
+                  localStorage.removeItem("documentId");
+                  navigate("/signin");
+                }}
+                className="text-[#FF5640] text-sm lg:text-xl text-left mt-auto lg:ml-3 md:ml-12 sm:ml-15 self-start w-full lg:w-full transition-all duration-300 mb-3 cursor-pointer"
+                style={{ cursor: "pointer" }}
+              >
+                Keluar dari akun
+              </button>
+            </div>
+
+            {/*middle */}
+            <div className="grid grid-cols-2 lg:w-3/4 col-span-4 lg:ml-0 md:ml-10 sm:ml-12">
+              <div className="grid grid-cols-1 gap-4 text-[#161F36] mt-10 ">
+                <div className="md:col-span-2">
                   <InputField
-                    label="First Name"
+                    label="Nama Lengkap"
                     type="text"
-                    name="firstName"
-                    value={formData.firstName}
+                    name="name"
+                    value={formData.name}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    className={
-                      errorFirstName ? "border-red-500" : "border-gray-300"
-                    }
+                    className={errorName ? "border-red-500" : "border-gray-900"}
                   />
-                  {errorFirstName && (
+                  {errorName && (
                     <p className="text-red-500 text-sm mt-2">
-                      First Name cannot be empty
+                      Nama depan tidak boleh kosong
                     </p>
                   )}
                 </div>
-                <div>
+                <div className="md:col-span-2 ">
                   <InputField
-                    label="Last Name"
+                    label="Specialisasi"
                     type="text"
-                    name="lastName"
-                    value={formData.lastName}
+                    name="specialization"
+                    value={formData.specialization}
                     onChange={handleChange}
                     readOnly={!isEditing}
+                    className={
+                      errorSpecialization ? "border-red-500" : "border-gray-900"
+                    }
                   />
+                  {errorSpecialization && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Specialization tidak boleh kosong
+                    </p>
+                  )}
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 font-medium">
                   <InputField
-                    label="Sex"
+                    label="Alumnus"
                     type="text"
-                    name="sex"
-                    value={formData.sex}
+                    name="alumnus"
+                    value={formData.alumnus}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    placeholder="Male or Female"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Work Address"
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    readOnly={!isEditing}
-                    placeholder="Your work address"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Graduate of"
-                    type="text"
-                    name="education" // Corrected key
-                    value={formData.education} // Corrected key
-                    onChange={handleChange}
-                    readOnly={!isEditing}
-                    placeholder="University, City, Year"
                   />
                 </div>
               </div>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-white">Contact</h2>
-              <div className="grid grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 w-full gap-4 mt-10 ">
                 <div>
                   <InputField
-                    label="Email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
+                    icon={<img src={calender} alt="calendar" className="" />}
+                    iconPosition="left"
+                    label="Tahun Bergabung"
+                    type="text"
+                    name="practiceYear"
+                    value={formData.practiceYear}
                     onChange={handleChange}
                     readOnly={true}
+                    className="pl-12 "
                   />
                 </div>
-
                 <div className="flex gap-2 items-stretch">
                   <div className="flex-grow">
                     <InputField
-                      label="Phone Number"
+                      label="Nomor STR"
                       type="text"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
+                      name="strNumber"
+                      value={formData.strNumber}
                       onChange={handleChange}
                       readOnly={!isEditing}
-                      placeholder="08xxxxxxx"
                     />
                   </div>
                 </div>
                 <div>
                   <InputField
-                    label="Country"
+                    label="Nomor Telepon"
                     type="text"
-                    name="country"
-                    value={formData.country}
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    placeholder="Your country"
+                    placeholder="08123272348"
+                    className={
+                      phoneError ? "border-red-500" : "border-gray-900"
+                    }
                   />
+                  {phoneError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Nomor Telepon harus dimulai dengan 08 dan dalam format
+                      yang benar
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end items-end w-full gap-6 lg:gap-10 lg:mb-20 md:mb-5 sm:pr-10 sm:mb-5 pt-10 lg:pr-17 md:pr-10 col-span-2">
+                <button
+                  onClick={() => {
+                    if (isEditing) {
+                      handleCancelEdit();
+                    } else {
+                      setIsEditing(true);
+                    }
+                  }}
+                  className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer"
+                >
+                  {isEditing ? "Batal" : "Ubah"}
+                </button>
+                {isEditing && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleSave}
+                      className={`bg-[#BACBD8] text-lg text-[#161F36] py-4 px-13 rounded-md hover:bg-[#87b4fb] transition font-medium ${
+                        !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={!isFormValid}
+                    >
+                      Simpan
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          {isOverlayVisible && (
+            <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
+              <div className="bg-[#F2EDE2] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
+                <h2 className="text-lg font-semibold mb-4">
+                  Apakah kamu yakin?
+                </h2>
+                <p className="text-sm mb-4 font-regular">
+                  Aksi ini akan mengubah data dirimu dan tidak bisa diubah{" "}
+                  <br />
+                  kembali ke semula apabila kamu melanjutkan.
+                </p>
+                <div className="flex flex-wrap justify-end gap-4">
+                  <button
+                    onClick={handleCloseOverlay}
+                    className="bg-transparent border-1 font-medium text-sm text-[#161F36] border-black px-4 py-2 rounded-md w-full sm:w-auto "
+                  >
+                    Batalkan
+                  </button>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("documentId");
+                      window.location.href = "/signin";
+                    }}
+                    className="bg-[#BACBD8] text-[#181818] font-medium px-4 py-2 rounded-md w-full sm:w-auto text-sm "
+                  >
+                    Lanjutkan
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/*MOBILE*/}
+      {isMobile && isProfileClicked && (
+        <div className=" bg-[#F2EDE2] flex h-screen w-full ml-0 ">
+          <div className="relative z-1 flex flex-col w-full ">
+            <div className="flex flex-col">
+              <div className="grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
+                <div className="md:col-span-2">
+                  <InputField
+                    label="Nama Lengkap"
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    className={errorName ? "border-red-500" : "border-gray-900"}
+                  />
+                  {errorName && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Nama depan tidak boleh kosong
+                    </p>
+                  )}
+                </div>
+                <div className="md:col-span-2 ">
+                  <InputField
+                    label="Specialisasi"
+                    type="text"
+                    name="specialization"
+                    value={formData.specialization}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    className={
+                      errorSpecialization ? "border-red-500" : "border-gray-900"
+                    }
+                  />
+                  {errorSpecialization && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Specialization tidak boleh kosong
+                    </p>
+                  )}
+                </div>
+                <div className="md:col-span-2 font-medium">
+                  <InputField
+                    label="Alumnus"
+                    type="text"
+                    name="alumnus"
+                    value={formData.alumnus}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
+                <div>
+                  <InputField
+                    icon={<img src={calender} alt="calendar" className="" />}
+                    iconPosition="left"
+                    label="Tahun Bergabung"
+                    type="text"
+                    name="practiceYear"
+                    value={formData.practiceYear}
+                    onChange={handleChange}
+                    readOnly={true}
+                    className="pl-12 "
+                  />
+                </div>
+                <div className="flex gap-2 items-stretch">
+                  <div className="flex-grow">
+                    <InputField
+                      label="Nomor STR"
+                      type="text"
+                      name="strNumber"
+                      value={formData.strNumber}
+                      onChange={handleChange}
+                      readOnly={!isEditing}
+                    />
+                  </div>
                 </div>
                 <div>
                   <InputField
-                    label="City"
+                    label="Nomor Telepon"
                     type="text"
-                    name="city"
-                    value={formData.city}
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    placeholder="Your city"
+                    placeholder=""
+                    className={
+                      phoneError ? "border-red-500" : "border-gray-900"
+                    }
                   />
+                  {phoneError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Nomor Telepon harus dimulai dengan 08 dan dalam format
+                      yang benar
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
           </div>
-
-          {isEditing && (
-            <div className="flex justify-center">
-              <button
-                onClick={handleSave}
-                className={`bg-[#41729b] text-white py-4 px-20 border-2 rounded-md hover:bg-[#48657c] transition font-bold text-xl ${
-                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={!isFormValid}
-              >
-                Save
-              </button>
-            </div>
-          )}
         </div>
-      </div>
+      )}
+
+      {isMobile && isSettingsClicked && (
+        <div className=" bg-[#F2EDE2] flex h-screen w-full  ">
+          <div className="relative z-1 flex flex-col w-full ">
+            <div className="flex flex-col justify-center items-center">
+              <div className="bg-transparent  w-[80%]  mt-10  text-[#161F36] border-2 border-[#161F36] rounded-[6px] p-4">
+                <div className="flex flex-col gap-2">
+                  {Object.entries(workSchedule).map(([day, time]) => (
+                    <div
+                      key={day}
+                      className="flex justify-between items-center "
+                    >
+                      <span className="text-left text-xl flex-1">
+                        {day}, {time}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default profilePsychiatrist;
+export default PsychiatristProfile;

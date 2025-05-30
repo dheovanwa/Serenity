@@ -110,6 +110,8 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
           <NavItem label="Chat" path="/chat" icon={MessageSquare} />
           <NavItem label="Profil" path="/profile" icon={User} />
         </nav>
+        <div className="flex items-center space-x-3 sm:space-x-4">
+          <div className="relative hidden sm:block"> </div>
 
         <div className="flex items-center gap-x-3 sm:gap-x-4 flex-shrink-0">
           <div className="flex items-center">

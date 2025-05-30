@@ -10,6 +10,7 @@ import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";
 import PsychiatristProfile from "./Pages/PsychiatristProfile";
 import Dashboardpsychiatrist from "./Pages/Dashboardpsychiatrist";
+import NavBar from "./components/Navbar";
 import SignUpComplete from "./Pages/CompleteSignUp";
 import TermsOfService from "./Pages/TermsOfService";
 import ManageApt from "./components/ManageAppointmentContent";
@@ -19,6 +20,8 @@ import ManageAppointmentPsy from "./components/ManageAppointmentPsy";
 import Layout from "./components/Layout";
 import ChatPage from "./Pages/Chat";
 import VideoCallPage from "./Pages/VideoCallPage";
+import Forum from "./Pages/Forum";
+import ForumPost from "./Pages/ForumPost";
 // import { initializeQuotaReset } from "./utils/storePsychiatrists";
 
 const App: React.FC = () => {
@@ -34,6 +37,7 @@ const App: React.FC = () => {
         <Route path="/signup" element={<Register />} />
         <Route path="/complete-register" element={<SignUpComplete />} />
         <Route path="/verify-email" element={<Verif />} />
+
         <Route path="/forgot-password/*" element={<ForgotPassword />} />
 
         {/* Routes with navbar */}
@@ -70,7 +74,7 @@ const App: React.FC = () => {
           }
         />
         <Route
-          path="/psychiatrist-coolit-heytame"
+          path="/doctor-profile"
           element={
             <Layout>
               <PsychiatristProfile />
@@ -138,6 +142,22 @@ const App: React.FC = () => {
           element={
             <Layout>
               <VideoCallPage />
+            </Layout>
+          }
+        />
+        <Route
+          path="/forum"
+          element={
+            <Layout>
+              <Forum />
+            </Layout>
+          }
+        />
+        <Route
+          path="/forum/:forumId"
+          element={
+            <Layout>
+              <ForumPost />
             </Layout>
           }
         />

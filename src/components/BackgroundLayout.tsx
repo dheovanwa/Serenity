@@ -3,9 +3,20 @@ import cloudImage from "../assets/cloud.png";
 
 interface AuthLayoutProps {
   children: ReactNode;
+  variant?: "default" | "solid";
 }
 
-const AuthLayout = ({ children }: AuthLayoutProps) => {
+const AuthLayout = ({ children, variant = "default" }: AuthLayoutProps) => {
+  if (variant === "solid") {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#F2EDE2]">
+        {children}
+        <p className="absolute bottom-2 font-bold w-full text-center text-gray-500 text-sm">
+          © 2024 - 2025 Mental Health J&D Sp. so.co
+        </p>
+      </div>
+    );
+  }
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-300 to-sky-50">
       {children}
