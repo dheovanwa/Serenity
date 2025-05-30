@@ -36,15 +36,17 @@ const EmailSent = () => {
         {/* Spacer to avoid overlapping logo */}
         <div className="flex-grow flex items-center justify-center">
           <div className="flex flex-col items-center justify-center text-center gap-4">
-            <h2 className="text-3xl sm:text-4xl font-bold">Check Your Email!</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold">
+              Periksa Email Anda!
+            </h2>
             <p className="text-base sm:text-lg">
-              A password reset link has been sent.
+              Link untuk reset password telah dikirim.
             </p>
             <button
               onClick={() => navigate("/forgot-password/reset-password")}
               className="w-full max-w-[310px] bg-[#BACBD8] text-black py-2 px-6 rounded-lg font-semibold hover:bg-[#bad2e5] transition shadow"
             >
-              Continue
+              Lanjut
             </button>
           </div>
         </div>
