@@ -1,96 +1,102 @@
 import React from "react";
+import Instagram from "../assets/instagram.png";
+import Whatsapp from "../assets/whatsapp.png";
+import email from "../assets/email.png";
+import SerenityLogo from "../assets/Logo - Dark.png"; // Asumsi: Ini adalah logo 'S'
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-[#2f2b28] text-white py-16">
-      <div className="max-w-screen-xl mx-auto px-6">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-          {/* Left Section: Website Name and Social Links */}
-          <div>
-            <h2 className="text-4xl font-bold mb-4">Serenity</h2>
-            <div className="flex space-x-6">
-              <a
-                href="https://www.instagram.com/mentalhealthid"
-                className="hover:opacity-75"
-              >
-                Instagram
-              </a>
-              <a href="tel:+6285232020581" className="hover:opacity-75">
-                +62 852-3202-0581
-              </a>
-              <a
-                href="mailto:mentalhealth@serenity.co.id"
-                className="hover:opacity-75"
-              >
-                mentalhealth@serenity.co.id
-              </a>
-            </div>
+    <footer className="bg-[#161F36] text-white pt-16">
+      <div className="w-full mx-auto px-10 md:px-16 lg:px-24">
+        <div className="flex items-center mb-16 pl-4 md:pl-0">
+          {SerenityLogo && (
+            <img
+              src={SerenityLogo}
+              alt="Serenity S Logo"
+              className="h-14 w-14 mr-4"
+            />
+          )}
+          <h2 className="text-6xl font-bold text-white">Serenity</h2>
+        </div>
+
+        {/* Menggunakan grid-cols-1 md:grid-cols-3 */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-y-12 md:gap-y-0 mb-16">
+          {/* Kolom 1: Informasi Kontak (Tetap Rata Kiri) */}
+          <div className="text-left">
+            <h3 className="text-xl font-semibold mb-6">Informasi Kontak</h3>
+            <ul className="space-y-4">
+              <li className="flex items-center text-base">
+                <img src={Instagram} alt="Instagram" className="w-6 h-6 mr-3" />
+                <span>@mentalhealthid</span>
+              </li>
+              <li className="flex items-center text-base">
+                <img src={Whatsapp} alt="Whatsapp" className="w-6 h-6 mr-3" />
+                <span>+628529320581</span>
+              </li>
+              <li className="flex items-center text-base">
+                <img src={email} alt="email" className="w-6 h-6 mr-3" />
+                <span>mentalhealth@serenity.co.id</span>
+              </li>
+            </ul>
           </div>
 
-          {/* Middle Section: Consumer Complaints Service */}
-          <div>
-            <h3 className="text-xl font-semibold mb-4">
-              Consumer Complaints Service
+          {/* Kolom 2: PT Serenity Mental Health (Alamat) - Dorong ke Tengah dengan margin-left */}
+          {/* Tambahkan md:ml-20 untuk mendorongnya dari kolom pertama */}
+          <div className="text-left md:ml-30">
+            {" "}
+            {/* <--- Perubahan di sini */}
+            <h3 className="text-xl font-semibold mb-6">
+              PT Serenity Mental Health
             </h3>
-            <p className="text-sm">
-              PT Mental Health Corp <br />
-              Jl. Raya Pantai No. 17, Kuningan, <br />
-              Jakarta Selatan 12345, Indonesia.
+            <p className="text-base leading-relaxed">
+              Jl. Raya Kb. Mangga No.72 RT.2/RW.09, <br />
+              Kec. Duku, Kota Jakarta Selatan, <br />
+              Daerah Khusus Ibukota Jakarta 10812
             </p>
           </div>
 
-          {/* Right Section: Site Map */}
-          <div>
-            <h3 className="text-xl font-semibold mb-4">Site Map</h3>
-            <ul className="space-y-2 text-sm">
+          {/* Kolom 3: Peta Situs (Dorong ke Kanan menggunakan ml-auto) */}
+          {/* Pastikan ini tetap ada untuk mendorongnya ke paling kanan */}
+          <div className="text-left md:ml-auto">
+            {" "}
+            {/* <--- Perubahan di sini */}
+            <h3 className="text-xl font-semibold mb-6">Peta Situs</h3>
+            <ul className="space-y-3 text-base">
               <li>
                 <a href="#" className="hover:opacity-75">
-                  FAQ
+                  Halaman Utama
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:opacity-75">
-                  Blog
+                  Pencarian Psikiater
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:opacity-75">
-                  Terms & Condition
+                  Jadwal Sesi
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:opacity-75">
-                  Privacy
+                  Pesan
                 </a>
               </li>
               <li>
                 <a href="#" className="hover:opacity-75">
-                  Security
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:opacity-75">
-                  Media
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:opacity-75">
-                  Partnership
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:opacity-75">
-                  Promotions
+                  Profil
                 </a>
               </li>
             </ul>
           </div>
         </div>
+      </div>
 
-        {/* Bottom Section: Copyright */}
-        <div className="mt-16 text-center">
-          <p className="text-sm">© 2024 - 2025 Mental Health J&D Sp. co.</p>
-        </div>
+      {/* Bagian Bawah: Copyright */}
+      <div className="bg-[#161F36] py-4 text-center">
+        <p className="text-base font-medium">
+          © 2024 - 2025 PT Serenity Mental Health
+        </p>
       </div>
     </footer>
   );

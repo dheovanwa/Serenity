@@ -5,7 +5,7 @@ import Login from "./Pages/Login";
 import Verif from "./components/verifyEmail";
 import ForgotPassword from "./Pages/forgotPassword";
 import UserProfile from "./components/profileUser";
-import Homepage from "./Pages/Homepage";
+import Homepage from "./Pages/HomepageRevised";
 import LandingPage from "./Pages/LandingPage";
 import SearchPskiater from "./Pages/SearchPskiater";
 import PsychiatristProfile from "./Pages/PsychiatristProfile";

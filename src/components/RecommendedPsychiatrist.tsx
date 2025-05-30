@@ -1,4 +1,3 @@
-import PsychiatristPhoto from "../assets/psychiatristPhoto.png";
 import { Card, CardContent } from "./ui/card";
 import {
   Carousel,
@@ -7,33 +6,37 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "./ui/carousel";
+import p1 from "../assets/p1.png"; // Import gambar profil
+import p2 from "../assets/p2.png"; // Import gambar profil
+import p4 from "../assets/p4.png";
+import p5 from "../assets/p5.png";
+import p3 from "../assets/p3.png";
 
-// Data psikiater
 const psychiatrists = [
   {
     name: "Titin Sulaiman",
-    job: "Anxiety & Depression Specialist",
-    image: { PsychiatristPhoto },
+    job: "Psikoterapi dan Konseling",
+    image: p1, // Menggunakan variabel p1 secara langsung
   },
   {
     name: "Yohanes Smith",
     job: "Therapist",
-    image: { PsychiatristPhoto },
+    image: p2, // Menggunakan variabel p2 secara langsung
   },
   {
     name: "Jane Smith",
-    job: "Therapist",
-    image: { PsychiatristPhoto },
+    job: "Hipnoterapi",
+    image: p4, // Menggunakan variabel p4 secara langsung
   },
   {
     name: "Dheo Smith",
-    job: "Therapist",
-    image: { PsychiatristPhoto },
+    job: "Evaluasi Kondisi Psikologis",
+    image: p5, // Menggunakan variabel p5 secara langsung
   },
   {
     name: "Jefferson Wenanta",
-    job: "Therapist",
-    image: { PsychiatristPhoto },
+    job: "Terapi Stimulasi Saraf Otak",
+    image: p3, // Menggunakan variabel p3 secara langsung
   },
 ];
 
@@ -48,7 +51,7 @@ export function CarouselDemo() {
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   {/* Gambar Psikiater */}
                   <img
-                    src={PsychiatristPhoto}
+                    src={psychiatrist.image} // Menggunakan psychiatrist.image
                     alt={psychiatrist.name}
                     className="w-62 h-42 rounded-2xl object-cover mb-4"
                   />
