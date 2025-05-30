@@ -1,3 +1,4 @@
+import React, { useEffect, useState } from "react";
 import { Card, CardContent } from "./ui/card";
 import {
   Carousel,
@@ -6,41 +7,69 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "./ui/carousel";
-import p1 from "../assets/p1.png"; // Import gambar profil
-import p2 from "../assets/p2.png"; // Import gambar profil
-import p4 from "../assets/p4.png";
-import p5 from "../assets/p5.png";
-import p3 from "../assets/p3.png";
-
-const psychiatrists = [
-  {
-    name: "Titin Sulaiman",
-    job: "Psikoterapi dan Konseling",
-    image: p1, // Menggunakan variabel p1 secara langsung
-  },
-  {
-    name: "Yohanes Smith",
-    job: "Therapist",
-    image: p2, // Menggunakan variabel p2 secara langsung
-  },
-  {
-    name: "Jane Smith",
-    job: "Hipnoterapi",
-    image: p4, // Menggunakan variabel p4 secara langsung
-  },
-  {
-    name: "Dheo Smith",
-    job: "Evaluasi Kondisi Psikologis",
-    image: p5, // Menggunakan variabel p5 secara langsung
-  },
-  {
-    name: "Jefferson Wenanta",
-    job: "Terapi Stimulasi Saraf Otak",
-    image: p3, // Menggunakan variabel p3 secara langsung
-  },
-];
+import { db } from "../config/firebase";
+import { collection, getDocs, query, limit } from "firebase/firestore";
+import ProfilePic from "../assets/default_profile_image.svg";
 
 export function CarouselDemo() {
+  const [psychiatrists, setPsychiatrists] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchPsychiatrists = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const psychiatristsQuery = query(
+          collection(db, "psychiatrists"),
+          limit(10)
+        );
+        const querySnap = await getDocs(psychiatristsQuery);
+        const data = querySnap.docs.map((doc) => {
+          const d = doc.data();
+          console.log("Fetched psychiatrist:", d);
+          return {
+            name: d.name || "Tanpa Nama",
+            specialty: d.specialty || "Spesialisasi tidak tersedia",
+            image: d.image && d.image.trim() !== "" ? d.image : ProfilePic,
+          };
+        });
+        setPsychiatrists(data);
+      } catch (e) {
+        console.error("Error fetching psychiatrists:", e);
+        setError("Gagal memuat data psikiater.");
+        setPsychiatrists([]);
+      }
+      setLoading(false);
+    };
+    fetchPsychiatrists();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="w-full flex justify-center items-center py-10 text-lg text-gray-500">
+        Memuat psikiater pilihan...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full flex justify-center items-center py-10 text-lg text-red-500">
+        {error}
+      </div>
+    );
+  }
+
+  if (psychiatrists.length === 0) {
+    return (
+      <div className="w-full flex justify-center items-center py-10 text-lg text-gray-500">
+        Tidak ada psikiater yang tersedia.
+      </div>
+    );
+  }
+
   return (
     <Carousel className="w-full max-w-7xl mx-auto">
       <CarouselContent>
@@ -51,16 +80,21 @@ export function CarouselDemo() {
                 <CardContent className="flex flex-col items-center justify-center p-6">
                   {/* Gambar Psikiater */}
                   <img
-                    src={psychiatrist.image} // Menggunakan psychiatrist.image
+                    src={psychiatrist.image}
                     alt={psychiatrist.name}
-                    className="w-62 h-42 rounded-2xl object-cover mb-4"
+                    className="w-62 h-62 rounded-xl object-cover mb-4"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = ProfilePic;
+                    }}
                   />
                   {/* Nama Psikiater */}
                   <span className="text-2xl font-semibold mb-2">
                     {psychiatrist.name}
                   </span>
-                  {/* Pekerjaan Psikiater */}
-                  <p className="text-lg text-gray-500">{psychiatrist.job}</p>
+                  {/* Spesialisasi Psikiater */}
+                  <p className="text-lg text-gray-500">
+                    {psychiatrist.specialty}
+                  </p>
                 </CardContent>
               </Card>
             </div>
