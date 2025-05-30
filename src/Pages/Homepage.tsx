@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HomeController } from "../controllers/HomeController";
-import backgroundImage from "../assets/Master Background11.png";
-import Instagram from "../assets/instagram.png";
-import Whatsapp from "../assets/whatsapp.png";
-import email from "../assets/email.png";
 import { LineCharts } from "../components/Chart";
 import { CarouselDemo } from "../components/RecommendedPsychiatrist";
 import RadarChart from "../components/RadarChart";
 import TopBar from "../components/TopBar";
 import type { RadarDataPoint, ChartData } from "../models/HomeModel";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
+import Footer from "../components/Footer";
 
 const Homepage: React.FC = () => {
   const [userName, setUserName] = useState<string>("Loading...");
@@ -71,17 +68,14 @@ const Homepage: React.FC = () => {
   return (
     <div
       className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden"
-      style={{ backgroundImage: `url(${backgroundImage})` }}
+      style={{ backgroundColor: `#F2EDE2` }}
     >
-      <TopBar userName={userName} onLogout={handleLogout} />
-      <div className="flex justify-center items-center mt-60 font-krub">
-        <h1 className="text-white text-8xl font-bold text-center leading-snug">
-          Welcome to
-          <br /> <span>Serenity</span>
-        </h1>
+      <div className="bg-white p-6 text-center">
+        <p className="text-6xl font-semibold text-gray-800">
+          Selamat Datang, {userName}
+        </p>
       </div>
 
-      {/* Radar Chart */}
       <h1 className="mt-20 font-bold text-4xl text-center leading-snug text-black pt-110">
         Radar Chart
       </h1>
@@ -198,96 +192,7 @@ const Homepage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      <footer className="bg-[#453A2F] text-white pt-5">
-        <div className="mx-auto ml-20 mr-20 mt-10">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-            {/* Left Section: Website Name and Social Links */}
-            <div className="text-left">
-              <h2 className="text-5xl font-bold mb-6">Serenity</h2>
-              <ul className="flex flex-col space-y-6">
-                <li className="flex items-center space-x-4">
-                  <img src={Instagram} alt="Instagram" className="w-10 h-10" />
-                  <span>@mentalhealth.id</span>
-                </li>
-                <li className="flex items-center space-x-4">
-                  <img src={Whatsapp} alt="Whatsapp" className="w-10 h-10" />
-                  <span>+628529320581</span>
-                </li>
-                <li className="flex items-center space-x-4">
-                  <img src={email} alt="email" className="w-10 h-10" />
-                  <span>mentalhealth@serenity.co.id</span>
-                </li>
-              </ul>
-            </div>
-
-            {/* Middle Section: Consumer Complaints Service */}
-            <div className="">
-              <h3 className="text-3xl font-semibold mb-4">
-                Consumer Complaints Service
-              </h3>
-              <p className="text-sm">
-                PT Mental Health Corp <br />
-                Jl. Raya Kb. Jeruk No.27, RT.1/RW.9, Kemanggisan, Kec. Palmerah,
-                Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta 11530
-              </p>
-            </div>
-
-            {/* Right Section: Site Map */}
-            <div className="text-right">
-              <h3 className="text-3xl font-semibold mb-4">Site Map</h3>
-              <ul className="grid grid-cols-1 md:grid-cols-2">
-                <li>
-                  <a href="#" className="hover:opacity-75">
-                    FAQ
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-75">
-                    Blog
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-75">
-                    Terms & Condition
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-75">
-                    Privacy
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-75">
-                    Security
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-75">
-                    Media
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-75">
-                    Partnership
-                  </a>
-                </li>
-                <li>
-                  <a href="#" className="hover:opacity-75">
-                    Promotions
-                  </a>
-                </li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        {/* Bottom Section: Copyright */}
-        <div className="mt-16 text-center bg-[#525252] py-2">
-          <p className="text-sm font-bold">
-            Â© 2024 - 2025 Mental Health J&D Sp. co.
-          </p>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
