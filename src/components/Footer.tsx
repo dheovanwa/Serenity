@@ -6,7 +6,7 @@ import SerenityLogo from "../assets/Logo - Dark.png"; // Asumsi: Ini adalah logo
 
 const Footer: React.FC = () => {
   return (
-    <footer className="bg-[#161F36] text-white pt-16">
+    <footer className="bg-[#0f1629] text-white pt-16">
       <div className="w-full mx-auto px-10 md:px-16 lg:px-24">
         <div className="flex items-center mb-16 pl-4 md:pl-0">
           {SerenityLogo && (

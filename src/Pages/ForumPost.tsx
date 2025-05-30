@@ -20,7 +20,31 @@ import { db } from "../config/firebase";
 import { containsProfanity } from "../utils/profanityFilter";
 import defaultProfileImage from "../assets/default_profile_image.svg";
 
-const ForumPost = () => {
+interface ForumPost {
+  id: string;
+  title: string;
+  content: string;
+  userId: string;
+  likeCount: number;
+  category: string[];
+  timeCreated: any; // Firebase Timestamp is 'any' if not explicitly defined
+  replyCount: number;
+  profileImage?: string | null;
+  userRole?: "user" | "psychiatrist";
+  specialty?: string;
+  isLiked?: boolean;
+  authorName?: string;
+  authorGender?: "male" | "female";
+  authorBirthDate?: string | Date;
+}
+
+// Tambahkan isDarkMode ke props ForumPost
+interface ForumPostPageProps {
+  isDarkMode: boolean;
+}
+
+const ForumPost: React.FC<ForumPostPageProps> = ({ isDarkMode }) => {
+  // Terima prop isDarkMode
   const { forumId } = useParams();
   const [post, setPost] = useState<any>(null);
   const [replies, setReplies] = useState<any[]>([]);
@@ -33,7 +57,9 @@ const ForumPost = () => {
     name: string;
     profileImage?: string | null;
     role: "user" | "psychiatrist";
-    specialty?: string; // Add specialty field
+    specialty?: string;
+    gender?: "male" | "female"; // Add gender
+    birthDate?: string | Date; // Add birthDate
   } | null>(null);
   const [likedReplies, setLikedReplies] = useState<Record<string, boolean>>({});
   const [showReportModal, setShowReportModal] = useState(false);
@@ -43,13 +69,12 @@ const ForumPost = () => {
   const [reportReplyReason, setReportReplyReason] = useState("");
   const [isReplyReportSubmitting, setIsReplyReportSubmitting] = useState(false);
   const [selectedReplyId, setSelectedReplyId] = useState<string | null>(null);
-  const [authorProfilePicture, setAuthorProfilePicture] = useState("");
+  const [authorProfilePicture, setAuthorProfilePicture] = useState(""); // Ini tidak digunakan
   const [replyProfilePictures, setReplyProfilePictures] = useState<{
     [key: string]: string;
   }>({});
   const navigate = useNavigate();
 
-  // Function to calculate age from birthOfDate
   const calculateAge = (birthOfDate: string | Date): number => {
     const birth = new Date(birthOfDate);
     const today = new Date();
@@ -65,12 +90,10 @@ const ForumPost = () => {
     return age;
   };
 
-  // Function to format display name based on role
   const getDisplayName = (author: any) => {
     if (author?.role === "psychiatrist") {
       return author.name || "Dr. Unknown";
     } else {
-      // For users, show "Gender, Age"
       if (author?.gender && author?.birthDate) {
         const age = calculateAge(author.birthDate);
         const gender = author.gender === "male" ? "Laki-laki" : "Perempuan";
@@ -83,16 +106,13 @@ const ForumPost = () => {
   useEffect(() => {
     if (!forumId) return;
 
-    // Create refs for listeners to clean up later
     let postUnsubscribe: (() => void) | undefined;
     let repliesUnsubscribe: (() => void) | undefined;
 
-    // Fetch post details with real-time updates
     const fetchPost = async () => {
       try {
         const postRef = doc(db, "forum", forumId);
 
-        // Use onSnapshot for real-time updates to the post document
         postUnsubscribe = onSnapshot(
           postRef,
           async (postSnap) => {
@@ -101,16 +121,14 @@ const ForumPost = () => {
               setPost(postData);
               setLocalLikeCount(postData.likeCount || 0);
 
-              // Check if user has liked the post
               if (userId) {
                 const userDoc = await getDoc(doc(db, "users", userId));
                 if (userDoc.exists()) {
-                  const likedPosts = userDoc.data().likedPosts || [];
+                  const likedPosts = userDoc.data()?.likedPosts || [];
                   setIsLiked(likedPosts.includes(forumId));
                 }
               }
 
-              // Fetch author information
               const authorId = postData.userId;
               let authorInfo = {
                 name: "Anonymous",
@@ -118,7 +136,6 @@ const ForumPost = () => {
                 role: "user" as const,
               };
 
-              // Check in psychiatrists collection first
               try {
                 const psyDocRef = doc(db, "psychiatrists", authorId);
                 const psyDoc = await getDoc(psyDocRef);
@@ -126,12 +143,11 @@ const ForumPost = () => {
                   const psyData = psyDoc.data();
                   authorInfo = {
                     name: `Dr. ${psyData.name}`,
-                    profileImage: psyData.image || null, // Use "image" field for psychiatrists
+                    profileImage: psyData.image || null,
                     role: "psychiatrist",
                     specialty: psyData.specialty || "",
                   };
                 } else {
-                  // If not found in psychiatrists, check users
                   const userDocRef = doc(db, "users", authorId);
                   const userDoc = await getDoc(userDocRef);
                   if (userDoc.exists()) {
@@ -170,7 +186,6 @@ const ForumPost = () => {
       }
     };
 
-    // Listen to replies in real-time - we already have this using onSnapshot
     const repliesRef = collection(db, "forum", forumId, "reply");
     const q = query(repliesRef, orderBy("timeCreated", "asc"));
 
@@ -180,26 +195,23 @@ const ForumPost = () => {
       for (const replyDoc of snapshot.docs) {
         const replyData = { id: replyDoc.id, ...replyDoc.data() };
 
-        // Fetch reply author info
         let replyAuthor = {
           name: "Anonymous",
           profileImage: null,
           role: "user" as const,
         };
 
-        // Check in psychiatrists collection first
         const psyDocRef = doc(db, "psychiatrists", replyData.userId);
         const psyDoc = await getDoc(psyDocRef);
         if (psyDoc.exists()) {
           const psyData = psyDoc.data();
           replyAuthor = {
             name: `Dr. ${psyData.name}`,
-            profileImage: psyData.image || null, // Use "image" field for psychiatrists
+            profileImage: psyData.image || null,
             role: "psychiatrist",
             specialty: psyData.specialty || "",
           };
         } else {
-          // If not found in psychiatrists, check users
           const userDocRef = doc(db, "users", replyData.userId);
           const userDoc = await getDoc(userDocRef);
           if (userDoc.exists()) {
@@ -227,14 +239,12 @@ const ForumPost = () => {
 
     fetchPost();
 
-    // Clean up all listeners when component unmounts
     return () => {
       if (postUnsubscribe) postUnsubscribe();
       if (repliesUnsubscribe) repliesUnsubscribe();
     };
   }, [forumId, userId]);
 
-  // Add effect to fetch user's liked replies
   useEffect(() => {
     if (!userId) return;
 
@@ -253,7 +263,6 @@ const ForumPost = () => {
     fetchLikedReplies();
   }, [userId]);
 
-  // Fetch profile pictures for replies
   useEffect(() => {
     const fetchReplyProfilePictures = async () => {
       if (!replies.length) return;
@@ -261,23 +270,21 @@ const ForumPost = () => {
       const profilePictures: { [key: string]: string } = {};
 
       for (const reply of replies) {
-        if (!reply.authorId) continue;
+        if (!reply.author.userId) continue; // Ensure userId is present
 
         try {
           let profilePictureUrl = "";
 
-          if (reply.authorRole === "psychiatrist") {
-            // For psychiatrists, use the "image" field
+          if (reply.author.role === "psychiatrist") {
             const psychiatristDoc = await getDoc(
-              doc(db, "psychiatrists", reply.authorId)
+              doc(db, "psychiatrists", reply.author.userId)
             );
             if (psychiatristDoc.exists()) {
               const psychiatristData = psychiatristDoc.data();
               profilePictureUrl = psychiatristData.image || "";
             }
           } else {
-            // For users, use the "profilePicture" field
-            const userDoc = await getDoc(doc(db, "users", reply.authorId));
+            const userDoc = await getDoc(doc(db, "users", reply.author.userId));
             if (userDoc.exists()) {
               const userData = userDoc.data();
               profilePictureUrl = userData.profilePicture || "";
@@ -285,11 +292,11 @@ const ForumPost = () => {
           }
 
           if (profilePictureUrl) {
-            profilePictures[reply.authorId] = profilePictureUrl;
+            profilePictures[reply.author.userId] = profilePictureUrl;
           }
         } catch (error) {
           console.error(
-            `Error fetching profile picture for ${reply.authorId}:`,
+            `Error fetching profile picture for ${reply.author.userId}:`,
             error
           );
         }
@@ -309,7 +316,6 @@ const ForumPost = () => {
       const postRef = doc(db, "forum", forumId);
 
       if (isLiked) {
-        // Unlike
         await updateDoc(userRef, {
           likedPosts: arrayRemove(forumId),
         });
@@ -318,7 +324,6 @@ const ForumPost = () => {
         });
         setLocalLikeCount((prev) => prev - 1);
       } else {
-        // Like
         await updateDoc(userRef, {
           likedPosts: arrayUnion(forumId),
         });
@@ -333,9 +338,9 @@ const ForumPost = () => {
     }
   };
 
-  const handleSubmitReply = async (e: React.FormEvent, parentId?: string) => {
+  const handleSubmitReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newReply.trim() || !userId) return;
+    if (!newReply.trim() || !userId || !forumId) return;
 
     try {
       const replyData = {
@@ -343,19 +348,13 @@ const ForumPost = () => {
         content: newReply,
         likeCount: 0,
         timeCreated: serverTimestamp(),
-        profileImage: null,
       };
 
-      if (parentId) {
-        // Add to nested reply collection
-        await addDoc(
-          collection(db, "forum", forumId, "reply", parentId, "reply"),
-          replyData
-        );
-      } else {
-        // Add to main reply collection
-        await addDoc(collection(db, "forum", forumId, "reply"), replyData);
-      }
+      await addDoc(collection(db, "forum", forumId, "reply"), replyData);
+      // Update replyCount on the main post
+      await updateDoc(doc(db, "forum", forumId), {
+        replyCount: increment(1),
+      });
 
       setNewReply("");
     } catch (error) {
@@ -370,48 +369,38 @@ const ForumPost = () => {
       const replyRef = doc(db, "forum", forumId, "reply", replyId);
       const userRef = doc(db, "users", userId);
 
-      // Check if reply exists
       const replySnap = await getDoc(replyRef);
       if (!replySnap.exists()) {
         console.error("Reply not found");
         return;
       }
 
-      const currentLikeCount = replySnap.data().likeCount || 0;
-      const isLiked = likedReplies[replyId];
+      const currentLikeCount = replySnap.data()?.likeCount || 0;
+      const isReplyCurrentlyLiked = likedReplies[replyId];
 
-      if (isLiked) {
-        // Unlike reply
+      if (isReplyCurrentlyLiked) {
         await updateDoc(replyRef, {
           likeCount: Math.max(0, currentLikeCount - 1),
         });
-
-        // Update user's likedReplies
-        const updatedLikedReplies = { ...likedReplies };
-        delete updatedLikedReplies[replyId];
-
         await updateDoc(userRef, {
-          likedReplies: updatedLikedReplies,
+          likedReplies: { ...likedReplies, [replyId]: false }, // Mark as unliked
         });
-
-        setLikedReplies(updatedLikedReplies);
+        setLikedReplies((prev) => {
+          const newState = { ...prev };
+          delete newState[replyId]; // Remove entry if unliked
+          return newState;
+        });
       } else {
-        // Like reply
         await updateDoc(replyRef, {
           likeCount: currentLikeCount + 1,
         });
-
-        // Update user's likedReplies
-        const updatedLikedReplies = {
-          ...likedReplies,
-          [replyId]: true,
-        };
-
         await updateDoc(userRef, {
-          likedReplies: updatedLikedReplies,
+          likedReplies: { ...likedReplies, [replyId]: true }, // Mark as liked
         });
-
-        setLikedReplies(updatedLikedReplies);
+        setLikedReplies((prev) => ({
+          ...prev,
+          [replyId]: true,
+        }));
       }
     } catch (error) {
       console.error("Error updating reply like:", error);
@@ -419,7 +408,6 @@ const ForumPost = () => {
   };
 
   const formatTime = (timestamp: any) => {
-    // Add null check
     if (!timestamp || !timestamp.toDate) {
       return "Baru saja";
     }
@@ -445,7 +433,6 @@ const ForumPost = () => {
 
     setIsSubmitting(true);
     try {
-      // Add report to reports subcollection of the forum post
       const reportsRef = collection(db, "forum", forumId, "reports");
       await addDoc(reportsRef, {
         reportContent: reportReason,
@@ -453,13 +440,14 @@ const ForumPost = () => {
         timestamp: serverTimestamp(),
       });
 
-      // Check if post contains profanity
-      if (post && containsProfanity(post)) {
+      if (
+        post &&
+        containsProfanity(post.title || "" + " " + post.content || "")
+      ) {
+        // Pass post object to profanity check
         try {
-          // Delete the post if it contains profanity
           await deleteDoc(doc(db, "forum", forumId));
 
-          // Add to removed posts collection for audit
           await addDoc(collection(db, "removedPosts"), {
             originalId: forumId,
             title: post.title,
@@ -470,7 +458,6 @@ const ForumPost = () => {
             reportReason: reportReason,
           });
 
-          // Redirect to forum home if post is deleted
           navigate("/forum");
           return;
         } catch (error) {
@@ -478,7 +465,6 @@ const ForumPost = () => {
         }
       }
 
-      // Close modal and reset state
       setShowReportModal(false);
       setReportReason("");
       setIsSubmitting(false);
@@ -488,20 +474,17 @@ const ForumPost = () => {
     }
   };
 
-  // Add a function to handle reply reporting
   const handleReplyReport = (replyId: string) => {
     setSelectedReplyId(replyId);
     setShowReplyReportModal(true);
   };
 
-  // Add function to submit reply report
   const submitReplyReport = async () => {
     if (!reportReplyReason.trim() || !userId || !forumId || !selectedReplyId)
       return;
 
     setIsReplyReportSubmitting(true);
     try {
-      // Get the reply content
       const replyRef = doc(db, "forum", forumId, "reply", selectedReplyId);
       const replySnap = await getDoc(replyRef);
 
@@ -510,12 +493,10 @@ const ForumPost = () => {
       }
 
       const replyData = replySnap.data();
-      const replyContent = replyData.content || "";
+      const replyContent = replyData?.content || "";
 
-      // Check if reply contains profanity
       const isProfane = containsProfanity(replyContent);
 
-      // Store the report in a subcollection of the reply
       const reportsRef = collection(replyRef, "reports");
       await addDoc(reportsRef, {
         reportContent: reportReplyReason,
@@ -523,7 +504,6 @@ const ForumPost = () => {
         timestamp: serverTimestamp(),
       });
 
-      // If profane, mark as violation immediately
       if (isProfane) {
         await updateDoc(replyRef, {
           isViolation: true,
@@ -532,7 +512,6 @@ const ForumPost = () => {
         });
       }
 
-      // Close modal and reset state
       setShowReplyReportModal(false);
       setReportReplyReason("");
       setSelectedReplyId(null);
@@ -543,13 +522,23 @@ const ForumPost = () => {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (!post) return <div>Post not found</div>;
+  if (loading)
+    return (
+      <div className="text-center p-6 dark:text-white dark:bg-gray-900 min-h-screen">
+        Loading...
+      </div>
+    );
+  if (!post)
+    return (
+      <div className="text-center p-6 dark:text-white dark:bg-gray-900 min-h-screen">
+        Post not found
+      </div>
+    );
 
   return (
-    <div className="min-h-screen bg-[#F2EDE2] p-6">
+    <div className="min-h-screen p-6 bg-[#F2EDE2] dark:bg-[#161F36] transition-colors duration-300">
       {/* Main post */}
-      <div className="max-w-4xl mx-auto bg-[#E4DCCC] rounded-lg p-6 mb-6">
+      <div className="max-w-4xl mx-auto rounded-lg p-6 mb-6 bg-[#E4DCCC] dark:bg-[#1A2947]">
         {/* Post author info */}
         <div className="flex items-center gap-3 mb-4">
           {postAuthor?.profileImage ? (
@@ -562,15 +551,15 @@ const ForumPost = () => {
             <img
               src={defaultProfileImage}
               alt="Default Profile"
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover dark:filter dark:invert"
             />
           )}
           <div>
-            <h3 className="font-semibold text-[#161F36]">
+            <h3 className="font-semibold text-[#161F36] dark:text-white">
               {getDisplayName(postAuthor)}
             </h3>
             {postAuthor?.role === "psychiatrist" && postAuthor.specialty && (
-              <span className="text-sm text-gray-600">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
                 {postAuthor.specialty}
               </span>
             )}
@@ -578,7 +567,7 @@ const ForumPost = () => {
           <div className="ml-auto">
             <button
               onClick={handleReport}
-              className="p-2 text-gray-500 hover:text-red-500 transition-colors"
+              className="p-2 text-gray-500 hover:text-red-500 transition-colors dark:text-gray-400 dark:hover:text-red-400"
               title="Laporkan postingan ini"
             >
               <Flag size={16} />
@@ -586,45 +575,56 @@ const ForumPost = () => {
           </div>
         </div>
 
-        <h1 className="text-2xl font-bold text-[#161F36] mb-4">{post.title}</h1>
-        <p className="text-gray-700 mb-4">{post.content}</p>
+        <h1 className="text-2xl font-bold text-[#161F36] mb-4 dark:text-white">
+          {post.title}
+        </h1>
+        <p className="text-gray-700 mb-4 dark:text-gray-300">{post.content}</p>
 
         {/* Categories */}
         {post.category && post.category.length > 0 && (
           <div className="flex gap-2 mb-4">
-            {post.category.map((tag, index) => (
-              <span
-                key={index}
-                className="bg-[#BACBD8] text-[#161F36] px-3 py-1 rounded-full text-sm"
-              >
-                {tag}
-              </span>
-            ))}
+            {post.category.map(
+              (
+                tag: string,
+                index: number // Add type annotation for tag and index
+              ) => (
+                <span
+                  key={index}
+                  className="bg-[#BACBD8] text-[#161F36] px-3 py-1 rounded-full text-sm dark:bg-gray-700 dark:text-white"
+                >
+                  {tag}
+                </span>
+              )
+            )}
           </div>
         )}
 
-        <div className="flex justify-between items-center text-gray-600">
+        <div className="flex justify-between items-center text-gray-600 dark:text-gray-300">
           <div className="flex items-center gap-4">
             <button
               onClick={handleLike}
-              className={`flex items-center text-gray-600 hover:text-[#BACBD8] transition-colors ${
-                isLiked ? "text-[#BACBD8]" : ""
-              }`}
+              className={`flex items-center hover:text-[#BACBD8] transition-colors
+                          dark:hover:text-blue-400 ${
+                            isLiked
+                              ? "text-[#BACBD8] dark:text-blue-400"
+                              : "text-gray-600 dark:text-gray-300"
+                          }`}
             >
               <ThumbsUp
                 size={18}
                 className="mr-1"
-                fill={isLiked ? "#BACBD8" : "none"}
+                fill={isLiked ? (isDarkMode ? "#60A5FA" : "#BACBD8") : "none"} // Conditional fill for dark mode
+                stroke="currentColor" // Use current text color for stroke
               />
               {localLikeCount}
             </button>
-            <span className="flex items-center gap-1">
-              <MessageSquare size={18} />
+            <span className="flex items-center gap-1 text-gray-600 dark:text-gray-300">
+              <MessageSquare size={18} className="dark:text-white" />
               {replies.length}
             </span>
           </div>
-          <div className="flex items-center gap-2">
-            <Clock size={16} />
+          <div className="flex items-center gap-2 text-gray-500 text-sm dark:text-gray-400">
+            <Clock size={16} className="dark:text-white" />
             <span>{formatTime(post.timeCreated)}</span>
           </div>
         </div>
@@ -638,13 +638,13 @@ const ForumPost = () => {
             value={newReply}
             onChange={(e) => setNewReply(e.target.value)}
             placeholder="Tulis balasanmu..."
-            className="flex-1 p-3 rounded-lg border border-gray-300 bg-white"
+            className="flex-1 p-3 rounded-lg border border-gray-300 bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400"
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-[#BACBD8] text-[#161F36] rounded-lg hover:bg-[#9FB6C6]"
+            className="px-4 py-2 rounded-lg bg-[#BACBD8] text-[#161F36] hover:bg-[#9FB6C6] dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#293c63]"
           >
-            <Send size={20} />
+            <Send size={20} className="dark:text-white" />
           </button>
         </form>
       </div>
@@ -652,7 +652,10 @@ const ForumPost = () => {
       {/* Replies */}
       <div className="max-w-4xl mx-auto space-y-4">
         {replies.map((reply) => (
-          <div key={reply.id} className="bg-white rounded-lg p-4 shadow">
+          <div
+            key={reply.id}
+            className="rounded-lg p-4 shadow bg-white dark:bg-[#1A2947]"
+          >
             {/* Reply author info */}
             <div className="flex items-center gap-3 mb-3">
               {reply.author?.profileImage ? (
@@ -665,25 +668,24 @@ const ForumPost = () => {
                 <img
                   src={defaultProfileImage}
                   alt="Default Profile"
-                  className="w-10 h-10 rounded-full object-cover"
+                  className="w-10 h-10 rounded-full object-cover dark:filter dark:invert"
                 />
               )}
               <div className="flex-1">
-                <h4 className="font-semibold text-[#161F36] text-sm">
+                <h4 className="font-semibold text-[#161F36] text-sm dark:text-white">
                   {getDisplayName(reply.author)}
                 </h4>
                 {reply.author?.role === "psychiatrist" &&
                   reply.author.specialty && (
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
                       {reply.author.specialty}
                     </span>
                   )}
               </div>
 
-              {/* Add Report Button for Reply */}
               <button
                 onClick={() => handleReplyReport(reply.id)}
-                className="p-2 text-gray-500 hover:text-red-500 transition-colors"
+                className="p-2 text-gray-500 hover:text-red-500 transition-colors dark:text-gray-400 dark:hover:text-red-400"
                 title="Laporkan balasan ini"
               >
                 <Flag size={14} />
@@ -692,34 +694,54 @@ const ForumPost = () => {
 
             {/* Reply content - only show warning if marked as violation */}
             {reply.isViolation ? (
-              <p className="text-gray-500 italic mb-2">
+              <p className="text-gray-500 italic mb-2 dark:text-gray-400">
                 Informasi yang diberikan oleh pengguna ini menyalahgunakan
                 syarat dan ketentuan dari penggunaan forum diskusi
               </p>
             ) : (
-              <p className="text-gray-800 mb-2">{reply.content}</p>
+              <p className="text-gray-800 mb-2 dark:text-gray-200">
+                {reply.content}
+              </p>
             )}
 
-            <div className="flex justify-between items-center text-sm text-gray-600">
+            <div className="flex justify-between items-center text-sm text-gray-600 dark:text-gray-300">
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => handleReplyLike(reply.id)}
-                  className={`flex items-center gap-1`}
+                  className={`flex items-center gap-1 ${
+                    likedReplies[reply.id]
+                      ? "text-[#BACBD8] dark:text-blue-400"
+                      : "text-gray-600 dark:text-gray-300"
+                  }`}
                 >
-                  <div className="flex items-center bg-[#F8F0E0] rounded-md px-2 py-1">
+                  <div className="flex items-center rounded-md px-2 py-1 bg-[#F8F0E0] dark:bg-gray-700">
                     <ThumbsUp
                       size={16}
                       className="mr-1"
-                      color="#5A6B7D"
-                      fill={likedReplies[reply.id] ? "#BACBD8" : "none"}
+                      color={
+                        isDarkMode
+                          ? likedReplies[reply.id]
+                            ? "#60A5FA"
+                            : "white"
+                          : likedReplies[reply.id]
+                          ? "#BACBD8"
+                          : "#5A6B7D"
+                      } // Conditional color for icon stroke
+                      fill={
+                        likedReplies[reply.id]
+                          ? isDarkMode
+                            ? "#60A5FA"
+                            : "#BACBD8"
+                          : "none"
+                      } // Conditional fill for icon
                       strokeWidth={1.5}
                     />
-                    <span className="text-[#5A6B7D] font-medium">
+                    <span className="text-[#5A6B7D] font-medium dark:text-white">
                       {reply.likeCount || 0}
                     </span>
                   </div>
                 </button>
-                <span>
+                <span className="text-gray-600 dark:text-gray-300">
                   {reply.timeCreated
                     ? formatTime(reply.timeCreated)
                     : "Baru saja"}
@@ -733,21 +755,25 @@ const ForumPost = () => {
       {/* Report Modal */}
       {showReportModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" // Modal overlay
           onClick={() => setShowReportModal(false)}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            className="rounded-lg p-6 max-w-md w-full mx-4
+                       bg-white dark:bg-[#1A2947]" // Modal content background
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4">Laporkan Postingan</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Silakan berikan alasan mengapa Anda ingin melaporkan postingan
+            <h3 className="text-xl font-bold mb-4 text-black dark:text-white">
+              Laporkan Postingan
+            </h3>
+            <p className="text-sm text-gray-600 mb-4 dark:text-gray-300">
+              Silahkan berikan alasan mengapa Anda ingin melaporkan postingan
               ini.
             </p>
 
             <textarea
-              className="w-full border border-gray-300 rounded-md p-2 mb-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#BACBD8]"
+              className="w-full border border-gray-300 rounded-md p-2 mb-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#BACBD8]
+                         bg-white text-black dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-700"
               placeholder="Tuliskan alasan laporan..."
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
@@ -755,20 +781,22 @@ const ForumPost = () => {
 
             <div className="flex justify-end gap-2">
               <button
-                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 rounded-md hover:bg-gray-300 transition-colors
+                           bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                 onClick={() => setShowReportModal(false)}
               >
                 Batal
               </button>
               <button
-                className="px-4 py-2 bg-[#BACBD8] text-[#161F36] rounded-md hover:bg-[#9FB6C6] transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-white rounded-md hover:bg-[#9FB6C6] transition-colors disabled:opacity-50
+                           bg-[#BACBD8] dark:bg-[#10347c] dark:hover:bg-[#4563a1]"
                 onClick={submitReport}
                 disabled={!reportReason.trim() || isSubmitting}
               >
                 {isSubmitting ? (
-                  <span className="flex items-center">
+                  <span className="flex items-center text-[#161F36] dark:text-white">
                     <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36]"
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36] dark:text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"
@@ -801,20 +829,24 @@ const ForumPost = () => {
       {/* Report Modal for Reply */}
       {showReplyReportModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" // Modal overlay
           onClick={() => setShowReplyReportModal(false)}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            className="rounded-lg p-6 max-w-md w-full mx-4
+                       bg-white dark:bg-gray-800" // Modal content background
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4">Laporkan Balasan</h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Silakan berikan alasan mengapa Anda ingin melaporkan balasan ini.
+            <h3 className="text-xl font-bold mb-4 text-black dark:text-white">
+              Laporkan Balasan
+            </h3>
+            <p className="text-sm text-gray-600 mb-4 dark:text-gray-300">
+              Silahkan berikan alasan mengapa Anda ingin melaporkan balasan ini.
             </p>
 
             <textarea
-              className="w-full border border-gray-300 rounded-md p-2 mb-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#BACBD8]"
+              className="w-full border border-gray-300 rounded-md p-2 mb-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#BACBD8]
+                         bg-white text-black dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-700"
               placeholder="Tuliskan alasan laporan..."
               value={reportReplyReason}
               onChange={(e) => setReportReplyReason(e.target.value)}
@@ -822,20 +854,22 @@ const ForumPost = () => {
 
             <div className="flex justify-end gap-2">
               <button
-                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 rounded-md hover:bg-gray-300 transition-colors
+                           bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                 onClick={() => setShowReplyReportModal(false)}
               >
                 Batal
               </button>
               <button
-                className="px-4 py-2 bg-[#BACBD8] text-[#161F36] rounded-md hover:bg-[#9FB6C6] transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-white rounded-md hover:bg-[#9FB6C6] transition-colors disabled:opacity-50
+                           bg-[#BACBD8] dark:bg-[#10347c] dark:hover:bg-[#4563a1]"
                 onClick={submitReplyReport}
                 disabled={!reportReplyReason.trim() || isReplyReportSubmitting}
               >
                 {isReplyReportSubmitting ? (
-                  <span className="flex items-center">
+                  <span className="flex items-center text-[#161F36] dark:text-white">
                     <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36]"
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36] dark:text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"

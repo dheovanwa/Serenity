@@ -15,7 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import CreatePostModal from "../components/CreatePostModal";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react"; // Import ChevronDown dari lucide-react
 
 interface ForumPost {
   id: string;
@@ -31,20 +31,25 @@ interface ForumPost {
   authorName?: string;
   authorGender?: string;
   authorBirthDate?: string;
-  specialty?: string; // Add specialty field
+  specialty?: string;
+  isLiked?: boolean;
 }
 
-const Forum = () => {
+interface ForumProps {
+  isDarkMode: boolean;
+}
+
+const Forum: React.FC<ForumProps> = ({ isDarkMode }) => {
   const [posts, setPosts] = useState<ForumPost[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selectedSort, setSelectedSort] = useState("Waktu");
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [sortOrder, setSortOrder] = useState("descending");
-  const [visiblePosts, setVisiblePosts] = useState<number>(5); // Initially show 5 posts
+  const [visiblePosts, setVisiblePosts] = useState<number>(5);
   const [userPosts, setUserPosts] = useState<ForumPost[]>([]);
   const [visibleUserPosts, setVisibleUserPosts] = useState<number>(5);
-  const [searchQuery, setSearchQuery] = useState(""); // New state for search query
+  const [searchQuery, setSearchQuery] = useState("");
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const loadMoreUserPostsRef = useRef<HTMLDivElement | null>(null);
@@ -52,23 +57,20 @@ const Forum = () => {
     [key: string]: string;
   }>({});
 
-  // Fetch posts
   useEffect(() => {
     const fetchPosts = async () => {
       try {
         setLoading(true);
         const userId = localStorage.getItem("documentId");
 
-        // Get user's liked posts
         let userLikedPosts: string[] = [];
         if (userId) {
           const userDoc = await getDoc(doc(db, "users", userId));
           if (userDoc.exists()) {
-            userLikedPosts = userDoc.data().likedPosts || [];
+            userLikedPosts = userDoc.data()?.likedPosts || [];
           }
         }
 
-        // Use onSnapshot instead of getDocs for real-time updates
         const forumRef = collection(db, "forum");
         const q = query(forumRef, orderBy("timeCreated", "desc"));
 
@@ -80,27 +82,22 @@ const Forum = () => {
             for (const docSnap of querySnapshot.docs) {
               const data = docSnap.data();
 
-              // Get user data for profile image and personal info
               let profileImage = null;
-              let userRole = "user";
+              let userRole: "user" | "psychiatrist" = "user";
               let authorName = "";
               let authorGender = "";
               let authorBirthDate = "";
               let specialty = "";
 
-              // Check in psychiatrists collection first
               const psyDocRef = doc(db, "psychiatrists", data.userId);
               const psyDoc = await getDoc(psyDocRef);
               if (psyDoc.exists()) {
-                console.log("Found in psychiatrists collection");
                 const psyData = psyDoc.data();
-                console.log("psyDoc:", psyData.image);
-                profileImage = psyData.image || null; // Use "image" field for psychiatrists
+                profileImage = psyData.image || null;
                 userRole = "psychiatrist";
                 authorName = `Dr. ${psyData.name}`;
                 specialty = psyData.specialty || "";
               } else {
-                // If not found in psychiatrists, check users
                 const userDocRef = doc(db, "users", data.userId);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
@@ -115,7 +112,6 @@ const Forum = () => {
                 }
               }
 
-              // Get reply count by getting collection size
               const replyCollectionRef = collection(docSnap.ref, "reply");
               const replySnapshot = await getDocs(replyCollectionRef);
 
@@ -134,8 +130,18 @@ const Forum = () => {
                 authorGender,
                 authorBirthDate,
                 specialty,
-                isLiked: userLikedPosts.includes(docSnap.id),
+                isLiked: false,
               });
+            }
+
+            if (userId) {
+              const userDoc = await getDoc(doc(db, "users", userId));
+              if (userDoc.exists()) {
+                const likedPosts = userDoc.data()?.likedPosts || [];
+                fetchedPosts.forEach((post) => {
+                  post.isLiked = likedPosts.includes(post.id);
+                });
+              }
             }
 
             setPosts(fetchedPosts);
@@ -147,7 +153,6 @@ const Forum = () => {
           },
           (error) => {
             console.error("Error fetching posts:", error);
-            // If snapshot listener fails, try to use cached data
             const cached = localStorage.getItem("cachedForumPosts");
             if (cached) {
               setPosts(JSON.parse(cached));
@@ -156,12 +161,10 @@ const Forum = () => {
           }
         );
 
-        // Return the unsubscribe function to clean up the listener
         return unsubscribe;
       } catch (error) {
         console.error("Error setting up forum listener:", error);
         setLoading(false);
-        // Try to use cached data if available
         const cached = localStorage.getItem("cachedForumPosts");
         if (cached) {
           setPosts(JSON.parse(cached));
@@ -170,8 +173,6 @@ const Forum = () => {
     };
 
     const unsubscribe = fetchPosts();
-
-    // Clean up the listener when component unmounts
     return () => {
       if (typeof unsubscribe === "function") {
         unsubscribe();
@@ -208,7 +209,6 @@ const Forum = () => {
     }
   };
 
-  // Add sorting icons components
   const AscendingIcon = () => (
     <svg
       width="24"
@@ -216,6 +216,7 @@ const Forum = () => {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="text-[#161F36] dark:text-white"
     >
       <path
         d="M12 20V4M12 4L6 10M12 4L18 10"
@@ -234,6 +235,7 @@ const Forum = () => {
       viewBox="0 0 24 24"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      className="text-[#161F36] dark:text-white"
     >
       <path
         d="M12 4V20M12 20L18 14M12 20L6 14"
@@ -264,31 +266,25 @@ const Forum = () => {
     });
   };
 
-  // Modified filter and sort function to prioritize title matches
   const filterAndSortPosts = (posts: ForumPost[]) => {
-    // First filter by search query if one exists
     let filtered = posts;
 
     if (searchQuery.trim() !== "") {
       const normalizedQuery = searchQuery.toLowerCase().trim();
 
-      // First, find posts where title matches the query
       const titleMatches = filtered.filter((post) =>
         post.title.toLowerCase().includes(normalizedQuery)
       );
 
-      // Then, find posts where only content matches (but title doesn't)
       const contentOnlyMatches = filtered.filter(
         (post) =>
           !post.title.toLowerCase().includes(normalizedQuery) &&
           post.content.toLowerCase().includes(normalizedQuery)
       );
 
-      // Combine them with title matches first
       filtered = [...titleMatches, ...contentOnlyMatches];
     }
 
-    // Then sort by selected criteria
     return filtered.sort((a, b) => {
       const multiplier = sortOrder === "ascending" ? 1 : -1;
       switch (selectedSort) {
@@ -302,33 +298,29 @@ const Forum = () => {
     });
   };
 
-  // Use filtered and sorted posts with user posts removed
   const userId = localStorage.getItem("documentId");
   const filteredPosts = filterAndSortPosts(posts)
     .filter((post) => post.userId !== userId)
     .slice(0, visiblePosts);
 
-  // Also update for user posts section
   const filteredUserPosts = filterAndSortPosts(userPosts).slice(
     0,
     visibleUserPosts
   );
 
-  // Implement infinite scroll with Intersection Observer
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const [target] = entries;
       if (target.isIntersecting && visiblePosts < posts.length) {
-        setVisiblePosts((prev) => prev + 5); // Load 5 more posts when scrolling down
+        setVisiblePosts((prev) => prev + 5);
       }
     },
     [visiblePosts, posts.length]
   );
 
-  // Set up the intersection observer
   useEffect(() => {
     const options = {
-      root: null, // Use viewport as root
+      root: null,
       rootMargin: "0px",
       threshold: 0.1,
     };
@@ -346,7 +338,6 @@ const Forum = () => {
     };
   }, [handleObserver, loadMoreRef]);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -363,17 +354,13 @@ const Forum = () => {
     };
   }, []);
 
-  // Get sorted posts but limit the number displayed
-  // Filter out current user's posts from "Semua Diskusi" section
   const displayedPosts = filteredPosts;
   const displayedUserPosts = filteredUserPosts;
 
-  // Add function to handle "View More" button click
   const handleViewMoreUserPosts = () => {
     setVisibleUserPosts((prev) => Math.min(prev + 5, userPosts.length));
   };
 
-  // Add effect to fetch current user's posts
   useEffect(() => {
     const fetchUserPosts = async () => {
       try {
@@ -395,25 +382,22 @@ const Forum = () => {
             for (const docSnap of querySnapshot.docs) {
               const data = docSnap.data();
 
-              // Get user data for profile image and personal info
               let profileImage = null;
-              let userRole = "user";
+              let userRole: "user" | "psychiatrist" = "user";
               let authorName = "";
               let authorGender = "";
               let authorBirthDate = "";
               let specialty = "";
 
-              // Check in psychiatrists collection first
               const psyDocRef = doc(db, "psychiatrists", data.userId);
               const psyDoc = await getDoc(psyDocRef);
               if (psyDoc.exists()) {
                 const psyData = psyDoc.data();
-                profileImage = psyData.image || null; // Use "image" field for psychiatrists
+                profileImage = psyData.image || null;
                 userRole = "psychiatrist";
                 authorName = `Dr. ${psyData.name}`;
-                specialty = psyData.specialty || ""; // Get specialty
+                specialty = psyData.specialty || "";
               } else {
-                // If not found in psychiatrists, check users
                 const userDocRef = doc(db, "users", data.userId);
                 const userDoc = await getDoc(userDocRef);
                 if (userDoc.exists()) {
@@ -428,7 +412,6 @@ const Forum = () => {
                 }
               }
 
-              // Get reply count
               const replyCollectionRef = collection(docSnap.ref, "reply");
               const replySnapshot = await getDocs(replyCollectionRef);
 
@@ -447,15 +430,14 @@ const Forum = () => {
                 authorGender,
                 authorBirthDate,
                 specialty,
-                isLiked: false, // Will be updated in a separate check
+                isLiked: false,
               });
             }
 
-            // Check which posts are liked by the user
             if (userId) {
               const userDoc = await getDoc(doc(db, "users", userId));
               if (userDoc.exists()) {
-                const likedPosts = userDoc.data().likedPosts || [];
+                const likedPosts = userDoc.data()?.likedPosts || [];
                 fetchedPosts.forEach((post) => {
                   post.isLiked = likedPosts.includes(post.id);
                 });
@@ -484,21 +466,19 @@ const Forum = () => {
     };
   }, []);
 
-  // Implement infinite scroll for user posts with Intersection Observer
   const handleUserPostsObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const [target] = entries;
       if (target.isIntersecting && visibleUserPosts < userPosts.length) {
-        setVisibleUserPosts((prev) => prev + 5); // Load 5 more posts when scrolling down
+        setVisibleUserPosts((prev) => prev + 5);
       }
     },
     [visibleUserPosts, userPosts.length]
   );
 
-  // Set up the intersection observer for user posts
   useEffect(() => {
     const options = {
-      root: null, // Use viewport as root
+      root: null,
       rootMargin: "0px",
       threshold: 0.1,
     };
@@ -516,47 +496,40 @@ const Forum = () => {
     };
   }, [handleUserPostsObserver, loadMoreUserPostsRef]);
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        sortDropdownRef.current &&
-        !sortDropdownRef.current.contains(event.target as Node)
-      ) {
-        setIsSortOpen(false);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
-
   return (
-    <div className="min-h-screen bg-[#F2EDE2] p-6">
+    <div
+      className="min-h-screen p-6 transition-colors duration-300
+                    bg-[#F2EDE2] dark:bg-[#161F36]"
+    >
+      {" "}
+      {/* Main background */}
       {/* Header Section */}
       <div className="max-w-6xl mx-auto mb-8">
-        <h1 className="text-4xl font-bold text-[#161F36] mb-4">
+        <h1 className="text-4xl font-bold mb-4 text-[#161F36] dark:text-white">
+          {" "}
+          {/* Title */}
           Forum Diskusi
         </h1>
-        <p className="text-gray-600 mb-6">
+        <p className="text-gray-600 mb-6 dark:text-gray-300">
+          {" "}
+          {/* Description */}
           Berbagi pengalaman dan dukungan dalam komunitas yang aman
         </p>
         <button
           onClick={() => setIsModalOpen(true)}
-          className="bg-[#BACBD8] text-[#161F36] px-6 py-2 rounded-lg hover:bg-[#9FB6C6] transition-colors font-semibold"
+          className="bg-[#BACBD8] text-[#161F36] px-6 py-2 rounded-lg hover:bg-[#9FB6C6] transition-colors font-semibold
+                     dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#293c63]" // Button
         >
           Buat Diskusi Baru
         </button>
       </div>
-
       {/* Filter and Search Section */}
       <div className="max-w-6xl mx-auto mb-8 flex flex-wrap gap-4">
         <input
           type="text"
           placeholder="Cari diskusi..."
-          className="flex-grow p-2 rounded-lg border border-gray-300 bg-white"
+          className="flex-grow p-2 rounded-lg border border-gray-300 bg-white
+                     dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400" // Search Input
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
         />
@@ -566,7 +539,8 @@ const Forum = () => {
           <div className="relative" ref={sortDropdownRef}>
             <button
               onClick={() => setIsSortOpen(!isSortOpen)}
-              className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold h-[45px] flex justify-between items-center hover:bg-[#9FB6C6] transition-all duration-300 min-w-[180px]"
+              className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold h-[45px] flex justify-between items-center hover:bg-[#9FB6C6] transition-all duration-300 min-w-[180px]
+                         dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#293c63]" // Sort Button
             >
               <span className="ml-1 mr-5">
                 {selectedSort || "Urut berdasarkan"}
@@ -574,26 +548,41 @@ const Forum = () => {
               <ChevronDown
                 className={`w-4 h-4 transition-transform duration-300 ${
                   isSortOpen ? "transform rotate-180" : ""
+                } ${
+                  isDarkMode ? "text-white" : "text-[#161F36] dark:text-white"
                 }`}
               />
             </button>
 
             {/* Sort Dropdown */}
             <div
-              className={`absolute w-full mt-1 bg-[#BACBD8] rounded-md shadow-lg transition-opacity duration-300 ${
-                isSortOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-              }`}
+              className={`absolute w-full mt-1 rounded-md shadow-lg transition-opacity duration-300 z-30
+                          bg-[#BACBD8] dark:bg-[#1A2947] dark:shadow-xl ${
+                            isSortOpen
+                              ? "opacity-100"
+                              : "opacity-0 pointer-events-none"
+                          }`}
             >
               <ul className="space-y-2">
                 <li
                   onClick={() => handleSelectSort("Like")}
-                  className="text-[#161F36] text-left font-base p-2 cursor-pointer hover:bg-[#9FB6C6] transition-colors duration-300"
+                  className={`text-left font-base p-2 cursor-pointer transition-colors duration-50 hover:rounded-tl-md hover:rounded-tr-md
+                             ${
+                               isDarkMode
+                                 ? "text-white hover:bg-[#23385F]"
+                                 : "text-[#161F36] hover:bg-[#9FB6C6] dark:text-white dark:hover:bg-[#4563a1]"
+                             }`}
                 >
                   Like
                 </li>
                 <li
                   onClick={() => handleSelectSort("Waktu")}
-                  className="text-[#161F36] text-left font-base p-2 cursor-pointer hover:bg-[#9FB6C6] transition-colors duration-300"
+                  className={`text-left font-base p-2 cursor-pointer transition-colors duration-50 hover:rounded-bl-md hover:rounded-br-md
+                             ${
+                               isDarkMode
+                                 ? "text-white hover:bg-[#23385F] dark:bg-[#1A2947]"
+                                 : "text-[#161F36] hover:bg-[#9FB6C6] dark:text-white dark:hover:bg-[#293c63]"
+                             }`}
                 >
                   Waktu
                 </li>
@@ -608,7 +597,8 @@ const Forum = () => {
                 prev === "ascending" ? "descending" : "ascending"
               )
             }
-            className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] hover:bg-[#9FB6C6] transition-all duration-300 flex items-center justify-center w-[45px]"
+            className="p-2 rounded-md text-[#161F36] hover:bg-[#9FB6C6] transition-all duration-300 flex items-center justify-center w-[45px]
+                       bg-[#BACBD8] dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#293c63]"
             title={
               sortOrder === "ascending" ? "Sort Ascending" : "Sort Descending"
             }
@@ -617,24 +607,27 @@ const Forum = () => {
           </button>
         </div>
       </div>
-
       {/* User Posts Section */}
       {userPosts.length > 0 && (
         <div className="max-w-6xl mx-auto mt-6 mb-10">
-          <h2 className="text-2xl font-bold text-[#161F36] mb-4">
+          <h2 className="text-2xl font-bold mb-4 text-[#161F36] dark:text-white">
             Diskusi Saya
           </h2>
           <div className="space-y-4">
             {displayedUserPosts.map((post) => (
-              <ForumPostCard key={post.id} post={post} />
+              <ForumPostCard
+                key={post.id}
+                post={post}
+                isDarkMode={isDarkMode}
+              />
             ))}
 
-            {/* View More button for user posts */}
             {visibleUserPosts < userPosts.length && (
               <div className="flex justify-center mt-6">
                 <button
                   onClick={handleViewMoreUserPosts}
-                  className="bg-[#BACBD8] text-[#161F36] px-6 py-2 rounded-md hover:bg-[#9FB6C6] transition-colors font-medium"
+                  className="bg-[#BACBD8] text-[#161F36] px-6 py-2 rounded-md hover:bg-[#9FB6C6] transition-colors font-medium
+                             dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#293c63]"
                 >
                   Lihat Lebih Banyak
                 </button>
@@ -643,36 +636,42 @@ const Forum = () => {
           </div>
         </div>
       )}
-
       {/* All Posts Section */}
       <div className="max-w-6xl mx-auto">
-        <h2 className="text-2xl font-bold text-[#161F36] mb-4">
+        <h2 className="text-2xl font-bold mb-4 text-[#161F36] dark:text-white">
           Semua Diskusi
         </h2>
         {filteredPosts.length > 0 ? (
           <div className="space-y-4">
             {filteredPosts.map((post) => (
-              <ForumPostCard key={post.id} post={post} />
+              <ForumPostCard
+                key={post.id}
+                post={post}
+                isDarkMode={isDarkMode}
+              />
             ))}
 
-            {/* Loading indicator and load more trigger */}
             <div ref={loadMoreRef} className="py-4 flex justify-center">
               {visiblePosts < posts.length && (
-                <div className="text-gray-500">Loading more posts...</div>
+                <div className="text-gray-500 dark:text-gray-400">
+                  Loading more posts...
+                </div>
               )}
             </div>
           </div>
         ) : (
-          <div className="bg-white p-6 rounded-lg text-center">
-            <p className="text-gray-600">Tidak ada diskusi yang ditemukan</p>
+          <div className="bg-white p-6 rounded-lg text-center dark:bg-[#1A2947]">
+            <p className="text-gray-600 dark:text-gray-300">
+              Tidak ada diskusi yang ditemukan
+            </p>
           </div>
         )}
       </div>
-
       <CreatePostModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreatePost}
+        isDarkMode={isDarkMode}
       />
     </div>
   );

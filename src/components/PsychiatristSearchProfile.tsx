@@ -4,7 +4,7 @@ import starIcon from "../assets/star.svg";
 import briefcase from "../assets/briefcase.svg";
 
 interface PsychiatristProps {
-  id: string; // Make id required instead of optional
+  id: string;
   name: string;
   specialty: string;
   price: number;
@@ -14,6 +14,7 @@ interface PsychiatristProps {
     [key: string]: { start: number; end: number } | null;
   };
   image: string;
+  isDarkMode: boolean;
 }
 
 const PsychiatristSearchProfile: React.FC<PsychiatristProps> = ({
@@ -23,8 +24,9 @@ const PsychiatristSearchProfile: React.FC<PsychiatristProps> = ({
   price,
   rating,
   tahunPengalaman,
-  jadwal = {}, // Add default empty object
+  jadwal = {},
   image,
+  isDarkMode,
 }) => {
   const navigate = useNavigate();
   const [buttonClicked, setButtonClicked] = useState(false);
@@ -57,7 +59,10 @@ const PsychiatristSearchProfile: React.FC<PsychiatristProps> = ({
 
     for (let i = 0; i < 7; i++) {
       const checkDay = (currentDay + i) % 7;
-      if (jadwal[days[checkDay]] !== null) {
+      if (
+        jadwal[days[checkDay]] !== null &&
+        jadwal[days[checkDay]] !== undefined
+      ) {
         return days[checkDay];
       }
     }
@@ -75,51 +80,82 @@ const PsychiatristSearchProfile: React.FC<PsychiatristProps> = ({
   };
 
   return (
-    <div className="flex flex-col items-center bg-[#F8F0E0] p-4 rounded-lg shadow-xl hover:shadow-lg hover:bg-[#E4DCCC] hover:border-2 transition-all duration-300 focus:outline-none w-90 pt-10 pb-10">
+    <div
+      className="flex flex-col items-center p-4 rounded-lg shadow-xl
+                 transition-all duration-300 focus:outline-none pt-10 pb-10
+                 bg-[#F8F0E0] hover:bg-[#E4DCCC]
+                 border-2 border-gray-300 hover:border-gray-400 transform-gpu
+                 dark:bg-gray-800 dark:shadow-md dark:hover:bg-gray-700 dark:hover:border-gray-500
+                 max-w-[280px] sm:max-w-xs md:max-w-sm lg:max-w-[320px] w-full"
+    >
       <img
         src={image ? image : "https://via.placeholder.com/213"}
         alt={name}
-        className="w-full h-auto max-w-[213px] max-h- rounded-lg object-cover"
+        className="w-full h-auto max-w-[213px] rounded-lg object-cover"
       />
-      <h3 className="text-xl font-semibold text-[#161F36] mt-2">{name} </h3>
-      <p className="text-sm text-[#161F36] opacity-70">{specialty}</p>
-      <div className="grid grid-cols-2 gap-5 justify-center pl-12">
-        <div className="flex mt-2 bg-[#BACBD8] rounded-md justify-start w-27 pl-2 pt-1">
-          <img src={briefcase} alt="icon" className="w-4 h-4 mr-2 mt-0.5" />
-          <span> {tahunPengalaman} Tahun</span>
+      <h3 className="text-xl font-semibold text-[#161F36] mt-2 dark:text-white">
+        {name}{" "}
+      </h3>
+      <p className="text-sm text-[#161F36] opacity-70 dark:text-gray-300">
+        {specialty}
+      </p>
+      {/* Container flexbox untuk Tahun Pengalaman dan Rating */}
+      <div className="flex justify-center items-center space-x-5 mt-2 w-full px-2">
+        {" "}
+        {/* PERUBAHAN DI SINI: space-x-px */}
+        {/* Tahun Pengalaman */}
+        <div
+          className="inline-flex rounded-md justify-center items-center py-1 px-3
+                       bg-[#BACBD8] dark:bg-gray-700 dark:text-white"
+        >
+          <img
+            src={briefcase}
+            alt="icon"
+            className="w-4 h-4 mr-1 dark:filter dark:invert"
+          />
+          <span className="text-sm"> {tahunPengalaman} Tahun</span>
         </div>
-        <div className="flex mt-2 bg-[#BACBD8] rounded-md justify-center items-center w-13">
+        {/* Rating */}
+        <div
+          className="inline-flex rounded-md justify-center items-center py-1 px-3
+                       bg-[#BACBD8] dark:bg-gray-700 dark:text-white"
+        >
           {Array.from({ length: 1 }).map((_, index) => (
             <img
               key={index}
               src={starIcon}
               alt="star"
-              className={`${
-                index < rating ? "text-[#161F36]" : "text-gray-400"
-              } w-4 h-4 mb-0.5`}
+              className={`w-4 h-4 mr-1 dark:filter dark:invert ${
+                index < rating
+                  ? "text-[#161F36] dark:text-yellow-400"
+                  : "text-gray-400 dark:text-gray-500"
+              }`}
             />
           ))}
-          <span className="ml-2 text-[#161F36]">{rating}</span>
+          <span className="ml-1 text-sm text-[#161F36] dark:text-white">
+            {rating}
+          </span>
         </div>
       </div>
 
       <div className="flex items-center mt-5">
-        <p className="text-base text-[#161F36] font-semibold">{`Rp${price}`}</p>
+        <p className="text-base text-[#161F36] font-semibold dark:text-white">{`Rp${price}`}</p>
       </div>
 
       <button
         onClick={handleMakeAppointment}
-        className={`mt-1 py-2 px-4 font-semibold w-[140px] rounded-[10px] transition-all duration-100 ${
-          buttonClicked
-            ? "bg-[#E6E6E6] text-white"
-            : "bg-[#187DA8] text-white hover:bg-[#155D8A]"
-        }`}
+        className={`mt-1 py-2 px-4 font-semibold w-[140px] rounded-[10px] transition-all duration-100
+                   ${
+                     buttonClicked
+                       ? "bg-[#E6E6E6] text-black dark:bg-gray-600 dark:text-[#161F36]"
+                       : "bg-[#187DA8] text-white dark:text-[#161F36] hover:bg-[#155D8A] dark:bg-[#BACBD8] dark:hover:bg-[#556281]"
+                   }`}
       >
         Detail
       </button>
 
       {isNotAvailableToday && (
-        <p className="text-xs text-red-500 mt-1">
+        <p className="text-xs text-red-500 mt-1 w-full px-2 text-center leading-tight">
           {`Tidak tersedia untuk hari ini, tersedia lagi ${nextAvailableDay} 09:00-16:00`}
         </p>
       )}

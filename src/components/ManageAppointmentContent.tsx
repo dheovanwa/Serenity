@@ -5,13 +5,10 @@ import { format } from "date-fns";
 import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-// import { doc, getDoc } from "firebase/firestore";
-// import { db } from "../config/firebase";
 import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import starIcon from "../assets/star.svg";
 import briefcase from "../assets/briefcase.svg";
-// import { psychiatristsData } from "../utils/storePsychiatrists";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import appointmentsData from "../utils/appointmentsData.json";
+// import appointmentsData from "../utils/appointmentsData.json"; // Ini tidak digunakan
 
 interface Psychiatrist {
   name: string;
@@ -45,6 +42,10 @@ interface Psychiatrist {
   bookedVideo: {
     [key: string]: number[]; // date as key (YYYY-MM-DD format), array of [startMinutes, endMinutes]
   };
+  alumnus: string; // Tambahkan ini jika belum ada di interface
+  str: string; // Tambahkan ini jika belum ada di interface
+  metode: string; // Tambahkan ini jika belum ada di interface
+  tahunPengalaman: number; // Tambahkan ini jika belum ada di interface
 }
 
 interface Appointment {
@@ -54,11 +55,12 @@ interface Appointment {
   patientName: string;
   gejala: string;
   method: string;
-  date: string;
+  date: number; // Menggunakan timestamp
   time: string;
   dayName: string;
   price: number;
   status: string;
+  createdAt: number; // Tambahkan ini agar sesuai dengan penambahan di handleSaveAppointment
 }
 
 // Add interface for User
@@ -66,6 +68,13 @@ interface User {
   bookedChat: {
     [key: string]: boolean; // date string as key (YYYY-MM-DD format), boolean as value
   };
+  firstName?: string;
+  lastName?: string;
+}
+
+// Add isDarkMode to props
+interface ManageAppointmentContentProps {
+  isDarkMode: boolean;
 }
 
 const formatTime = (minutes: number): string => {
@@ -74,7 +83,10 @@ const formatTime = (minutes: number): string => {
   return `${String(hours).padStart(2, "0")}:${String(mins).padStart(2, "0")}`;
 };
 
-const ManageAppointmentContent = () => {
+const ManageAppointmentContent = ({
+  isDarkMode,
+}: ManageAppointmentContentProps) => {
+  // Terima prop isDarkMode
   const { id } = useParams();
   const navigate = useNavigate();
   const [psychiatrist, setPsychiatrist] = useState<Psychiatrist | null>(null);
@@ -97,11 +109,11 @@ const ManageAppointmentContent = () => {
   const [showModal, setShowModal] = useState(false);
 
   const handleCancel = () => {
-  setShowModal(true);
-};
+    setShowModal(true);
+  };
   const handleCloseModal = () => {
-  setShowModal(false); 
-};
+    setShowModal(false);
+  };
 
   const handleConfirmCancel = () => {
     setDate(undefined);
@@ -125,7 +137,6 @@ const ManageAppointmentContent = () => {
     if (!duration && !customMinutes) return [];
     if (!selectedDate || !psychiatrist?.jadwal) return [];
 
-    // Get the day of week
     const days = [
       "minggu",
       "senin",
@@ -137,9 +148,8 @@ const ManageAppointmentContent = () => {
     ];
     const dayName = days[selectedDate.getDay()];
 
-    // Get schedule for the selected day
     const daySchedule = psychiatrist.jadwal[dayName];
-    if (!daySchedule) return []; // Return empty array if no schedule for this day
+    if (!daySchedule) return [];
 
     const sessionMinutes =
       customMinutes ??
@@ -159,7 +169,6 @@ const ManageAppointmentContent = () => {
     const slots: string[] = [];
     const totalMinutes = daySchedule.end - daySchedule.start;
 
-    // Get booked slots for the selected date
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     const bookedSlots = psychiatrist?.bookedVideo?.[dateStr] || [];
 
@@ -167,11 +176,9 @@ const ManageAppointmentContent = () => {
       const startTotalMinutes = daySchedule.start + i;
       const endTotalMinutes = startTotalMinutes + sessionMinutes;
 
-      // Check if this time slot overlaps with any booked slots
       const isSlotBooked =
         Array.isArray(bookedSlots) && bookedSlots.length >= 2
           ? bookedSlots.some((_, index) => {
-              // Only check even indices (0, 2, 4, etc.) as they represent start times
               if (index % 2 === 0 && index + 1 < bookedSlots.length) {
                 const bookedStart = bookedSlots[index];
                 const bookedEnd = bookedSlots[index + 1];
@@ -216,7 +223,6 @@ const ManageAppointmentContent = () => {
 
       try {
         setLoading(true);
-        // Try fetching from Firestore directly
         const docRef = doc(db, "psychiatrists", id);
         const docSnap = await getDoc(docRef);
 
@@ -224,7 +230,7 @@ const ManageAppointmentContent = () => {
           setPsychiatrist({
             id: docSnap.id,
             ...(docSnap.data() as Psychiatrist),
-          });
+          } as Psychiatrist); // Cast to Psychiatrist
         } else {
           console.error("No psychiatrist found with ID:", id);
         }
@@ -244,12 +250,8 @@ const ManageAppointmentContent = () => {
         const userSnap = await getDoc(userRef);
 
         if (userSnap.exists()) {
-          const user = userSnap.data() as User & {
-            firstName?: string;
-            lastName?: string;
-          };
+          const user = userSnap.data() as User;
           setUserData(user);
-          // Set patientName from firstName + lastName if available
           if (user.firstName && user.lastName) {
             setPatientName(`${user.firstName} ${user.lastName}`.trim());
           } else if (user.firstName) {
@@ -267,63 +269,6 @@ const ManageAppointmentContent = () => {
     fetchUserData();
   }, [id]);
 
-  //   if (loading) {
-  //     return (
-  //       <AuthLayoutapt>
-  //         <div className="w-full flex flex-col items-center px-4">
-  //           {/* Skeleton for title */}
-  //           <div className="h-12 w-64 bg-gray-300 rounded-lg animate-pulse mb-6 mt-6"></div>
-
-  //           <div className="relative z-1 bg-white rounded-3xl shadow-xl p-6 sm:p-10 lg:p-16 flex flex-col lg:flex-row gap-8 w-full max-w-[1200px] mb-10">
-  //             {/* Left section skeleton */}
-  //             <div className="w-full lg:w-1/4 flex flex-col items-center pr-6 lg:border-r border-gray-300">
-  //               <div className="w-32 h-32 rounded-full bg-gray-300 animate-pulse mb-4"></div>
-  //               <div className="w-48 h-6 bg-gray-300 rounded animate-pulse mb-2"></div>
-  //               <div className="w-32 h-4 bg-gray-300 rounded animate-pulse mb-4"></div>
-  //               <div className="w-full space-y-4">
-  //                 {[1, 2, 3].map((i) => (
-  //                   <div key={i} className="space-y-2">
-  //                     <div className="w-24 h-4 bg-gray-300 rounded animate-pulse"></div>
-  //                     <div className="w-full h-4 bg-gray-300 rounded animate-pulse"></div>
-  //                   </div>
-  //                 ))}
-  //               </div>
-  //             </div>
-
-  //             {/* Middle section skeleton */}
-  //             <div className="w-full lg:w-2/5 space-y-6 pr-6 lg:border-r border-gray-300">
-  //               {[1, 2, 3, 4].map((i) => (
-  //                 <div key={i} className="space-y-3">
-  //                   <div className="w-32 h-6 bg-gray-300 rounded animate-pulse"></div>
-  //                   <div className="w-full h-12 bg-gray-300 rounded animate-pulse"></div>
-  //                 </div>
-  //               ))}
-  //             </div>
-
-  //             {/* Right section skeleton */}
-  //             <div className="w-full lg:w-2/5 space-y-6">
-  //               <div className="space-y-3">
-  //                 <div className="w-32 h-6 bg-gray-300 rounded animate-pulse"></div>
-  //                 <div className="grid grid-cols-2 gap-2">
-  //                   {[1, 2, 3, 4].map((i) => (
-  //                     <div
-  //                       key={i}
-  //                       className="h-12 bg-gray-300 rounded animate-pulse"
-  //                     ></div>
-  //                   ))}
-  //                 </div>
-  //               </div>
-  //               <div className="flex justify-end space-x-4">
-  //                 <div className="w-24 h-10 bg-gray-300 rounded animate-pulse"></div>
-  //                 <div className="w-24 h-10 bg-gray-300 rounded animate-pulse"></div>
-  //               </div>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </AuthLayoutapt>
-  //     );
-  //   }
-
   const renderSchedule = () => {
     if (!psychiatrist?.jadwal) return null;
 
@@ -340,7 +285,12 @@ const ManageAppointmentContent = () => {
     return Object.entries(days).map(([key, label]) => {
       const schedule = psychiatrist.jadwal[key];
       return (
-        <p key={key}>
+        <p
+          key={key}
+          className="text-base font-regular text-black dark:text-gray-300"
+        >
+          {" "}
+          {/* Schedule text */}
           {label}
           {schedule
             ? `, ${formatTime(schedule.start)} - ${formatTime(schedule.end)}`
@@ -358,18 +308,16 @@ const ManageAppointmentContent = () => {
     } else if (selectedMethod === "Video") {
       let multiplier = 1;
       if (showCustomInput) {
-        // Custom sessions calculation (15 minutes per session)
-        multiplier = 1 + (customSessions - 2) * 0.5; // -2 because base is 2 sessions
+        multiplier = 1 + (customSessions - 2) * 0.5;
       } else {
-        // Standard duration calculation
         switch (selectedDuration) {
-          case "30m": // 2 sessions
+          case "30m":
             multiplier = 1.5;
             break;
-          case "45m": // 3 sessions
+          case "45m":
             multiplier = 2;
             break;
-          case "1h": // 4 sessions
+          case "1h":
             multiplier = 2.5;
             break;
           default:
@@ -395,16 +343,13 @@ const ManageAppointmentContent = () => {
       const dateStr = format(date, "yyyy-MM-dd");
 
       if (selectedMethod === "Chat") {
-        // Get current psychiatrist data
         const docSnap = await getDoc(psychiatristRef);
         if (!docSnap.exists()) {
           throw new Error("Psychiatrist not found");
         }
 
         const currentData = docSnap.data();
-        const currentBookedChat = currentData.bookedChat || {};
-
-        // Update bookedChat field, incrementing the count for this date
+        const currentBookedChat = currentData?.bookedChat || {}; // Use optional chaining
         await updateDoc(psychiatristRef, {
           chatPatientQuota: psychiatrist.chatPatientQuota - 1,
           bookedChat: {
@@ -413,7 +358,6 @@ const ManageAppointmentContent = () => {
           },
         });
       } else if (selectedMethod === "Video" && selectedTime) {
-        // Parse the time range
         const [startTime, endTime] = selectedTime.split(" - ");
         const [startHour, startMinute] = startTime.split(".").map(Number);
         const [endHour, endMinute] = endTime.split(".").map(Number);
@@ -421,16 +365,13 @@ const ManageAppointmentContent = () => {
         const startMinutes = startHour * 60 + (startMinute || 0);
         const endMinutes = endHour * 60 + (endMinute || 0);
 
-        // Get current psychiatrist data
         const docSnap = await getDoc(psychiatristRef);
         if (!docSnap.exists()) {
           throw new Error("Psychiatrist not found");
         }
 
         const currentData = docSnap.data();
-        const currentBookedVideo = currentData.bookedVideo || {};
-
-        // Update bookedVideo field, creating new date entry if it doesn't exist
+        const currentBookedVideo = currentData?.bookedVideo || {}; // Use optional chaining
         await updateDoc(psychiatristRef, {
           bookedVideo: {
             ...currentBookedVideo,
@@ -453,25 +394,23 @@ const ManageAppointmentContent = () => {
           "Jumat",
           "Sabtu",
         ];
-        console.log("Date:", date);
         return days[date.getDay()];
       };
 
-      // Convert to Unix timestamp (milliseconds since epoch)
       const unixTimestamp = date.getTime();
 
       const newAppointment: Appointment = {
         psychiatristId: psychiatrist.id,
         patientId: documentId,
         doctorName: psychiatrist.name,
-        patientName: patientName || "User", // Use fetched patient name
+        patientName: patientName || "User",
         gejala,
         method: selectedMethod || "Chat",
         date: unixTimestamp,
         time: selectedMethod === "Chat" ? "today" : selectedTime,
         dayName: getDayName(date),
         price: totalPrice,
-        createdAt: Date.now(), // Add creation timestamp
+        createdAt: Date.now(),
         status: "Menunggu pembayaran",
       };
 
@@ -480,14 +419,12 @@ const ManageAppointmentContent = () => {
       const appointmentsRef = collection(db, "appointments");
       await addDoc(appointmentsRef, newAppointment);
 
-      // Navigate to manage-appointment after successful creation
       navigate("/manage-appointment");
     } catch (error) {
       console.error("Error saving appointment:", error);
       alert("Failed to save appointment. Please try again.");
     }
   };
-
 
   const handleDateSelect = (newDate: Date | undefined) => {
     console.log("Selected date:", newDate);
@@ -499,7 +436,6 @@ const ManageAppointmentContent = () => {
     const isSameDay = day.toDateString() === new Date().toDateString();
     const dateStr = format(day, "yyyy-MM-dd");
 
-    // Get the day's schedule
     const days = [
       "minggu",
       "senin",
@@ -512,43 +448,35 @@ const ManageAppointmentContent = () => {
     const dayName = days[day.getDay()];
     const daySchedule = psychiatrist?.jadwal?.[dayName];
 
-    // Disable if it's a holiday (schedule is null)
     if (daySchedule === null) {
       return true;
     }
 
-    // Chat appointment validation
     if (selectedMethod === "Chat") {
       const bookedCount = psychiatrist?.bookedChat?.[dateStr] || 0;
       const isFullyBooked = bookedCount >= 5;
       const hasUserBookedChat = userData?.bookedChat?.[dateStr] === true;
 
-      // If it's today, check chat quota
       if (isSameDay && psychiatrist?.chatPatientQuota === 0) {
         console.log("Date:", dateStr, hasUserBookedChat);
         return true;
       }
 
-      // Disable if date is before today, fully booked, or user already has chat booking
       return isBeforeToday || isFullyBooked || hasUserBookedChat;
     }
 
-    // Video appointment validation
     if (selectedMethod === "Video") {
-      // Disable past dates and holidays
       return isBeforeToday;
     }
 
-    // Default behavior if no method selected
     return isBeforeToday;
   };
 
-  // Add function to check if form is valid based on method
   const isFormValid = () => {
     if (!selectedMethod) return false;
 
     if (selectedMethod === "Chat") {
-      return !!date; // Only need date for Chat
+      return !!date;
     }
 
     if (selectedMethod === "Video") {
@@ -563,49 +491,64 @@ const ManageAppointmentContent = () => {
   };
 
   return (
-    <div className="w-full flex flex-col items-center px-4">
-      <h1 className="w-full max-w-[1200px] text-left text-4xl sm:text-5xl font-bold text-[#161F36] mb-6 mt-6">
+    <div className="w-full flex flex-col items-center px-4 dark:bg-[#161F36] transition-colors duration-300">
+      {" "}
+      {/* Main page background */}
+      <h1 className="w-full max-w-[1200px] text-left text-4xl sm:text-5xl font-bold text-[#161F36] mb-6 mt-6 dark:text-white">
         Manage Appointment
       </h1>
-
-      <div className="relative z-1 bg-[#E4DCCC] rounded-3xl shadow-xl p-6 sm:p-10 lg:p-16 flex flex-col lg:flex-row gap-8 w-full max-w-[1200px] mb-10">
+      <div
+        className="relative z-1 rounded-3xl shadow-xl p-6 sm:p-10 lg:p-16 flex flex-col lg:flex-row gap-8 w-full max-w-[1200px] mb-10
+                      bg-[#E4DCCC] dark:bg-[#202f55]"
+      >
+        {" "}
+        {/* Main card background */}
         {/* Left Section */}
-        <div className="w-full lg:w-1/4 flex flex-col items-center pr-6 lg:border-r border-black">
+        <div className="w-full lg:w-1/4 flex flex-col items-center pr-6 lg:border-r border-black dark:border-gray-600">
           <div className="flex flex-col items-center">
             <img
               src={psychiatrist?.image}
               alt={psychiatrist?.name}
               className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover mt-4"
             />
-            <h2 className="text-xl sm:text-2xl font-semibold text-[#000000] mt-2">
+            <h2 className="text-xl sm:text-2xl font-semibold text-[#000000] mt-2 dark:text-white">
               Dr. {psychiatrist?.name}
             </h2>
-            <p className="text-sky-500 font-semibold">
+            <p className="text-sky-500 font-semibold dark:text-blue-300">
               {psychiatrist?.specialty}
             </p>
             <div className="flex gap-2 mt-2 items-center">
-              <div className="flex mt-2 bg-[#BACBD8] rounded-md justify-start w-27 pl-2 pt-1">
+              <div
+                className="inline-flex rounded-md justify-center items-center py-1 px-3
+                               bg-[#BACBD8] dark:bg-gray-700 dark:text-white"
+              >
                 <img
                   src={briefcase}
                   alt="icon"
-                  className="w-4 h-4 mr-2 mt-0.5"
+                  className="w-4 h-4 mr-1 dark:filter dark:invert"
                 />
-                <span> {psychiatrist?.tahunPengalaman} Tahun</span>
+                <span className="text-sm">
+                  {" "}
+                  {psychiatrist?.tahunPengalaman} Tahun
+                </span>
               </div>
-              <div className="flex mt-2 bg-[#BACBD8] rounded-md w-17 pl-2 pt-1">
+              <div
+                className="inline-flex rounded-md justify-center items-center py-1 px-3
+                               bg-[#BACBD8] dark:bg-gray-700 dark:text-white"
+              >
                 {Array.from({ length: 1 }).map((_, index) => (
                   <img
                     key={index}
                     src={starIcon}
                     alt="star"
-                    className={`${
-                      index < psychiatrist?.rating
-                        ? "text-[#161F36]"
-                        : "text-gray-400"
-                    } w-4 h-4 mb-0.5`}
+                    className={`w-4 h-4 mr-1 dark:filter dark:invert ${
+                      index < (psychiatrist?.rating || 0)
+                        ? "text-[#161F36] dark:text-yellow-400"
+                        : "text-gray-400 dark:text-gray-500"
+                    }`}
                   />
                 ))}
-                <span className="ml-2 text-[#161F36]">
+                <span className="ml-1 text-sm text-[#161F36] dark:text-white">
                   {psychiatrist?.rating}
                 </span>
               </div>
@@ -614,35 +557,40 @@ const ManageAppointmentContent = () => {
 
           <div className="text-left w-full mt-6">
             <div className="mb-4">
-              <h1 className="text-lg font-semibold text-[#000000]">Alumnus</h1>
-              <p className="text-base font-regular text-black mt-1">
+              <h1 className="text-lg font-semibold text-[#000000] dark:text-white">
+                Alumnus
+              </h1>
+              <p className="text-base font-regular text-black mt-1 dark:text-gray-300">
                 {psychiatrist?.alumnus}
               </p>
             </div>
 
             <div className="mb-4">
-              <p className="text-lg font-semibold text-black">Nomor STR</p>
-              <p className="text-base font-regular text-black mt-1">
+              <p className="text-lg font-semibold text-black dark:text-white">
+                Nomor STR
+              </p>
+              <p className="text-base font-regular text-black mt-1 dark:text-gray-300">
                 {psychiatrist?.str}
               </p>
             </div>
 
             <div className="mb-4">
-              <p className="text-lg font-semibold text-black">
+              <p className="text-lg font-semibold text-black dark:text-white">
                 Metode Konsultasi
               </p>
-              <p className="text-base font-regular text-black mt-1">
+              <p className="text-base font-regular text-black mt-1 dark:text-gray-300">
                 {psychiatrist?.metode}
               </p>
             </div>
           </div>
         </div>
-
         {/* Middle Section */}
-        <div className="flex flex-col gap-4 w-full lg:w-2/5 pr-6 lg:border-r border-black">
+        <div className="flex flex-col gap-4 w-full lg:w-2/5 pr-6 lg:border-r border-black dark:border-gray-600">
           {/* Method */}
           <div>
-            <p className="text-xl font-semibold text-black">Metode</p>
+            <p className="text-xl font-semibold text-black dark:text-white">
+              Metode
+            </p>
             {/* Method buttons */}
             <div className="flex gap-2 mt-2 flex-wrap">
               {["Chat", "Video"].map((method) => (
@@ -651,9 +599,9 @@ const ManageAppointmentContent = () => {
                   variant="outline"
                   onClick={() => setSelectedMethod(method)}
                   className={cn(
-                    "py-2 px-6 text-sm sm:text-base bg-[#F2F2E2]",
+                    "py-2 px-6 text-sm sm:text-base bg-[#F2F2E2] dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600",
                     selectedMethod === method
-                      ? "bg-[#BACBD8] text-black"
+                      ? "bg-[#BACBD8] text-black dark:bg-[#86939c] dark:text-white"
                       : "hover:bg-[#BACBD8] hover:text-black"
                   )}
                 >
@@ -668,17 +616,19 @@ const ManageAppointmentContent = () => {
             <>
               {/* Date - Moved here and only show for both Chat and Video */}
               <div>
-                <p className="text-xl font-semibold text-black">Tanggal</p>
+                <p className="text-xl font-semibold text-black dark:text-white">
+                  Tanggal
+                </p>
                 <Popover>
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
                       className={cn(
-                        "w-full justify-start text-left font-normal py-5 text-sm sm:text-base mt-2 bg-[#F2F2E2] ",
-                        !date && "text-muted-foreground"
+                        "w-full justify-start text-left font-normal py-5 text-sm sm:text-base mt-2 bg-[#F2F2E2] dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600",
+                        !date && "text-muted-foreground dark:text-gray-400"
                       )}
                     >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      <CalendarIcon className="mr-2 h-4 w-4 dark:text-white" />
                       {date ? (
                         format(date, "PPP")
                       ) : (
@@ -687,7 +637,7 @@ const ManageAppointmentContent = () => {
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent
-                    className="w-auto p-0 bg-[#F2F2E2]"
+                    className="w-auto p-0 bg-[#F2F2E2] dark:bg-gray-800 dark:border-gray-600 dark:text-white" // Calendar content
                     align="start"
                   >
                     <Calendar
@@ -697,6 +647,9 @@ const ManageAppointmentContent = () => {
                       initialFocus
                       disabled={isDateDisabled}
                       dateFormat="dd/MM/YYYY"
+                      // Shadcn Calendar internal styling for dark mode might need to be configured
+                      // in tailwind.config.js or globals.css if not auto-applied.
+                      // For now, ensuring parent PopoverContent is dark should help.
                     />
                   </PopoverContent>
                 </Popover>
@@ -707,7 +660,9 @@ const ManageAppointmentContent = () => {
                 <>
                   {/* Duration */}
                   <div>
-                    <p className="text-xl font-semibold text-black">Durasi</p>
+                    <p className="text-xl font-semibold text-black dark:text-white">
+                      Durasi
+                    </p>
                     {/* Duration buttons */}
                     <div className="flex gap-2 mt-2 flex-wrap">
                       {["30m", "45m", "1h", "Custom"].map((duration) => (
@@ -725,10 +680,10 @@ const ManageAppointmentContent = () => {
                             }
                           }}
                           className={cn(
-                            "py-2 px-6 text-sm sm:text-base bg-[#F2F2E2]",
+                            "py-2 px-6 text-sm sm:text-base bg-[#F2F2E2] dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600",
                             selectedDuration === duration ||
                               (duration === "Custom" && showCustomInput)
-                              ? "bg-[#BACBD8] text-black"
+                              ? "bg-[#86939c] text-black dark:bg-[#86939c] dark:text-white"
                               : "hover:bg-[#BACBD8] hover:text-black"
                           )}
                         >
@@ -739,7 +694,7 @@ const ManageAppointmentContent = () => {
 
                     {showCustomInput && (
                       <div className="mt-4">
-                        <label className="block text-black font-semibold mb-2">
+                        <label className="block text-black font-semibold mb-2 dark:text-white">
                           Masukkan jumlah sesi (15 menit per sesi, minimal 2
                           sesi):
                         </label>
@@ -752,9 +707,9 @@ const ManageAppointmentContent = () => {
                             const val = Math.max(2, Number(e.target.value));
                             setCustomSessions(val);
                           }}
-                          className="border border-gray-300 rounded px-3 py-2 w-24 bg-[#F2F2E2]"
+                          className="border border-gray-300 rounded px-3 py-2 w-24 bg-[#F2F2E2] dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                         />
-                        <p className="mt-2 text-gray-700">
+                        <p className="mt-2 text-gray-700 dark:text-gray-300">
                           Total durasi:{" "}
                           {customSessions * 15 < 60
                             ? `${customSessions * 15} menit`
@@ -769,21 +724,30 @@ const ManageAppointmentContent = () => {
 
                   {/* Time */}
                   <div className="mt-1">
-                    <p className="text-xl font-semibold text-black">Waktu</p>
+                    <p className="text-xl font-semibold text-black dark:text-white">
+                      Waktu
+                    </p>
                     <Select
                       onValueChange={setSelectedTime}
                       value={selectedTime}
                     >
-                      <SelectTrigger className="w-full mt-2 bg-[#F2F2E2] py-5">
-                        <SelectValue placeholder="Pilih jam konsultasi" />
+                      <SelectTrigger className="w-full mt-2 bg-[#F2F2E2] py-5 dark:bg-gray-700 dark:text-white">
+                        <SelectValue
+                          placeholder="Pilih jam konsultasi"
+                          className="dark:text-gray-400"
+                        />
                       </SelectTrigger>
-                      <SelectContent className="max-h-60 overflow-y-auto bg-[#F2F2E2]">
+                      <SelectContent className="max-h-60 overflow-y-auto bg-[#F2F2E2] dark:bg-gray-800 dark:text-white">
                         {getTimeSlotsByDuration(
                           selectedDuration,
                           showCustomInput ? customSessions * 15 : undefined,
                           date // Pass the selected date
                         ).map((slot) => (
-                          <SelectItem key={slot} value={slot}>
+                          <SelectItem
+                            key={slot}
+                            value={slot}
+                            className="dark:hover:bg-gray-700"
+                          >
                             {slot}
                           </SelectItem>
                         ))}
@@ -795,28 +759,29 @@ const ManageAppointmentContent = () => {
             </>
           )}
         </div>
-
         {/* Right Section */}
         <div className="flex flex-col gap-4 w-full lg:w-2/5 ">
           <div>
-            <p className="text-xl font-semibold text-black">Gejala</p>
+            <p className="text-xl font-semibold text-black dark:text-white">
+              Gejala
+            </p>
             <Textarea
               placeholder="Masukkan gejalamu disini..."
-              className="resize-y mt-2 h-32 border-gray-600 bg-[#F2F2E2]"
+              className="resize-y mt-2 h-32 border-gray-600 bg-[#F2F2E2] dark:border-gray-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
               value={gejala}
               onChange={(e) => setGejala(e.target.value)}
             />
           </div>
 
-          <div className="text-xl font-semibold">
+          <div className="text-xl font-semibold text-black dark:text-white">
             <h1>Jadwal Konsultasi</h1>
           </div>
           <div className="text-lg mb-3">{renderSchedule()}</div>
 
           <div className="flex flex-col justify-between items-end mt-4">
-            <p className="text-lg sm:text-xl font-bold text-gray-800">
+            <p className="text-lg sm:text-xl font-bold text-gray-800 dark:text-white">
               Total Biaya:{" "}
-              <span className="text-gray-800">
+              <span className="text-gray-800 dark:text-white">
                 Rp{totalPrice.toLocaleString("id-ID")}
               </span>
             </p>
@@ -824,17 +789,19 @@ const ManageAppointmentContent = () => {
             <div className="flex gap-4 mt-4 flex-wrap">
               <Button
                 variant="outline"
-                className="bg-[#BACBD8] text-black hover:bg-[#9FB6C6]"
+                className="bg-[#BACBD8] text-black hover:bg-[#9FB6C6] dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                 onClick={handleCancel}
               >
                 Batal
               </Button>
               <Button
-                className={`${
+                className={cn(
+                  // Use cn for conditional classes
+                  `h-auto py-2 px-6 rounded-md font-semibold`, // Base button classes
                   isFormValid()
-                    ? "bg-[#BACBD8] text-black hover:bg-[#9FB6C6]"
-                    : "bg-gray-400 text-white cursor-not-allowed"
-                }`}
+                    ? "bg-[#BACBD8] text-black hover:bg-[#9FB6C6] dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800"
+                    : "bg-gray-400 text-white cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
+                )}
                 onClick={handleSaveAppointment}
                 disabled={!isFormValid()}
               >
@@ -844,24 +811,27 @@ const ManageAppointmentContent = () => {
           </div>
         </div>
       </div>
-
-        {/* Modal Konfirmasi Batal */}
+      {/* Modal Konfirmasi Batal */}
       {showModal && (
         <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex justify-center items-center z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px]">
-            <h2 className="text-xl font-semibold text-black">Konfirmasi Batal</h2>
-            <p className="mt-2">Apakah Anda yakin ingin membatalkan pemesanan?</p>
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px] dark:bg-gray-800 dark:text-white">
+            <h2 className="text-xl font-semibold text-black dark:text-white">
+              Konfirmasi Batal
+            </h2>
+            <p className="mt-2 text-black dark:text-gray-300">
+              Apakah Anda yakin ingin membatalkan pemesanan?
+            </p>
             <div className="flex justify-end gap-5 mt-5">
               <Button
                 variant="outline"
-                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                 onClick={handleCloseModal}
               >
                 Batal
               </Button>
               <Button
-                className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1"
-                onClick={handleConfirmCancel} 
+                className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800"
+                onClick={handleConfirmCancel}
               >
                 Ya, Lanjutkan
               </Button>
@@ -869,9 +839,6 @@ const ManageAppointmentContent = () => {
           </div>
         </div>
       )}
-
-
-
     </div>
   );
 };
