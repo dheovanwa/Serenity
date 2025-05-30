@@ -1,10 +1,14 @@
 import React, { useState, useRef, useEffect } from "react";
-import searchIcon from "../assets/search1.png";
-import chevronDownIcon from "../assets/con1.png";
-import SparklingIcon from "../assets/Sparkling.svg";
+import searchIcon from "../assets/search1.png"; // Asumsi ikon ini hitam/gelap
+import chevronDownIcon from "../assets/con1.png"; // Asumsi ikon ini hitam/gelap
+import SparklingIcon from "../assets/Sparkling.svg"; // Asumsi ikon ini mungkin sudah berwarna (misal: emas/putih)
 import PsychiatristSearchProfile from "../components/PsychiatristSearchProfile";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "../config/firebase";
+
+// Import logo dark dan light untuk komponen ini jika perlu
+import logoLight from "../assets/Logo - Light.png"; // Contoh, jika logo muncul di sini
+import logoDark from "../assets/Logo - Dark.png"; // Contoh, jika logo muncul di sini
 
 interface Psychiatrist {
   id?: string;
@@ -19,6 +23,11 @@ interface Psychiatrist {
   image: string;
 }
 
+// Tambahkan isDarkMode ke props SearchPsikiater
+interface SearchPsikiaterProps {
+  isDarkMode: boolean;
+}
+
 const AscendingIcon = () => (
   <svg
     width="24"
@@ -26,6 +35,7 @@ const AscendingIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className="dark:text-white" // Ikon SVG bisa langsung diwarnai ulang
   >
     <path
       d="M12 20V4M12 4L6 10M12 4L18 10"
@@ -44,6 +54,7 @@ const DescendingIcon = () => (
     viewBox="0 0 24 24"
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
+    className="dark:text-white" // Ikon SVG bisa langsung diwarnai ulang
   >
     <path
       d="M12 4V20M12 20L18 14M12 20L6 14"
@@ -65,7 +76,8 @@ const specialties = [
   "Terapis / Konselor Umum",
 ];
 
-const SearchPsikiater: React.FC = () => {
+const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
+  // Terima prop isDarkMode
   const [searchText, setSearchText] = useState("");
   const [selectedSort, setSelectedSort] = useState("");
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -209,20 +221,28 @@ const SearchPsikiater: React.FC = () => {
   return (
     <div
       ref={containerRef}
-      className="min-h-screen w-full bg-[#F2EDE2] flex flex-col overflow-x-hidden"
+      className="min-h-screen w-full bg-[#F2EDE2] dark:bg-[#161F36] flex flex-col overflow-x-hidden transition-colors duration-300" // Background utama halaman
     >
-      <div className="mt-50 pt-6 px-2 sm:px-4 md:px-6 lg:px-8 ">
+      <div className="mt-50 pt-6 px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="w-full sm:w-[90%] lg:w-[75%] mx-auto flex flex-col gap-3 sm:flex-row sm:justify-between">
           <div className="flex flex-wrap items-center gap-3 sm:w-[60%] lg:w-[70%]">
             {/* Magic Recommendation Button */}
             <button
-              className="flex items-center justify-center bg-[#BACBD8] text-[#161F36] font-semibold rounded-md h-[45px] px-3"
+              className="flex items-center justify-center bg-[#BACBD8] text-[#161F36] font-semibold rounded-md h-[45px] px-3
+                         dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#23385F] transition-colors duration-300"
               style={{ minWidth: 45 }}
               title="Magic Recommendation"
               // onClick={handleMagicRecommendation}
             >
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#BACBD8]">
-                <img src={SparklingIcon} alt="Magic" className="w-5 h-5" />
+              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#BACBD8] dark:bg-transparent">
+                {" "}
+                {/* Ubah background lingkaran ikon jika perlu */}
+                <img
+                  src={SparklingIcon}
+                  alt="Magic"
+                  className="w-5 h-5 dark:filter dark:invert"
+                />{" "}
+                {/* Invert ikon jika perlu */}
               </span>
             </button>
             <div className="relative flex-grow">
@@ -231,26 +251,31 @@ const SearchPsikiater: React.FC = () => {
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 placeholder="Cari ahli medis pilihanmu..."
-                className="bg-transparent border-1 border-black text-[#161F36] p-2 rounded-md w-full h-[45px] pl-10 text-sm sm:text-base"
+                className="bg-transparent border-1 border-black text-[#161F36] p-2 rounded-md w-full h-[45px] pl-10 text-sm sm:text-base
+                           dark:bg-[#161F36] dark:border-gray-600 dark:text-white dark:placeholder-gray-400 transition-colors duration-300" // Input search
               />
               <img
                 src={searchIcon}
                 alt="Search Icon"
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6"
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 dark:filter dark:invert" // Invert ikon search
               />
             </div>
             <button
               onClick={handleClear}
-              className="bg-[#BACBD8] text-[#161F36] font-semibold rounded-md h-[45px] px-5 min-w-[120px]"
+              className="bg-[#BACBD8] text-[#161F36] font-semibold rounded-md h-[45px] px-5 min-w-[120px]
+                         dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#23385F] transition-colors duration-300" // Tombol Hapus
             >
               Hapus
             </button>
           </div>
           <div className="flex gap-3 w-full sm:w-auto z-20">
+            {/* Dropdown Spesialisasi */}
             <div className="relative sm:w-[200px] w-full">
               <button
                 onClick={() => setIsSpecialtyOpen(!isSpecialtyOpen)}
-                className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold text-sm sm:text-base w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300"
+                className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold text-sm sm:text-base w-full h-[45px] flex justify-between items-center
+                           hover:bg-blue-200 transition-all duration-300
+                           dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#23385F]" // Tombol Pilih Spesialisasi
               >
                 <span className="truncate">
                   {selectedSpecialty ? selectedSpecialty : "Pilih Spesialisasi"}
@@ -258,22 +283,27 @@ const SearchPsikiater: React.FC = () => {
                 <img
                   src={chevronDownIcon}
                   alt="Dropdown Icon"
-                  className={`w-4 h-4 ml-2 max-w-[24px] max-h-[24px] object-contain ${
+                  className={`w-4 h-4 ml-2 max-w-[24px] max-h-[24px] object-contain dark:filter  ${
+                    // Invert ikon dropdown
                     isSpecialtyOpen ? "transform rotate-180" : ""
                   } transition-transform duration-300`}
                 />
               </button>
               <div
-                className={`absolute w-full mt-1 bg-[#BACBD8] rounded-md shadow-lg transition-opacity duration-300 z-30 ${
-                  isSpecialtyOpen
-                    ? "opacity-100"
-                    : "opacity-0 pointer-events-none"
-                }`}
+                className={`absolute w-full mt-1 bg-[#BACBD8] rounded-md shadow-lg transition-opacity duration-300 z-30
+                            dark:bg-[#1A2947] dark:shadow-xl ${
+                              // Dropdown Spesialisasi content
+                              isSpecialtyOpen
+                                ? "opacity-100"
+                                : "opacity-0 pointer-events-none"
+                            }`}
               >
                 <ul className="space-y-1 max-h-60 overflow-auto">
                   <li
                     onClick={() => handleSelectSpecialty("")}
-                    className="text-[#161F36] text-left font-bold text-sm p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    className="text-[#161F36] text-left font-bold text-sm p-2 cursor-pointer
+                               hover:bg-blue-100 transition-colors duration-300
+                               dark:text-white dark:hover:bg-[#23385F]" // Item dropdown "Semua Spesialisasi"
                   >
                     Semua Spesialisasi
                   </li>
@@ -281,7 +311,9 @@ const SearchPsikiater: React.FC = () => {
                     <li
                       key={specialty}
                       onClick={() => handleSelectSpecialty(specialty)}
-                      className="text-[#161F36] text-left font-base text-sm p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                      className="text-[#161F36] text-left font-base text-sm p-2 cursor-pointer
+                                 hover:bg-blue-100 transition-colors duration-300
+                                 dark:text-white dark:hover:bg-[#23385F]" // Item dropdown Spesialisasi
                     >
                       {specialty}
                     </li>
@@ -290,11 +322,14 @@ const SearchPsikiater: React.FC = () => {
               </div>
             </div>
 
+            {/* Dropdown Urut Berdasarkan */}
             <div className="relative sm:w-[200px] w-full">
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsSortOpen((prev) => !prev)}
-                  className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold text-sm sm:text-base md:text-base w-full h-[45px] flex justify-between items-center hover:bg-blue-200 transition-all duration-300 min-w-[180px] max-w-[180px]"
+                  className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] font-semibold text-sm sm:text-base md:text-base w-full h-[45px] flex justify-between items-center
+                             hover:bg-blue-200 transition-all duration-300 min-w-[180px] max-w-[180px]
+                             dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#23385F]" // Tombol Urut Berdasarkan
                   style={{ minWidth: 180, maxWidth: 180 }}
                 >
                   <span
@@ -306,7 +341,8 @@ const SearchPsikiater: React.FC = () => {
                   <img
                     src={chevronDownIcon}
                     alt="Dropdown Icon"
-                    className={`w-4 h-4 mr-1 max-w-[24px] max-h-[24px] object-contain ${
+                    className={`w-4 h-4 mr-1 max-w-[24px] max-h-[24px] object-contain dark:filter${
+                      // Invert ikon dropdown
                       isSortOpen ? "transform rotate-180" : ""
                     } transition-transform duration-300`}
                   />
@@ -317,7 +353,8 @@ const SearchPsikiater: React.FC = () => {
                       prev === "ascending" ? "descending" : "ascending"
                     )
                   }
-                  className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] hover:bg-blue-200 transition-all duration-300 flex items-center justify-center w-[45px]"
+                  className="p-2 rounded-md bg-[#BACBD8] text-[#161F36] hover:bg-blue-200 transition-all duration-300 flex items-center justify-center w-[45px]
+                             dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#23385F]" // Tombol Asc/Desc
                   title={
                     sortOrder === "ascending"
                       ? "Sort Ascending"
@@ -334,25 +371,32 @@ const SearchPsikiater: React.FC = () => {
               <div
                 className={`absolute w-full mt-1 bg-[#BACBD8] rounded-md shadow-lg transition-opacity duration-300 ${
                   isSortOpen ? "opacity-100" : "opacity-0 pointer-events-none"
-                }`}
+                }
+                dark:bg-[#1A2947] dark:shadow-xl`} // Dropdown Urut Berdasarkan content
                 style={{ minWidth: 180, maxWidth: 180 }}
               >
                 <ul className="space-y-2">
                   <li
                     onClick={() => handleSelectSort("Rating")}
-                    className="text-[#161F36] text-left font-base text-sm sm:text-base md:text-base p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    className="text-[#161F36] text-left font-base text-sm sm:text-base md:text-base p-2 cursor-pointer
+                               hover:bg-blue-100 transition-colors duration-300
+                               dark:text-white dark:hover:bg-[#23385F]" // Item dropdown
                   >
                     Rating
                   </li>
                   <li
                     onClick={() => handleSelectSort("Harga")}
-                    className="text-[#161F36] text-left font-base text-sm sm:text-base md:text-base p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    className="text-[#161F36] text-left font-base text-sm sm:text-base md:text-base p-2 cursor-pointer
+                               hover:bg-blue-100 transition-colors duration-300
+                               dark:text-white dark:hover:bg-[#23385F]" // Item dropdown
                   >
                     Harga
                   </li>
                   <li
                     onClick={() => handleSelectSort("Tahun Pengalaman")}
-                    className="text-[#161F36] text-left font-base text-sm sm:text-base md:text-base p-2 cursor-pointer hover:bg-blue-100 transition-colors duration-300"
+                    className="text-[#161F36] text-left font-base text-sm sm:text-base md:text-base p-2 cursor-pointer
+                               hover:bg-blue-100 transition-colors duration-300
+                               dark:text-white dark:hover:bg-[#23385F]" // Item dropdown
                   >
                     Tahun Pengalaman
                   </li>
@@ -362,8 +406,9 @@ const SearchPsikiater: React.FC = () => {
           </div>
         </div>
 
+        {/* Kontainer daftar psikiater */}
         <div
-          className="bg-transparent w-[95%] max-w-full max-h-[600px] sm:w-[90%] md:w-[85%] lg:w-[80%] h-auto sm:h-[600px] overflow-auto mx-auto p-4 sm:p-8 lg:p-12  mt-4 mb-8 "
+          className="bg-transparent w-[95%] max-w-full max-h-[600px] sm:w-[90%] md:w-[85%] lg:w-[80%] h-auto sm:h-[600px] overflow-auto mx-auto p-4 sm:p-8 lg:p-12 mt-4 mb-8"
           style={{
             width: "80%",
             height: "auto",
@@ -377,17 +422,19 @@ const SearchPsikiater: React.FC = () => {
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
-                  className="flex flex-col items-center bg-[#F8F0E0] p-4 rounded-lg shadow-xl hover:shadow-lg transition-all duration-300"
+                  className="flex flex-col items-center bg-[#F8F0E0] p-4 rounded-lg shadow-xl hover:shadow-lg transition-all duration-300
+                             dark:bg-gray-800 dark:shadow-md" // Skeleton loading card background
                 >
-                  <div className="w-full max-w-[213px] h-[320px] bg-gray-200 rounded-lg animate-pulse"></div>
-                  <div className="w-36 h-6 bg-gray-200 rounded mt-2 animate-pulse"></div>
-                  <div className="w-44 h-4 bg-gray-200 rounded mt-2 animate-pulse"></div>
+                  <div className="w-full max-w-[213px] h-[320px] bg-gray-200 rounded-lg animate-pulse dark:bg-gray-700"></div>{" "}
+                  {/* Skeleton elements */}
+                  <div className="w-36 h-6 bg-gray-200 rounded mt-2 animate-pulse dark:bg-gray-700"></div>
+                  <div className="w-44 h-4 bg-gray-200 rounded mt-2 animate-pulse dark:bg-gray-700"></div>
                   <div className="flex items-center mt-2 space-x-2">
-                    <div className="w-16 h-6 bg-gray-200 rounded animate-pulse"></div>
-                    <div className="w-20 h-6 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-16 h-6 bg-gray-200 rounded animate-pulse dark:bg-gray-700"></div>
+                    <div className="w-20 h-6 bg-gray-200 rounded animate-pulse dark:bg-gray-700"></div>
                   </div>
-                  <div className="w-[160px] h-9 bg-gray-200 rounded-[10px] mt-4 animate-pulse"></div>
-                  <button className="w-[173px] h-9 bg-gray-200 rounded-[10px] mt-4 animate-pulse"></button>
+                  <div className="w-[160px] h-9 bg-gray-200 rounded-[10px] mt-4 animate-pulse dark:bg-gray-700"></div>
+                  <button className="w-[173px] h-9 bg-gray-200 rounded-[10px] mt-4 animate-pulse dark:bg-gray-700"></button>
                 </div>
               ))}
             </div>
@@ -404,6 +451,7 @@ const SearchPsikiater: React.FC = () => {
                   tahunPengalaman={psychiatrist.tahunPengalaman}
                   jadwal={psychiatrist.jadwal || {}}
                   image={psychiatrist.image}
+                  isDarkMode={isDarkMode} // Teruskan prop isDarkMode ke komponen anak
                 />
               ))}
             </div>

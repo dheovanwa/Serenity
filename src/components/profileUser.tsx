@@ -8,6 +8,7 @@ import cameraIcon from "../assets/83574.png";
 import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
 import calender from "../assets/Calendar.svg";
+import { Calendar } from "lucide-react";
 
 const UserProfile = () => {
   const [userName, setUserName] = useState("Loading...");
@@ -318,7 +319,7 @@ const UserProfile = () => {
 
   return (
     <div className="w-full h-screen flex flex-col">
-      <div className="w-full bg-white items-center justify-center mt-40 mb-2">
+      <div className="w-full items-center justify-center mt-40 mb-2">
         <div className="flex items-center justify-center">
           <div className="relative w-24 h-24 sm:w-55 sm:h-55 rounded-full overflow-hidden">
             <img
@@ -351,18 +352,18 @@ const UserProfile = () => {
         </div>
 
         <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left mt-6">
-          <h1 className="text-2xl sm:text-4xl font-medium">
+          <h1 className="text-2xl sm:text-4xl font-medium dark:text-white">
             {formData.firstName} {formData.lastName}
           </h1>
         </div>
-        <div className="flex justify-center text-lg items-center text-[#161F36] font-light">
+        <div className="flex justify-center text-lg items-center text-[#161F36] font-light dark:text-white">
           {formData.email}
         </div>
       </div>
 
       {/*DESKTOP*/}
       {!isMobile && (
-        <div className=" bg-[#F2EDE2] flex h-screen ">
+        <div className=" bg-[#F2EDE2] flex h-screen dark:bg-[#151515]">
           <div className="relative z-1 flex flex-col lg:flex-row gap-8 w-full ">
             {/*middle */}
             <div className="grid grid-cols-2 lg:w-full col-span-4 pl-60 pr-60">
@@ -409,7 +410,7 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 w-full gap-4 mt-10 ml-20">
                 <div>
                   <InputField
-                    icon={<img src={calender} alt="calendar" className="" />}
+                    icon={<Calendar />}
                     iconPosition="left"
                     label="Tanggal Lahir"
                     type="text"
@@ -463,7 +464,7 @@ const UserProfile = () => {
                       setIsEditing(true);
                     }
                   }}
-                  className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer"
+                  className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer dark:bg-[#1A2947] dark:text-white"
                 >
                   {isEditing ? "Batal" : "Ubah"}
                 </button>
@@ -471,7 +472,7 @@ const UserProfile = () => {
                   <div className="flex justify-center">
                     <button
                       onClick={handleSave}
-                      className={`bg-[#BACBD8] text-lg text-[#161F36] py-4 px-13 rounded-md hover:bg-[#87b4fb] transition font-medium ${
+                      className={`bg-[#BACBD8] dark:bg-[#1A2947] text-lg text-[#161F36]  dark:text-[#E6E6E6] py-4 px-13 rounded-md hover:bg-[#87b4fb] transition font-medium ${
                         !isFormValid ? "opacity-50 cursor-not-allowed" : ""
                       }`}
                       disabled={!isFormValid}
@@ -491,7 +492,7 @@ const UserProfile = () => {
           </div>
 
           {isOverlayVisible && (
-            <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
+            <div className="fixed inset-0 bg-white bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
               <div className="bg-[#F2EDE2] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
                 <h2 className="text-lg font-semibold mb-4">
                   Apakah kamu yakin?

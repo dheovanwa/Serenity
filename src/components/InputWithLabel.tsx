@@ -1,21 +1,21 @@
 import React, { useState, useEffect } from "react";
 import { Input } from "../components/Input";
 import { Label } from "../components/Label";
-import mail from "../assets/Mail.png";
-import eyesN from "../assets/eyesN.png";
-import eyes from "../assets/eyes.png";
+import mail from "../assets/Mail.png"; // Pastikan path ini benar
+import eyesN from "../assets/eyesN.png"; // Pastikan path ini benar
+import eyes from "../assets/eyes.png"; // Pastikan path ini benar
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"; // Sesuaikan path jika perlu
 
 // Add interface for input props
 interface InputProps {
   value?: string;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement> | string) => void; // Perluas untuk Select
   name?: string;
   error?: string;
   firstName?: string;
@@ -23,21 +23,26 @@ interface InputProps {
   onFirstNameChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onLastNameChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   autocomplete?: string;
+  isDarkMode?: boolean; // Tambahkan prop isDarkMode
 }
 
+// 1. InputWithLabelNamefirst
 export function InputWithLabelNamefirst({
   firstName,
   onFirstNameChange,
+  isDarkMode, // Terima prop isDarkMode
 }: InputProps) {
   return (
-    <div className="grid w-full items-center mt-10 text-black gap-4">
+    <div className="grid w-full items-center mt-10 text-black gap-4 dark:text-white">
       <div className="w-full">
-        <Label htmlFor="firstname">Nama depan*</Label>
+        <Label htmlFor="firstname" className="dark:text-white">
+          Nama depan*
+        </Label>
         <Input
           type="text"
           id="firstname"
           placeholder="Masukkan nama depanmu disini..."
-          className="border border-black px-3 py-2 w-full"
+          className="border border-black px-3 py-2 w-full dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           value={firstName}
           onChange={onFirstNameChange}
         />
@@ -45,19 +50,24 @@ export function InputWithLabelNamefirst({
     </div>
   );
 }
+
+// 2. InputWithLabelNamelast
 export function InputWithLabelNamelast({
   lastName,
   onLastNameChange,
+  isDarkMode, // Terima prop isDarkMode
 }: InputProps) {
   return (
-    <div className="grid w-full items-center mt-5 text-black gap-4">
+    <div className="grid w-full items-center mt-5 text-black gap-4 dark:text-white">
       <div className="w-full">
-        <Label htmlFor="lastname">Nama belakang</Label>
+        <Label htmlFor="lastname" className="dark:text-white">
+          Nama belakang
+        </Label>
         <Input
           type="text"
           id="lastname"
           placeholder="Masukkan nama belakangmu disini..."
-          className="border border-black px-3 py-2 w-full"
+          className="border border-black px-3 py-2 w-full dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
           value={lastName}
           onChange={onLastNameChange}
         />
@@ -66,28 +76,45 @@ export function InputWithLabelNamelast({
   );
 }
 
-export function InputWithLabelGender({ value, onChange }: InputProps) {
+// 3. InputWithLabelGender
+export function InputWithLabelGender({
+  value,
+  onChange,
+  isDarkMode,
+}: InputProps) {
   return (
-    <div className="relative w-full">
-      <Label htmlFor="gender">Jenis Kelamin*</Label>
+    <div className="relative w-full text-black dark:text-white">
+      <Label htmlFor="gender" className="dark:text-white">
+        Jenis Kelamin*
+      </Label>
       <Select
         value={value}
         onValueChange={(value) => {
           if (onChange) {
-            onChange({
-              target: { value },
-            } as React.ChangeEvent<HTMLInputElement>);
+            onChange(value);
           }
         }}
       >
-        <SelectTrigger className="w-full border border-black rounded-sm px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12">
+        <SelectTrigger
+          className="w-full border border-black rounded-sm px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12
+                                       dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:border-gray-500 transition-colors duration-300"
+        >
           <SelectValue placeholder="Pilih jenis kelamin" />
         </SelectTrigger>
-        <SelectContent className="bg-[#F2EDE2] border border-black rounded-sm">
-          <SelectItem value="Laki-laki" className="hover:bg-[#BACBD8]">
+        <SelectContent
+          className="bg-[#F2EDE2] border border-black rounded-sm
+                                       dark:bg-gray-800 dark:border-gray-600 dark:text-white transition-colors duration-300"
+        >
+          <SelectItem
+            value="Laki-laki"
+            className="hover:bg-[#BACBD8] dark:hover:bg-gray-700"
+          >
             Laki-laki
           </SelectItem>
-          <SelectItem value="Perempuan" className="hover:bg-[#BACBD8]">
+          <SelectItem
+            value="Perempuan"
+            className="hover:bg-[#BACBD8] dark:hover:bg-gray-700"
+          >
             Perempuan
           </SelectItem>
         </SelectContent>
@@ -96,7 +123,8 @@ export function InputWithLabelGender({ value, onChange }: InputProps) {
   );
 }
 
-type Props = {
+// 4. InputWithLabelBirth
+type BirthProps = {
   day: string;
   month: string;
   year: string;
@@ -104,6 +132,7 @@ type Props = {
   onMonthChange: (value: string) => void;
   onYearChange: (value: string) => void;
   error?: string;
+  isDarkMode?: boolean; // Tambahkan ini
 };
 
 export function InputWithLabelBirth({
@@ -114,7 +143,8 @@ export function InputWithLabelBirth({
   onMonthChange,
   onYearChange,
   error,
-}: Props) {
+  isDarkMode, // Terima prop isDarkMode
+}: BirthProps) {
   const [selectedDay, setSelectedDay] = useState("");
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
@@ -135,7 +165,7 @@ export function InputWithLabelBirth({
     "December",
   ];
 
-  const years = Array.from({ length: 100 }, (_, i) => 2025 - i); // 100 years back from 2025
+  const years = Array.from({ length: 100 }, (_, i) => 2025 - i);
 
   const getDaysInMonth = (month: string, year: string) => {
     if (!month || !year) return Array.from({ length: 31 }, (_, i) => i + 1);
@@ -160,10 +190,8 @@ export function InputWithLabelBirth({
       case "month":
         newMonth = value;
         setSelectedMonth(value);
-        // Update days when month changes
         const newDaysMonth = getDaysInMonth(value, selectedYear);
         setAvailableDays(newDaysMonth);
-        // Reset day if it exceeds new maximum
         if (selectedDay && parseInt(selectedDay) > newDaysMonth.length) {
           newDay = "";
           setSelectedDay("");
@@ -172,53 +200,48 @@ export function InputWithLabelBirth({
       case "year":
         newYear = value;
         setSelectedYear(value);
-        // Update days when year changes
         const newDaysYear = getDaysInMonth(selectedMonth, value);
         setAvailableDays(newDaysYear);
-        // Reset day if it exceeds new maximum
         if (selectedDay && parseInt(selectedDay) > newDaysYear.length) {
           newDay = "";
           setSelectedDay("");
         }
         break;
     }
-
-    // Immediately trigger onChange with the new values
-    if (onChange && newDay && newMonth && newYear) {
-      const dateString = `${newYear}-${String(
-        months.indexOf(newMonth) + 1
-      ).padStart(2, "0")}-${newDay.padStart(2, "0")}`;
-      const event = {
-        target: { value: dateString },
-      } as React.ChangeEvent<HTMLInputElement>;
-      onChange(event);
-    }
+    if (type === "day") onDayChange(newDay);
+    if (type === "month") onMonthChange(newMonth);
+    if (type === "year") onYearChange(newYear);
   };
 
-  // Initialize available days
   useEffect(() => {
     setAvailableDays(getDaysInMonth(selectedMonth, selectedYear));
   }, [selectedMonth, selectedYear]);
 
-  const days = Array.from({ length: 31 }, (_, i) => i + 1); // 1 to 31
-
   return (
-    <div className="w-full">
-      <Label htmlFor="birthdate" className="block mb-2">
+    <div className="w-full text-black dark:text-white">
+      <Label htmlFor="birthdate" className="block mb-2 dark:text-white">
         Tanggal Lahir*
       </Label>
       <div className="flex gap-2">
-        {/* Day Select */}
-        <Select value={day} onValueChange={onDayChange}>
-          <SelectTrigger className="w-[100px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12">
+        <Select
+          value={day}
+          onValueChange={(val) => handleDateChange("day", val)}
+        >
+          <SelectTrigger
+            className="w-[100px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12
+                                       dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:border-gray-500 transition-colors duration-300"
+          >
             <SelectValue placeholder="Tanggal" />
           </SelectTrigger>
-          <SelectContent className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md">
+          <SelectContent
+            className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md
+                                       dark:bg-gray-800 dark:border-gray-600 dark:text-white transition-colors duration-300"
+          >
             {availableDays.map((day) => (
               <SelectItem
                 key={day}
                 value={String(day).padStart(2, "0")}
-                className="hover:bg-[#BACBD8]"
+                className="hover:bg-[#BACBD8] dark:hover:bg-gray-700"
               >
                 {String(day).padStart(2, "0")}
               </SelectItem>
@@ -226,22 +249,25 @@ export function InputWithLabelBirth({
           </SelectContent>
         </Select>
 
-        {/* Month Select */}
         <Select
           value={month}
-          onValueChange={(value) => {
-            onMonthChange(value);
-          }}
+          onValueChange={(val) => handleDateChange("month", val)}
         >
-          <SelectTrigger className="w-[130px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12">
+          <SelectTrigger
+            className="w-[130px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12
+                                       dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:border-gray-500 transition-colors duration-300"
+          >
             <SelectValue placeholder="Bulan" />
           </SelectTrigger>
-          <SelectContent className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md">
+          <SelectContent
+            className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md
+                                       dark:bg-gray-800 dark:border-gray-600 dark:text-white transition-colors duration-300"
+          >
             {months.map((month) => (
               <SelectItem
                 key={month}
                 value={month}
-                className="hover:bg-[#BACBD8]"
+                className="hover:bg-[#BACBD8] dark:hover:bg-gray-700"
               >
                 {month}
               </SelectItem>
@@ -249,22 +275,25 @@ export function InputWithLabelBirth({
           </SelectContent>
         </Select>
 
-        {/* Year Select */}
         <Select
           value={year}
-          onValueChange={(value) => {
-            onYearChange(value);
-          }}
+          onValueChange={(val) => handleDateChange("year", val)}
         >
-          <SelectTrigger className="w-[100px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12">
+          <SelectTrigger
+            className="w-[100px] border border-black rounded-md px-3 py-2 appearance-none bg-[#F2EDE2] relative h-12
+                                       dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:hover:border-gray-500 transition-colors duration-300"
+          >
             <SelectValue placeholder="Tahun" />
           </SelectTrigger>
-          <SelectContent className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md">
+          <SelectContent
+            className="max-h-[200px] bg-[#F2EDE2] border border-black rounded-md
+                                       dark:bg-gray-800 dark:border-gray-600 dark:text-white transition-colors duration-300"
+          >
             {years.map((year) => (
               <SelectItem
                 key={year}
                 value={String(year)}
-                className="hover:bg-[#BACBD8]"
+                className="hover:bg-[#BACBD8] dark:hover:bg-gray-700"
               >
                 {year}
               </SelectItem>
@@ -272,11 +301,17 @@ export function InputWithLabelBirth({
           </SelectContent>
         </Select>
       </div>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 }
 
-export function InputWithLabelPhone({ value, onChange }: InputProps) {
+// 5. InputWithLabelPhone
+export function InputWithLabelPhone({
+  value,
+  onChange,
+  isDarkMode,
+}: InputProps) {
   const [error, setError] = useState<string>("");
 
   const handlePhoneInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -284,7 +319,6 @@ export function InputWithLabelPhone({ value, onChange }: InputProps) {
 
     if (numeric.length > 0 && !numeric.startsWith("08")) {
       setError("Nomor telepon harus dimulai dengan '08'");
-      // Keep the invalid input but show error
       if (onChange) {
         onChange({
           ...e,
@@ -310,15 +344,17 @@ export function InputWithLabelPhone({ value, onChange }: InputProps) {
   };
 
   return (
-    <div className="w-full">
-      <Label htmlFor="phone">Nomor Telepon</Label>
+    <div className="w-full text-black dark:text-white">
+      <Label htmlFor="phone" className="dark:text-white">
+        Nomor Telepon
+      </Label>
       <Input
         type="tel"
         id="phone"
         placeholder="08xxxxxxxxxx"
         className={`border border-black px-3 py-2 w-full ${
           error ? "border-red-500" : ""
-        }`}
+        } dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400`}
         value={value}
         onChange={handlePhoneInput}
         inputMode="numeric"
@@ -329,15 +365,22 @@ export function InputWithLabelPhone({ value, onChange }: InputProps) {
   );
 }
 
-export function InputWithLabelAddress({ value, onChange }: InputProps) {
+// 6. InputWithLabelAddress
+export function InputWithLabelAddress({
+  value,
+  onChange,
+  isDarkMode,
+}: InputProps) {
   return (
-    <div className="w-full">
-      <Label htmlFor="address">Alamat</Label>
+    <div className="w-full text-black dark:text-white">
+      <Label htmlFor="address" className="dark:text-white">
+        Alamat
+      </Label>
       <Input
         type="text"
         id="address"
         placeholder="Masukkan alamatmu disini..."
-        className="border border-black px-3 py-2 w-full"
+        className="border border-black px-3 py-2 w-full dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
         value={value}
         onChange={onChange}
       />
@@ -345,30 +388,35 @@ export function InputWithLabelAddress({ value, onChange }: InputProps) {
   );
 }
 
+// 7. InputWithLabel (Email) - Sudah dimodifikasi dari pertanyaan sebelumnya, hanya verifikasi
 export function InputWithLabel({
   value = "",
   onChange,
   name,
   error,
+  isDarkMode, // Terima prop isDarkMode
 }: InputProps) {
   return (
-    <div className="grid w-full max-w-sm items-center gap-1.5 text-black mt-10">
-      <Label htmlFor="email">Email</Label>
+    <div className="grid w-full max-w-sm items-center gap-1.5 text-black mt-10 dark:text-white">
+      <Label htmlFor="email" className="dark:text-white">
+        Email
+      </Label>
       <div className="relative">
         <Input
           type="email"
           id="email"
           placeholder="contoh@gmail.com"
-          className={`border-1 ${error ? "border-red-500" : "border-black"}`}
-          style={{
-            backgroundImage: `url(${mail})`,
-            backgroundPosition: "98% center",
-            backgroundRepeat: "no-repeat",
-            backgroundSize: "20px 20px",
-          }}
+          className={`border-1 pr-10 ${
+            error ? "border-red-500" : "border-black"
+          } dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400`}
           value={value}
           onChange={onChange}
           name={name}
+        />
+        <img
+          src={mail}
+          alt="Mail icon"
+          className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 dark:filter dark:invert"
         />
       </div>
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
@@ -376,12 +424,14 @@ export function InputWithLabel({
   );
 }
 
+// 8. InputWithLabelPass - Sudah dimodifikasi dari pertanyaan sebelumnya, hanya verifikasi
 export function InputWithLabelPass({
   value,
   onChange,
   name,
   error,
   autocomplete,
+  isDarkMode,
 }: InputProps) {
   const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
@@ -390,7 +440,7 @@ export function InputWithLabelPass({
   };
 
   return (
-    <div className="grid w-full max-w-sm items-center mt-10 text-black">
+    <div className="grid w-full max-w-sm items-center gap-1.5 mt-10 text-black">
       <Label htmlFor="password">Kata Sandi</Label>
       <div className="relative">
         <Input
@@ -399,11 +449,11 @@ export function InputWithLabelPass({
           placeholder="•••••••"
           className={`border-1 pr-10 ${
             error ? "border-red-500" : "border-black"
-          }`} // tambahkan padding kanan
+          } dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400`}
           value={value}
           onChange={onChange}
           name={name}
-          autoComplete={autocomplete} // Add this prop
+          autoComplete={autocomplete}
         />
         <button
           type="button"
@@ -413,48 +463,7 @@ export function InputWithLabelPass({
           <img
             src={isPasswordVisible ? eyes : eyesN}
             alt="Toggle visibility"
-            className="w-5 h-5"
-          />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-export function InputWithLabelPassConfirm({
-  value,
-  onChange,
-  name,
-  error,
-}: InputProps) {
-  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
-
-  const togglePasswordVisibility = () => {
-    setIsPasswordVisible((prevState) => !prevState);
-  };
-
-  return (
-    <div className="grid w-full max-w-sm items-center mt-10 text-black">
-      <Label htmlFor="password">Konfirmasi Kata Sandi</Label>
-      <div className="relative">
-        <Input
-          type={isPasswordVisible ? "text" : "password"}
-          id="password"
-          placeholder="•••••••"
-          className="border-1 border-black pr-10"
-          value={value}
-          onChange={onChange}
-          name={name}
-        />
-        <button
-          type="button"
-          onClick={togglePasswordVisibility}
-          className="absolute right-3 top-1/2 -translate-y-1/2"
-        >
-          <img
-            src={isPasswordVisible ? eyes : eyesN}
-            alt="Toggle visibility"
-            className="w-5 h-5"
+            className="w-5 h-5 dark:filter dark:invert"
           />
         </button>
       </div>
@@ -463,28 +472,48 @@ export function InputWithLabelPassConfirm({
   );
 }
 
-export function InputWithLabelName() {
-  return (
-    <div className="grid w-full max-w-sm gap-6 text-black mt-10">
-      <div className="grid items-center gap-1.5">
-        <Label htmlFor="firstname">Nama Depan</Label>
-        <Input
-          type="text"
-          id="firstname"
-          placeholder="Masukkan nama depan"
-          className="border border-black"
-        />
-      </div>
+// 9. InputWithLabelPassConfirm - Tambahkan isDarkMode dan styling dark mode
+export function InputWithLabelPassConfirm({
+  value,
+  onChange,
+  name,
+  error,
+  isDarkMode, // Terima prop isDarkMode
+}: InputProps) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false);
 
-      <div className="grid items-center gap-1.5">
-        <Label htmlFor="lastname">Nama Belakang</Label>
+  const togglePasswordVisibility = () => {
+    setIsPasswordVisible((prevState) => !prevState);
+  };
+
+  return (
+    <div className="grid w-full max-w-sm items-center gap-1.5 mt-10 text-black">
+      <Label htmlFor="password">Konfirmasi Kata Sandi</Label>
+      <div className="relative">
         <Input
-          type="text"
-          id="lastname"
-          placeholder="Masukkan nama belakang"
-          className="border border-black"
+          type={isPasswordVisible ? "text" : "password"}
+          id="password"
+          placeholder="•••••••"
+          className={`border-1 border-black pr-10 ${
+            error ? "border-red-500" : "border-black"
+          } dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400`}
+          value={value}
+          onChange={onChange}
+          name={name}
         />
+        <button
+          type="button"
+          onClick={togglePasswordVisibility}
+          className="absolute right-3 top-1/2 -translate-y-1/2"
+        >
+          <img
+            src={isPasswordVisible ? eyes : eyesN}
+            alt="Toggle visibility"
+            className="w-5 h-5 dark:filter dark:invert"
+          />
+        </button>
       </div>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 }

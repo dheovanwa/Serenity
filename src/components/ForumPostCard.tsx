@@ -28,7 +28,7 @@ interface ForumPost {
   replyCount: number;
   profileImage?: string | null;
   userRole?: "user" | "psychiatrist";
-  specialty?: string; // Add specialty field
+  specialty?: string;
   isLiked?: boolean;
   authorName?: string;
   authorGender?: "male" | "female";
@@ -37,9 +37,11 @@ interface ForumPost {
 
 interface ForumPostCardProps {
   post: ForumPost;
+  isDarkMode: boolean; // Tambahkan prop isDarkMode
 }
 
-const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
+const ForumPostCard: React.FC<ForumPostCardProps> = ({ post, isDarkMode }) => {
+  // Terima prop isDarkMode
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(false);
   const [localLikeCount, setLocalLikeCount] = useState(post.likeCount);
@@ -53,7 +55,7 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
       if (!userId) return;
       const userDoc = await getDoc(doc(db, "users", userId));
       if (userDoc.exists()) {
-        const likedPosts = userDoc.data().likedPosts || [];
+        const likedPosts = userDoc.data()?.likedPosts || [];
         setIsLiked(likedPosts.includes(post.id));
       }
     };
@@ -103,7 +105,6 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
 
     setIsSubmitting(true);
     try {
-      // Store the report in a subcollection of the forum post
       const reportsRef = collection(db, "forum", post.id, "reports");
       await addDoc(reportsRef, {
         reportContent: reportReason,
@@ -111,13 +112,10 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
         timestamp: serverTimestamp(),
       });
 
-      // Check if post contains profanity
       if (shouldRemovePost(post)) {
         try {
-          // Delete the post if it contains profanity
           await deleteDoc(doc(db, "forum", post.id));
 
-          // Add to removed posts collection for audit
           await addDoc(collection(db, "removedPosts"), {
             originalId: post.id,
             title: post.title,
@@ -128,14 +126,12 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
             reportReason: reportReason,
           });
 
-          // Redirect to forum home if post is deleted
           navigate("/forum");
         } catch (error) {
           console.error("Error deleting inappropriate post:", error);
         }
       }
 
-      // Close modal and reset state
       setShowReportModal(false);
       setReportReason("");
       setIsSubmitting(false);
@@ -177,7 +173,6 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
     if (post.userRole === "psychiatrist") {
       return post.authorName || "Dr. Unknown";
     } else {
-      // For users, show "Gender, Age"
       if (post.authorGender && post.authorBirthDate) {
         const age = calculateAge(post.authorBirthDate);
         const gender = post.authorGender === "male" ? "Laki-laki" : "Perempuan";
@@ -190,7 +185,8 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
   return (
     <>
       <div
-        className="bg-[#E4DCCC] p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
+        className="p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer
+                   bg-[#E4DCCC] dark:bg-[#1A2947] dark:hover:bg-[#293c63]" // Card background and hover
         onClick={() => navigate(`/forum/${post.id}`)}
       >
         {/* Author Information and Profile */}
@@ -205,19 +201,22 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
             <img
               src={defaultProfileImage}
               alt="Default Profile"
-              className="w-12 h-12 rounded-full object-cover"
+              className="w-12 h-12 rounded-full object-cover dark:filter dark:invert" // Default profile image
             />
           )}
           <div>
-            <h3 className="font-semibold text-[#161F36]">{getDisplayName()}</h3>
+            <h3 className="font-semibold text-[#161F36] dark:text-white">
+              {getDisplayName()}
+            </h3>
             {post.userRole === "psychiatrist" && post.specialty && (
-              <span className="text-sm text-gray-600">{post.specialty}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {post.specialty}
+              </span>
             )}
           </div>
-          {/* Add Report Button */}
           <button
             onClick={handleReport}
-            className="ml-auto p-2 text-gray-500 hover:text-red-500 transition-colors"
+            className="ml-auto p-2 text-gray-500 hover:text-red-500 transition-colors dark:text-gray-400 dark:hover:text-red-400" // Report button
             title="Laporkan postingan ini"
           >
             <Flag size={16} />
@@ -225,10 +224,10 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
         </div>
 
         {/* Post Title and Content */}
-        <h2 className="text-xl font-semibold text-[#161F36] mb-2">
+        <h2 className="text-xl font-semibold text-[#161F36] mb-2 dark:text-white">
           {post.title}
         </h2>
-        <p className="text-gray-700 mb-4">{post.content}</p>
+        <p className="text-gray-700 mb-4 dark:text-gray-300">{post.content}</p>
 
         {/* Categories/Tags */}
         {post.category && post.category.length > 0 && (
@@ -236,7 +235,8 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
             {post.category.map((tag, index) => (
               <span
                 key={index}
-                className="bg-[#BACBD8] text-[#161F36] px-3 py-1 rounded-full text-sm"
+                className="bg-[#BACBD8] text-[#161F36] px-3 py-1 rounded-full text-sm
+                           dark:bg-gray-700 dark:text-white" // Category tags
               >
                 {tag}
               </span>
@@ -245,30 +245,45 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
         )}
 
         {/* Post Footer */}
-        <div className="flex justify-between items-center text-gray-600">
+        <div className="flex justify-between items-center text-gray-600 dark:text-gray-300">
+          {" "}
+          {/* Footer text */}
           <div className="flex items-center gap-4">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleLike(e);
               }}
-              className={`flex items-center text-gray-600 hover:text-[#BACBD8] transition-colors ${
-                isLiked ? "text-[#BACBD8]" : ""
-              }`}
+              className={`flex items-center hover:text-[#BACBD8] transition-colors
+                          dark:hover:text-blue-400 ${
+                            // Hover text color for like
+                            isLiked
+                              ? "text-[#BACBD8] dark:text-blue-400"
+                              : "text-gray-600 dark:text-gray-300" // Liked/unliked text color
+                          }`}
             >
               <ThumbsUp
                 size={18}
                 className="mr-1"
-                fill={isLiked ? "#BACBD8" : "none"}
+                fill={isLiked ? "#BACBD8" : "none"} // Fill color for like icon (light mode)
+                // Add conditional fill for dark mode if using SVG directly or different icon
+                // For lucide-react, `stroke="currentColor"` is common, so `text-` class handles it
+                style={{
+                  fill: isLiked ? (isDarkMode ? "#60A5FA" : "#BACBD8") : "none",
+                }} // Contoh: warna biru light saat liked di dark mode
               />
               {localLikeCount}
             </button>
-            <span className="flex items-center text-gray-600">
+            <span className="flex items-center text-gray-600 dark:text-gray-300">
+              {" "}
+              {/* Reply count */}
               <MessageSquare size={18} className="mr-1" />
               {post.replyCount}
             </span>
           </div>
-          <div className="flex items-center text-gray-500 text-sm">
+          <div className="flex items-center text-gray-500 text-sm dark:text-gray-400">
+            {" "}
+            {/* Time text */}
             <Clock size={16} className="mr-2" />
             {formatTime(post.timeCreated)}
           </div>
@@ -278,21 +293,25 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
       {/* Report Modal */}
       {showReportModal && (
         <div
-          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" // Modal overlay
           onClick={() => setShowReportModal(false)}
         >
           <div
-            className="bg-white rounded-lg p-6 max-w-md w-full mx-4"
+            className="rounded-lg p-6 max-w-md w-full mx-4
+                       bg-white dark:bg-gray-800" // Modal content background
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-4">Laporkan Postingan</h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <h3 className="text-xl font-bold mb-4 text-black dark:text-white">
+              Laporkan Postingan
+            </h3>
+            <p className="text-sm text-gray-600 mb-4 dark:text-gray-300">
               Silakan berikan alasan mengapa Anda ingin melaporkan postingan
               ini.
             </p>
 
             <textarea
-              className="w-full border border-gray-300 rounded-md p-2 mb-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#BACBD8]"
+              className="w-full border border-gray-300 rounded-md p-2 mb-4 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-[#BACBD8]
+                         bg-white text-black dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:placeholder-gray-400 dark:focus:ring-blue-700" // Textarea
               placeholder="Tuliskan alasan laporan..."
               value={reportReason}
               onChange={(e) => setReportReason(e.target.value)}
@@ -300,20 +319,22 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
 
             <div className="flex justify-end gap-2">
               <button
-                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors"
+                className="px-4 py-2 bg-gray-200 rounded-md hover:bg-gray-300 transition-colors
+                           dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600" // Batal button
                 onClick={() => setShowReportModal(false)}
               >
                 Batal
               </button>
               <button
-                className="px-4 py-2 bg-[#BACBD8] text-[#161F36] rounded-md hover:bg-[#9FB6C6] transition-colors disabled:opacity-50"
+                className="px-4 py-2 text-white rounded-md hover:bg-[#9FB6C6] transition-colors disabled:opacity-50
+                           bg-[#BACBD8] dark:bg-[#355391] dark:hover:bg-[#536488] dark:text-white" // Kirim Laporan button
                 onClick={submitReport}
                 disabled={!reportReason.trim() || isSubmitting}
               >
                 {isSubmitting ? (
-                  <span className="flex items-center">
+                  <span className="flex items-center text-[#161F36] dark:text-white">
                     <svg
-                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36]"
+                      className="animate-spin -ml-1 mr-2 h-4 w-4 text-[#161F36] dark:text-white"
                       xmlns="http://www.w3.org/2000/svg"
                       fill="none"
                       viewBox="0 0 24 24"

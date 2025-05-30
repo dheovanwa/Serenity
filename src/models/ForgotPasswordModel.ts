@@ -19,7 +19,7 @@ export class ForgotPasswordModel {
     const errors: ResetPasswordErrors = {};
 
     if (!email) {
-      errors.email = "Email is required";
+      errors.email = "Email dibutuhkan";
     } else if (!/@\w+\.\w+/.test(email)) {
       errors.email = "Email must be in the correct format";
     }

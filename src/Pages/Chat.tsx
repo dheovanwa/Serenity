@@ -1,5 +1,13 @@
-import React, { useState, useEffect, useRef } from "react";
-import { Video, Search, Phone, Send, Menu, X } from "lucide-react";
+import React, { useState, useEffect, useRef, useCallback } from "react"; // Tambahkan useCallback
+import {
+  Video,
+  Search,
+  Phone,
+  Send,
+  Menu,
+  X,
+  MessagesSquare,
+} from "lucide-react"; // Import Lucide icons
 import { db } from "../config/firebase";
 import {
   collection,
@@ -19,7 +27,7 @@ import {
 } from "firebase/firestore";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
-import ProfilePic from "../assets/default_profile_image.svg";
+import ProfilePic from "../assets/default_profile_image.svg"; // Asumsi ini gelap dan perlu di-invert
 
 interface Message {
   id: string;
@@ -40,11 +48,19 @@ interface Appointment {
   patientName: string;
   method: string;
   status: string;
-  doctorPhoto?: string; // add photo fields
+  doctorPhoto?: string;
   patientPhoto?: string;
+  createdAt?: number; // Tambahkan ini agar CountdownTimer berfungsi
 }
 
-const ChatPage: React.FC = () => {
+// Tambahkan prop isDarkMode ke ChatPage
+interface ChatPageProps {
+  isDarkMode: boolean;
+  toggleTheme: () => void; // Jika Anda ingin tombol toggle tema ada di sini
+}
+
+const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
+  // Terima prop isDarkMode dan toggleTheme
   const [activeAppointment, setActiveAppointment] =
     useState<Appointment | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -55,8 +71,8 @@ const ChatPage: React.FC = () => {
   );
   const [userId, setUserId] = useState<string | null>(null);
   const [userName, setUserName] = useState<string>("");
-  const [appointments, setAppointments] = useState<Appointment[]>([]); // All chat appointments
-  const [sidebarWidth, setSidebarWidth] = useState(288); // 72 * 4 = 288px (default w-72)
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [sidebarWidth, setSidebarWidth] = useState(288);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const resizing = useRef(false);
   const [latestMessages, setLatestMessages] = useState<
@@ -83,7 +99,7 @@ const ChatPage: React.FC = () => {
   const [existingRating, setExistingRating] = useState<number | null>(null);
 
   const handleEndConversationClick = () => {
-    setIsConfirmingEnd(true); // Tampilkan pop-up konfirmasi
+    setIsConfirmingEnd(true);
   };
 
   const confirmEndConversation = async () => {
@@ -97,7 +113,7 @@ const ChatPage: React.FC = () => {
       await setDoc(
         chatDocRef,
         {
-          appointmentId: activeAppointment.id, // Correctly reference the appointment ID
+          appointmentId: activeAppointment.id,
           hasEnded: true,
         },
         { merge: true }
@@ -111,21 +127,19 @@ const ChatPage: React.FC = () => {
     setIsConfirmingEnd(false);
   };
   const cancelEndConversation = () => {
-    setIsConfirmingEnd(false); // Menutup pop-up tanpa melakukan apapun
+    setIsConfirmingEnd(false);
   };
-  // Scroll to bottom on new message
+
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Determine user type and id
   useEffect(() => {
     const type = localStorage.getItem("userType") as "user" | "psychiatrist";
     const id = localStorage.getItem("documentId");
     setUserType(type);
     setUserId(id);
 
-    // Fetch user name
     if (id && type) {
       const col = type === "user" ? "users" : "psychiatrists";
       getDoc(doc(db, col, id)).then((snap) => {
@@ -136,7 +150,6 @@ const ChatPage: React.FC = () => {
     }
   }, []);
 
-  // Find active appointment (status "Sedang berlangsung", method "Chat")
   useEffect(() => {
     console.log("Fetching active appointment for userId:", userType);
     if (!userId || !userType) return;
@@ -159,7 +172,6 @@ const ChatPage: React.FC = () => {
           where("method", "==", "Chat")
         );
       }
-      //   console.log("Active appointment query result:", q);
       const snap = await getDocs(q);
       if (!snap.empty) {
         const apt = snap.docs[0].data() as Appointment;
@@ -174,7 +186,6 @@ const ChatPage: React.FC = () => {
     fetchActiveAppointment();
   }, [userId, userType]);
 
-  // Fetch all chat appointments for sidebar
   useEffect(() => {
     if (!userId || !userType) return;
 
@@ -202,14 +213,12 @@ const ChatPage: React.FC = () => {
         let doctorPhoto = "";
         let patientPhoto = "";
 
-        // Fetch psychiatrist profile photo from 'image' field
         if (apt.psychiatristId) {
           try {
             const docRef = doc(db, "psychiatrists", apt.psychiatristId);
             const docData = await getDoc(docRef);
             if (docData.exists()) {
               const psychiatristData = docData.data();
-              // Use 'image' field for psychiatrists
               const firestorePhoto = psychiatristData.image || "";
               doctorPhoto =
                 firestorePhoto && firestorePhoto.trim() !== ""
@@ -221,14 +230,12 @@ const ChatPage: React.FC = () => {
           }
         }
 
-        // Fetch user profile photo from 'profilePicture' field
         if (apt.patientId) {
           try {
             const docRef = doc(db, "users", apt.patientId);
             const docData = await getDoc(docRef);
             if (docData.exists()) {
               const userData = docData.data();
-              // Use 'profilePicture' field for users
               const firestorePhoto = userData.profilePicture || "";
               patientPhoto =
                 firestorePhoto && firestorePhoto.trim() !== ""
@@ -244,7 +251,6 @@ const ChatPage: React.FC = () => {
       }
       setAppointments(apts);
 
-      // If no active selected, pick the first "Sedang berlangsung" or first available
       if (!activeAppointment && apts.length > 0) {
         const active =
           apts.find((a) => a.status === "Sedang berlangsung") || apts[0];
@@ -253,12 +259,9 @@ const ChatPage: React.FC = () => {
     };
 
     fetchAppointments();
-    // eslint-disable-next-line
   }, [userId, userType]);
 
-  // Fetch latest message for each "Sedang berlangsung" appointment
   useEffect(() => {
-    // Only fetch for "Sedang berlangsung" appointments
     const runningApts = appointments.filter(
       (apt) => apt.status === "Sedang berlangsung"
     );
@@ -275,11 +278,7 @@ const ChatPage: React.FC = () => {
     let unsubscribes: (() => void)[] = [];
     runningApts.forEach((apt) => {
       const chatRef = collection(db, "chats", apt.id, "messages");
-      const qMsg = query(
-        chatRef,
-        orderBy("timeCreated", "desc"), // Changed from "timestamp" to "timeCreated"
-        limit(1) // Add limit to only get the latest message
-      );
+      const qMsg = query(chatRef, orderBy("timeCreated", "desc"), limit(1));
       const unsub = onSnapshot(qMsg, (snap) => {
         if (!snap.empty) {
           const docMsg = snap.docs[0];
@@ -293,9 +292,7 @@ const ChatPage: React.FC = () => {
             },
           }));
 
-          // Set the time for the latest message, ensure it's in WIB format
           const messageTime = d.time || "00:00";
-          // If the time is not in proper format, convert it
           const formattedTime = messageTime.includes(":")
             ? messageTime
             : new Date().toLocaleTimeString("id-ID", {
@@ -311,14 +308,12 @@ const ChatPage: React.FC = () => {
           }));
         } else {
           console.log("No messages found for appointment:", apt.id);
-          // Clear the latest message for this appointment if no messages exist
           setLatestMessages((prev) => {
             const updated = { ...prev };
             delete updated[apt.id];
             return updated;
           });
 
-          // Clear the latest time as well
           setLatestTime((prev) => {
             const updated = { ...prev };
             delete updated[apt.id];
@@ -331,10 +326,8 @@ const ChatPage: React.FC = () => {
     return () => {
       unsubscribes.forEach((unsub) => unsub());
     };
-    // eslint-disable-next-line
   }, [appointments, userId]);
 
-  // Listen to chat messages for the active appointment and check hasEnded
   useEffect(() => {
     if (!activeAppointment) {
       setMessages([]);
@@ -342,10 +335,8 @@ const ChatPage: React.FC = () => {
       return;
     }
 
-    // Mark messages as read when opening this chat
     markMessagesAsRead(activeAppointment.id);
 
-    // Check hasEnded field in chat document
     const chatDocRef = doc(db, "chats", activeAppointment.id);
     getDoc(chatDocRef).then((snap) => {
       if (snap.exists() && snap.data().hasEnded) {
@@ -385,7 +376,6 @@ const ChatPage: React.FC = () => {
         }));
       }
 
-      // Auto-mark new messages as read if user is currently viewing this chat
       if (snap.docChanges().length > 0) {
         const batch = writeBatch(db);
         let hasUpdates = false;
@@ -393,7 +383,6 @@ const ChatPage: React.FC = () => {
         snap.docChanges().forEach((change) => {
           if (change.type === "added") {
             const messageData = change.doc.data();
-            // Only mark as read if it's from someone else and not already read
             if (
               messageData.senderId !== userId &&
               messageData.receiverRead === false
@@ -416,7 +405,6 @@ const ChatPage: React.FC = () => {
     return () => unsub();
   }, [activeAppointment, userId, userType, userName]);
 
-  // Summarize psychiatrist advice for the user (only when requested)
   const handleSummarize = async () => {
     if (userType === "user" && activeAppointment && messages.length > 0) {
       const adviceMessages = messages
@@ -431,7 +419,6 @@ const ChatPage: React.FC = () => {
 
       if (adviceMessages.length > 0) {
         try {
-          // Use google/gemini-2.0-flash-exp:free from OpenRouter AI
           const openRouterApiKey =
             "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";
           const inputText = adviceMessages.join("\n\n");
@@ -484,22 +471,18 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  // Handler to end the conversation
   const handleEndConversation = async () => {
     if (!activeAppointment) return;
     setIsEnding(true);
     try {
-      // Update appointment status to "Selesai"
       await updateDoc(doc(db, "appointments", activeAppointment.id), {
         status: "Selesai",
       });
-      // Update or add hasEnded field in chat document
       const chatDocRef = doc(db, "chats", activeAppointment.id);
-      // Use setDoc with merge to avoid errors if doc doesn't exist
       await setDoc(
         chatDocRef,
         {
-          appointmentId: activeAppointment.id, // Correctly reference the appointment ID
+          appointmentId: activeAppointment.id,
           hasEnded: true,
         },
         { merge: true }
@@ -512,7 +495,6 @@ const ChatPage: React.FC = () => {
     setIsEnding(false);
   };
 
-  // Send message to Firestore
   const handleSendMessage = async () => {
     if (
       !newMessage.trim() ||
@@ -523,29 +505,26 @@ const ChatPage: React.FC = () => {
       hasEnded
     )
       return;
-    const chatId = activeAppointment.id; // This is actually the appointment ID
+    const chatId = activeAppointment.id;
     const chatRef = collection(db, "chats", chatId, "messages");
 
-    // Chat room should already exist, but check just in case
     const chatDocRef = doc(db, "chats", chatId);
     const chatDocSnapshot = await getDoc(chatDocRef);
 
     if (!chatDocSnapshot.exists()) {
       console.warn("Chat room doesn't exist, creating it now");
-      // Create chat document with appointmentId reference
       await setDoc(chatDocRef, {
-        appointmentId: activeAppointment.id, // Use the actual appointment ID
+        appointmentId: activeAppointment.id,
         createdAt: serverTimestamp(),
         hasEnded: false,
       });
     }
 
-    // Create WIB time
     const wibTime = new Date().toLocaleTimeString("id-ID", {
       timeZone: "Asia/Jakarta",
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false, // 24-hour format
+      hour12: false,
     });
 
     await addDoc(chatRef, {
@@ -553,19 +532,17 @@ const ChatPage: React.FC = () => {
       senderId: userId,
       senderName: userName,
       timeCreated: serverTimestamp(),
-      time: wibTime, // Use WIB 24-hour format
-      senderRead: true, // Sender has read their own message
-      receiverRead: false, // Receiver hasn't read it yet
+      time: wibTime,
+      senderRead: true,
+      receiverRead: false,
     });
     setNewMessage("");
   };
 
-  // Function to mark all messages in a chat as read
   const markMessagesAsRead = async (chatId: string) => {
     if (!userId || !userType) return;
 
     try {
-      // Chat room should already exist, but ensure it exists with appointment reference
       const chatDocRef = doc(db, "chats", chatId);
       const chatDocSnapshot = await getDoc(chatDocRef);
 
@@ -573,17 +550,14 @@ const ChatPage: React.FC = () => {
         console.warn(
           "Chat room doesn't exist during mark as read, creating it"
         );
-        // Create chat document with appointmentId reference
-        // chatId here is actually the appointment ID since we use appointment.id as the chat document ID
         await setDoc(chatDocRef, {
-          appointmentId: chatId, // chatId is the appointment ID in our system
+          appointmentId: chatId,
           createdAt: serverTimestamp(),
           hasEnded: false,
         });
       }
 
       const messagesRef = collection(db, "chats", chatId, "messages");
-      // Get ALL messages in the chat session
       const q = query(messagesRef);
 
       const snapshot = await getDocs(q);
@@ -593,7 +567,6 @@ const ChatPage: React.FC = () => {
         snapshot.docs.forEach((docSnapshot) => {
           const messageData = docSnapshot.data();
 
-          // Only update receiverRead for messages we didn't send
           if (
             messageData.senderId !== userId &&
             messageData.receiverRead === false
@@ -610,7 +583,6 @@ const ChatPage: React.FC = () => {
     }
   };
 
-  // Determine chat partner info
   const partnerName =
     userType === "user"
       ? activeAppointment?.doctorName
@@ -621,24 +593,22 @@ const ChatPage: React.FC = () => {
       ? activeAppointment?.doctorPhoto
       : activeAppointment?.patientPhoto;
 
-  // Sidebar resize handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (isMobile) return;
     resizing.current = true;
     document.body.style.cursor = "col-resize";
-    document.body.style.userSelect = "none"; // Prevent text selection
+    document.body.style.userSelect = "none";
   };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!resizing.current) return;
-      // Minimum 200px, maximum 500px
       setSidebarWidth(Math.max(200, Math.min(500, e.clientX)));
     };
     const handleMouseUp = () => {
       resizing.current = false;
       document.body.style.cursor = "";
-      document.body.style.userSelect = ""; // Restore text selection
+      document.body.style.userSelect = "";
     };
     window.addEventListener("mousemove", handleMouseMove);
     window.addEventListener("mouseup", handleMouseUp);
@@ -648,7 +618,6 @@ const ChatPage: React.FC = () => {
     };
   }, []);
 
-  // Set activeAppointment based on chatId param
   useEffect(() => {
     if (!appointments.length) return;
     const chatId = searchParams.get("chatId");
@@ -656,7 +625,6 @@ const ChatPage: React.FC = () => {
       const found = appointments.find((apt) => apt.id === chatId);
       if (found) setActiveAppointment(found);
     } else if (!activeAppointment && appointments.length > 0) {
-      // fallback to first available
       const active =
         appointments.find((a) => a.status === "Sedang berlangsung") ||
         appointments[0];
@@ -665,14 +633,12 @@ const ChatPage: React.FC = () => {
         setSearchParams({ chatId: active.id });
       }
     }
-    // eslint-disable-next-line
   }, [appointments, searchParams, activeAppointment, setSearchParams]);
 
   useEffect(() => {
     const handleResize = () => {
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
-      // Jika beralih ke desktop, pastikan sidebar tidak tersembunyi
       if (!mobile) {
         setIsSidebarOpen(true);
       } else {
@@ -686,7 +652,6 @@ const ChatPage: React.FC = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  // Ganti useEffect notifikasi Anda dengan yang ini
   useEffect(() => {
     if (!userId || appointments.length === 0) return;
 
@@ -697,7 +662,7 @@ const ChatPage: React.FC = () => {
         const q = query(
           messagesRef,
           where("senderId", "!=", userId),
-          where("receiverRead", "==", false), // Check receiverRead instead of read
+          where("receiverRead", "==", false),
           orderBy("timeCreated", "desc")
         );
 
@@ -724,7 +689,6 @@ const ChatPage: React.FC = () => {
     return () => unsubscribes.forEach((unsub) => unsub());
   }, [appointments, userId, activeAppointment]);
 
-  // Check if user has already rated this appointment when chat ends
   useEffect(() => {
     const checkExistingRating = async () => {
       if (!activeAppointment || userType !== "user") return;
@@ -736,7 +700,6 @@ const ChatPage: React.FC = () => {
 
         if (chatDoc.exists()) {
           const chatData = chatDoc.data();
-          // Check if rating field exists and is not null
           if (
             chatData.rating !== null &&
             chatData.rating !== undefined &&
@@ -749,14 +712,12 @@ const ChatPage: React.FC = () => {
               `Found existing rating: ${chatData.rating} - rating disabled`
             );
           } else {
-            // Rating field is null, undefined, or doesn't exist - allow rating
             setExistingRating(null);
             setRating(0);
             setHasRated(false);
             console.log("No existing rating found - rating enabled");
           }
         } else {
-          // Chat document doesn't exist - allow rating
           setExistingRating(null);
           setRating(0);
           setHasRated(false);
@@ -764,7 +725,6 @@ const ChatPage: React.FC = () => {
         }
       } catch (error) {
         console.error("Error checking existing rating:", error);
-        // On error, disable rating to be safe
         setHasRated(true);
       }
     };
@@ -772,10 +732,8 @@ const ChatPage: React.FC = () => {
     checkExistingRating();
   }, [activeAppointment, userType, hasEnded]);
 
-  // Enhanced rating component with backend integration
   const StarRating = () => {
     const handleStarClick = async (starValue: number) => {
-      // Prevent rating if already rated (rating field exists and is not null)
       if (hasRated || existingRating !== null) {
         console.log("Rating already exists, cannot rate again");
         return;
@@ -789,7 +747,6 @@ const ChatPage: React.FC = () => {
           throw new Error("Missing appointment or user information");
         }
 
-        // Double-check that rating doesn't exist before saving
         const chatDocRef = doc(db, "chats", activeAppointment.id);
         const chatDoc = await getDoc(chatDocRef);
 
@@ -800,7 +757,6 @@ const ChatPage: React.FC = () => {
           }
         }
 
-        // Save rating to chat session
         await setDoc(
           chatDocRef,
           {
@@ -812,7 +768,6 @@ const ChatPage: React.FC = () => {
           { merge: true }
         );
 
-        // Update psychiatrist's ratings array and calculate new average
         const psychiatristRef = doc(
           db,
           "psychiatrists",
@@ -824,16 +779,13 @@ const ChatPage: React.FC = () => {
           const psychiatristData = psychiatristDoc.data();
           const currentRatings = psychiatristData.ratings || [];
 
-          // Add new rating to array
           const updatedRatings = [...currentRatings, starValue];
 
-          // Calculate new average rating
           const averageRating =
             updatedRatings.reduce((sum, rating) => sum + rating, 0) /
             updatedRatings.length;
-          const roundedAverage = Math.round(averageRating * 10) / 10; // Round to 1 decimal place
+          const roundedAverage = Math.round(averageRating * 10) / 10;
 
-          // Update psychiatrist document
           await updateDoc(psychiatristRef, {
             ratings: updatedRatings,
             rating: roundedAverage,
@@ -847,15 +799,15 @@ const ChatPage: React.FC = () => {
         setHasRated(true);
         setExistingRating(starValue);
         console.log(`User rated ${starValue} stars - saved to database`);
-      } catch (error) {
+      } catch (error: any) {
+        // Catch error as 'any' to access message
         console.error("Error saving rating:", error);
         if (error.message === "Rating already exists for this session") {
           alert("Rating sudah ada untuk sesi ini.");
-          // Refresh the rating state
           setHasRated(true);
         } else {
           alert("Gagal menyimpan rating. Silakan coba lagi.");
-          setRating(existingRating || 0); // Reset to previous rating on error
+          setRating(existingRating || 0);
         }
       } finally {
         setIsSubmittingRating(false);
@@ -863,25 +815,22 @@ const ChatPage: React.FC = () => {
     };
 
     const handleStarHover = (starValue: number) => {
-      // Only allow hover effects if rating hasn't been given
       if (!hasRated && existingRating === null) {
         setHoveredRating(starValue);
       }
     };
 
     const handleStarLeave = () => {
-      // Only clear hover effects if rating hasn't been given
       if (!hasRated && existingRating === null) {
         setHoveredRating(0);
       }
     };
 
-    // Check if rating is disabled (rating field exists and is not null)
     const isRatingDisabled = hasRated || existingRating !== null;
 
     return (
-      <div className="flex flex-col items-center py-4 bg-yellow-50 border-t border-b border-yellow-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-3">
+      <div className="flex flex-col items-center py-4 bg-yellow-50 border-t border-b border-yellow-200 dark:bg-gray-700 dark:border-gray-600">
+        <h3 className="text-lg font-semibold text-gray-800 mb-3 dark:text-white">
           {isRatingDisabled
             ? "Rating Anda untuk sesi konsultasi ini"
             : "Beri rating untuk sesi konsultasi ini"}
@@ -923,11 +872,13 @@ const ChatPage: React.FC = () => {
         </div>
 
         {isSubmittingRating && (
-          <p className="text-sm text-blue-600">Menyimpan rating...</p>
+          <p className="text-sm text-blue-600 dark:text-blue-400">
+            Menyimpan rating...
+          </p>
         )}
 
         {!isSubmittingRating && rating > 0 && (
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-gray-600 dark:text-gray-300">
             {isRatingDisabled
               ? `Anda telah memberi rating ${rating} bintang. Terima kasih atas feedback Anda!`
               : `Anda akan memberi rating ${rating} bintang`}
@@ -937,7 +888,7 @@ const ChatPage: React.FC = () => {
         {!isRatingDisabled && rating > 0 && !isSubmittingRating && (
           <button
             onClick={() => handleStarClick(rating)}
-            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+            className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm dark:bg-blue-700 dark:hover:bg-blue-800"
             disabled={isSubmittingRating}
           >
             Konfirmasi Rating
@@ -949,7 +900,9 @@ const ChatPage: React.FC = () => {
 
   return (
     <div
-      className="flex h-screen font-sans bg-[#FDFBF6] relative overflow-hidden"
+      className={`flex h-screen font-sans relative overflow-hidden ${
+        isDarkMode ? "dark:bg-gray-900 dark:text-white" : "bg-[#FDFBF6]"
+      }`}
       style={{ fontFamily: '"Josefin Sans", sans-serif' }}
     >
       {isMobile && isSidebarOpen && (
@@ -961,24 +914,28 @@ const ChatPage: React.FC = () => {
 
       {/* SIDEBAR */}
       <aside
-        className={`bg-[#E0E7EF] border-r border-gray-200 flex flex-col transition-transform transform ${
+        className={`border-r dark:border-gray-700 flex flex-col transition-transform transform ${
           isMobile
             ? `fixed top-0 left-0 h-full z-30 ${
                 isSidebarOpen ? "translate-x-0" : "-translate-x-full"
               }`
             : "relative"
+        } ${
+          isDarkMode
+            ? "dark:bg-gray-800 dark:border-gray-700"
+            : "bg-[#E0E7EF] dark:bg-gray-900"
         }`}
         style={{
           width: isMobile ? "80vw" : sidebarWidth,
           maxWidth: isMobile ? "320px" : "500px",
         }}
       >
-        <div className=" p-4 font-bold text-lg text-gray-700 border-b border-gray-300 flex justify-between items-center">
+        <div className="p-4 font-bold text-lg border-b border-gray-300 flex justify-between items-center dark:bg-gray-900 dark:text-white dark:border-gray-700 text-gray-700">
           <span>Chat Sessions</span>
           {isMobile && (
             <button
               onClick={() => setIsSidebarOpen(false)}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 dark:text-gray-300"
             >
               <X size={24} />
             </button>
@@ -987,7 +944,7 @@ const ChatPage: React.FC = () => {
         <div className="p-3">
           <div className="relative">
             <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
               size={16}
             />
             <input
@@ -995,13 +952,15 @@ const ChatPage: React.FC = () => {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari nama atau balasan terakhir..."
-              className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm "
+              className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:placeholder-gray-400"
             />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
           {appointments.length === 0 && (
-            <div className="p-4 text-gray-500">No chat sessions found.</div>
+            <div className="p-4 text-gray-500 dark:text-gray-400">
+              No chat sessions found.
+            </div>
           )}
 
           {appointments
@@ -1017,7 +976,6 @@ const ChatPage: React.FC = () => {
               const latestMessage =
                 latestMessages[apt.id]?.text?.toLowerCase() || "";
 
-              // Prioritize name search first
               const nameMatch = name.includes(query);
               const messageMatch = latestMessage.includes(query);
 
@@ -1041,10 +999,8 @@ const ChatPage: React.FC = () => {
               const aNameMatch = aName.includes(query);
               const bNameMatch = bName.includes(query);
 
-              // If both or neither match by name, maintain original order
               if (aNameMatch === bNameMatch) return 0;
 
-              // Prioritize name matches
               return aNameMatch ? -1 : 1;
             })
             .map((apt) => {
@@ -1059,16 +1015,16 @@ const ChatPage: React.FC = () => {
               return (
                 <button
                   key={apt.id}
-                  className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-blue-100 transition ${
-                    activeAppointment?.id === apt.id
-                      ? "bg-blue-200 font-semibold"
-                      : ""
-                  }`}
+                  className={`w-full text-left px-4 py-3 border-b border-gray-100 transition
+                              dark:border-gray-700 dark:text-gray-300 dark:hover:bg-[#2b3442] ${
+                                activeAppointment?.id === apt.id
+                                  ? "bg-blue-200 font-semibold dark:bg-[#364153] dark:text-white"
+                                  : "hover:bg-blue-100"
+                              }`}
                   onClick={() => {
                     setActiveAppointment(apt);
                     setSearchParams({ chatId: apt.id });
 
-                    // Mark messages as read when selecting this chat
                     markMessagesAsRead(apt.id);
 
                     setUnreadCounts((prev) => ({ ...prev, [apt.id]: 0 }));
@@ -1096,7 +1052,7 @@ const ChatPage: React.FC = () => {
                     <img
                       src={photo && photo.trim() !== "" ? photo : ProfilePic}
                       alt={name}
-                      className="w-9 h-9 rounded-full object-cover border border-gray-300"
+                      className="w-9 h-9 rounded-full object-cover border border-gray-300 dark:border-gray-600"
                       onError={(e) => {
                         (e.target as HTMLImageElement).src = ProfilePic;
                       }}
@@ -1108,8 +1064,8 @@ const ChatPage: React.FC = () => {
                         <span
                           className={`text-xs truncate ${
                             unreadCount > 0
-                              ? "text-black font-bold"
-                              : "text-gray-700"
+                              ? "text-black font-bold dark:text-white"
+                              : "text-gray-700 dark:text-gray-400"
                           }`}
                         >
                           {latestMessages[apt.id].sender === "me"
@@ -1117,7 +1073,7 @@ const ChatPage: React.FC = () => {
                             : latestMessages[apt.id].text}
                         </span>
                       ) : (
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
                           {apt.status}
                         </span>
                       )}
@@ -1126,13 +1082,13 @@ const ChatPage: React.FC = () => {
                       {/* Show time for latest message */}
                       {apt.status === "Sedang berlangsung" &&
                         latestTime[apt.id] && (
-                          <span className="text-[11px] text-gray-500 font-medium">
+                          <span className="text-[11px] text-gray-500 font-medium dark:text-gray-400">
                             {latestTime[apt.id]} WIB
                           </span>
                         )}
                       {/* Show unread badge if there are unread messages */}
                       {unreadCount > 0 && (
-                        <div className="bg-blue-500 text-white text-[11px] font-semibold rounded-full h-5 w-5 flex justify-center items-center">
+                        <div className="bg-blue-500 text-white text-[11px] font-semibold rounded-full h-5 w-5 flex justify-center items-center dark:bg-blue-600">
                           {unreadCount}
                         </div>
                       )}
@@ -1142,7 +1098,6 @@ const ChatPage: React.FC = () => {
               );
             })}
 
-          {/* Show no results message when search query exists but no matches */}
           {searchQuery.trim() &&
             appointments.filter((apt) => {
               const query = searchQuery.toLowerCase();
@@ -1155,7 +1110,7 @@ const ChatPage: React.FC = () => {
                 latestMessages[apt.id]?.text?.toLowerCase() || "";
               return name.includes(query) || latestMessage.includes(query);
             }).length === 0 && (
-              <div className="p-4 text-gray-500 text-center">
+              <div className="p-4 text-gray-500 text-center dark:text-gray-400">
                 <p>Tidak ada hasil untuk "{searchQuery}"</p>
                 <p className="text-xs mt-1">Coba kata kunci lain</p>
               </div>
@@ -1172,20 +1127,20 @@ const ChatPage: React.FC = () => {
               height: "100%",
               cursor: "col-resize",
               zIndex: 10,
-              background: "transparent",
+              background: "",
             }}
-            className="hover:bg-blue-200 transition"
+            className="hover:bg-black transition dark:hover:bg-blue-950"
           />
         )}
       </aside>
 
       <div className="flex flex-col flex-1 h-full">
-        <header className="flex items-center justify-between p-4 bg-[#E0E7EF] border-b border-gray-200">
+        <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:bg-gray-900 dark:border-gray-700 bg-[#E0E7EF]">
           <div className="flex items-center space-x-3">
             {isMobile && (
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="mr-2 text-gray-700"
+                className="mr-2 text-gray-700 dark:text-gray-300"
               >
                 <Menu size={24} />
               </button>
@@ -1194,17 +1149,17 @@ const ChatPage: React.FC = () => {
               <img
                 src={partnerPhoto}
                 alt={partnerName || ""}
-                className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                className="w-10 h-10 rounded-full object-cover border border-gray-300 dark:border-gray-600"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = ProfilePic;
                 }}
               />
             ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xl font-bold">
+              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xl font-bold dark:bg-gray-700 dark:text-gray-300">
                 {partnerName?.[0] || "?"}
               </div>
             )}
-            <span className="font-semibold text-lg text-gray-800">
+            <span className="font-semibold text-lg text-gray-800 dark:text-white">
               {partnerName || ""}
             </span>
           </div>
@@ -1216,31 +1171,63 @@ const ChatPage: React.FC = () => {
                 <button
                   onClick={handleEndConversationClick}
                   disabled={isEnding}
-                  className="ml-4 px-3 py-2 text-sm md:px-4 md:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-60"
+                  className="ml-4 px-3 py-2 text-sm md:px-4 md:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-60 dark:bg-red-700 dark:hover:bg-red-800"
                 >
                   {isEnding ? "..." : "Selesaikan"}
                 </button>
               )}
+            {/* Tombol toggle tema, jika ingin ada di header chat */}
+            {toggleTheme && (
+              <button
+                onClick={toggleTheme}
+                className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${
+                  isDarkMode ? "bg-gray-700" : "bg-gray-300"
+                }`}
+                aria-label="Toggle theme"
+              >
+                <span
+                  className={`absolute top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white dark:bg-gray-700 rounded-full shadow-md transform transition-transform duration-300 ${
+                    isDarkMode
+                      ? "translate-x-6 left-0.5"
+                      : "translate-x-0.5 left-0.5"
+                  }`}
+                >
+                  {isDarkMode ? (
+                    <X
+                      size={16}
+                      className="w-4 h-4 m-auto absolute inset-0 text-white"
+                    /> // Contoh ikon X untuk dark mode
+                  ) : (
+                    <Menu
+                      size={16}
+                      className="w-4 h-4 m-auto absolute inset-0 text-gray-800"
+                    /> // Contoh ikon Menu untuk light mode
+                  )}
+                </span>
+              </button>
+            )}
           </div>
         </header>
 
         {isConfirmingEnd && (
-          <div className="fixed inset-0 bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl w-80">
-              <h3 className="text-xl font-semibold mb-4">Konfirmasi</h3>
-              <p className="mb-6">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl w-80 dark:bg-gray-800 dark:text-white">
+              <h3 className="text-xl font-semibold mb-4 dark:text-white">
+                Konfirmasi
+              </h3>
+              <p className="mb-6 dark:text-gray-300">
                 Apakah Anda yakin ingin menyelesaikan percakapan?
               </p>
               <div className="flex justify-end space-x-4">
                 <button
                   onClick={cancelEndConversation}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1"
+                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
                 >
                   Batal
                 </button>
                 <button
                   onClick={confirmEndConversation}
-                  className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300"
+                  className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800"
                 >
                   Ya, Selesaikan
                 </button>
@@ -1250,11 +1237,11 @@ const ChatPage: React.FC = () => {
         )}
 
         {loading ? (
-          <div className="flex items-center justify-center flex-1">
+          <div className="flex items-center justify-center flex-1 text-gray-700 dark:text-gray-300">
             <span>Loading chat...</span>
           </div>
         ) : !activeAppointment ? (
-          <div className="flex items-center justify-center flex-1 text-center p-4">
+          <div className="flex items-center justify-center flex-1 text-center p-4 text-gray-700 dark:text-gray-300">
             <span>
               Tidak ada sesi chat yang sedang berlangsung. <br /> Pilih sesi
               chat dari menu.
@@ -1262,7 +1249,7 @@ const ChatPage: React.FC = () => {
           </div>
         ) : (
           <>
-            <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#FDFBF6]">
+            <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#FDFBF6] dark:bg-[#161F36]">
               {messages.map((msg) => (
                 <div
                   key={msg.id}
@@ -1278,8 +1265,8 @@ const ChatPage: React.FC = () => {
                     <div
                       className={`py-2 px-4 rounded-2xl ${
                         msg.sender === "me"
-                          ? "bg-[#D1DCEB] text-gray-800 rounded-br-none"
-                          : "bg-[#E4DCCC] text-gray-800 rounded-tl-none"
+                          ? "bg-[#D1DCEB] text-gray-800 rounded-br-none dark:bg-[#5c6a74] dark:text-white"
+                          : "bg-[#E4DCCC] text-gray-800 rounded-tl-none dark:bg-[#2d3646] dark:text-white"
                       }`}
                     >
                       <p className="text-sm break-words">{msg.text}</p>
@@ -1289,13 +1276,14 @@ const ChatPage: React.FC = () => {
                         msg.sender === "me" ? "end" : "start"
                       }`}
                     >
-                      {/* Show read status for sender's messages */}
                       {msg.sender === "me" && msg.receiverRead && (
-                        <span className="text-xs text-blue-600 font-medium mb-1">
+                        <span className="text-xs text-blue-600 font-medium mb-1 dark:text-blue-400">
                           Read
                         </span>
                       )}
-                      <p className="text-xs text-gray-500">{msg.time} WIB</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {msg.time} WIB
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -1303,7 +1291,7 @@ const ChatPage: React.FC = () => {
               <div ref={messagesEndRef} />
             </main>
             {userType === "user" && showSummary && summary && (
-              <div className="p-4 bg-yellow-50 border-t border-b border-yellow-200 text-yellow-900">
+              <div className="p-4 bg-yellow-50 border-t border-b border-yellow-200 text-yellow-900 dark:bg-gray-700 dark:border-gray-600 dark:text-yellow-200">
                 <div className="font-semibold mb-2">
                   Ringkasan Saran Psikiater:
                 </div>
@@ -1311,12 +1299,11 @@ const ChatPage: React.FC = () => {
               </div>
             )}
 
-            {/* Show rating component for users when chat session has ended */}
             {userType === "user" && activeAppointment.status === "Selesai" && (
               <StarRating />
             )}
 
-            <div className="p-4 bg-[#F0EBE3] border-t border-gray-200 flex items-center space-x-3">
+            <div className="p-4 border-t border-gray-200 flex items-center space-x-3 dark:bg-gray-800 dark:border-gray-700 bg-[#F0EBE3]">
               <input
                 type="text"
                 value={newMessage}
@@ -1327,13 +1314,13 @@ const ChatPage: React.FC = () => {
                     ? "Percakapan telah selesai."
                     : "Ketik pesan Anda di sini..."
                 }
-                className="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
+                className="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300 dark:placeholder-gray-400"
                 disabled={activeAppointment.status === "Selesai" || hasEnded}
               />
               {activeAppointment.status !== "Selesai" && !hasEnded && (
                 <button
                   onClick={handleSendMessage}
-                  className="p-3 rounded-lg text-white bg-[#BACBD8] hover:bg-[#93A3AF] transition-colors"
+                  className="p-3 rounded-lg text-white bg-[#BACBD8] hover:bg-[#93A3AF] transition-colors dark:bg-[#2f4a80] dark:hover:bg-[#293c63]"
                 >
                   <Send size={22} />
                 </button>

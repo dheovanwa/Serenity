@@ -4,14 +4,19 @@ import { RegisterController } from "../controllers/RegisterController";
 import {
   InputWithLabel,
   InputWithLabelPassConfirm,
-} from "../components/InputWithLabel";
-import { InputWithLabelPass } from "../components/InputWithLabel";
+} from "../components/InputWithLabel"; // Asumsi InputWithLabelPassConfirm juga di sini
+import { InputWithLabelPass } from "../components/InputWithLabel"; // Ini bisa dihapus jika InputWithLabelPassConfirm adalah varian
 import { ButtonOutline } from "../components/ButtonOutline";
 import { auth } from "../config/firebase";
 import background from "../assets/backgroundSignin.png";
 import logoLight from "../assets/Logo - Light.png";
+import logoDark from "../assets/Logo - Dark.png"; // Import logo dark
 import { Button } from "../components/Button";
 import Loading from "../components/Loading";
+
+// Import ikon Sun dan Moon
+import Sun from "../assets/Sun.svg"; // Pastikan path ini benar
+import Moon from "../assets/Do not Disturb iOS.svg"; // Pastikan path ini benar
 
 const SignUp = () => {
   const [email, setEmail] = useState("");
@@ -29,6 +34,50 @@ const SignUp = () => {
   const [tosError, setTosError] = useState<string>("");
   const [isLoading, setIsLoading] = useState(true);
 
+  // State baru untuk dark mode (sama seperti Login.tsx)
+  const [isDarkMode, setIsDarkMode] = useState<boolean>(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      return true;
+    }
+    if (savedTheme === "light") {
+      return false;
+    }
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  // Efek untuk mengaplikasikan kelas 'dark' ke elemen html
+  useEffect(() => {
+    const htmlElement = document.documentElement;
+    if (isDarkMode) {
+      htmlElement.classList.add("dark");
+    } else {
+      htmlElement.classList.remove("dark");
+    }
+    localStorage.setItem("theme", isDarkMode ? "dark" : "light");
+  }, [isDarkMode]);
+
+  // Efek untuk mendengarkan perubahan preferensi sistem secara real-time
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const handleChange = (event: MediaQueryListEvent) => {
+      if (!localStorage.getItem("theme")) {
+        setIsDarkMode(event.matches);
+      }
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkMode((prevMode) => !prevMode);
+  };
+
+  const navSpecificThemeColors = {
+    toggleBg: isDarkMode ? "bg-[#4A4A4A]" : "bg-gray-300",
+  };
+
   const handleClick = () => {
     console.log("Button clicked");
     setIsClicked(true);
@@ -38,26 +87,22 @@ const SignUp = () => {
   const validateForm = () => {
     let isValid = true;
 
-    // Reset all errors
     setEmailError("");
     setPasswordError("");
     setConfirmPasswordError("");
     setTosError("");
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setEmailError("Email harus dalam format example@email.com");
       isValid = false;
     }
 
-    // Password validation
     if (password.length < 8) {
       setPasswordError("Kata sandi harus lebih dari 8 karakter");
       isValid = false;
     }
 
-    // Confirm password validation
     if (password !== confirmPassword) {
       setConfirmPasswordError(
         "Kata sandi harus sama dengan kata sandi di atas"
@@ -65,7 +110,6 @@ const SignUp = () => {
       isValid = false;
     }
 
-    // Terms of service validation
     if (!acceptTerms) {
       setTosError("Harap setujui syarat dan ketentuan");
       isValid = false;
@@ -141,7 +185,6 @@ const SignUp = () => {
   }, []);
 
   useEffect(() => {
-    // Check if there's any auth state to handle
     const unsubscribe = auth.onAuthStateChanged(() => {
       setIsLoading(false);
     });
@@ -149,27 +192,28 @@ const SignUp = () => {
     return () => unsubscribe();
   }, []);
 
-  // if (isLoading) {
-  //   return <Loading />;
-  // }
-
   return (
     <div className="min-h-screen flex flex-col sm:flex-row overflow-hidden">
       {isLoading && <Loading />}
       <div className="absolute top-5 left-4 flex items-center gap-2 z-10">
-        <img src={logoLight} alt="logoLight" className="w-16 h-16" />
-        <h1 className="text-xl text-[#78716C]">Serenity</h1>
+        <img
+          src={isDarkMode ? logoDark : logoLight} // Logo menyesuaikan mode
+          alt="Logo"
+          className="w-16 h-16"
+        />
+        <h1 className="text-xl text-[#78716C] dark:text-white">Serenity</h1>{" "}
+        {/* Teks logo menyesuaikan mode */}
       </div>
 
       <div
         className={`${
           isMobile ? "w-full" : "w-1/2"
-        } bg-[#F2EDE2] flex justify-center items-center py-6 sm:py-10 flex-grow`}
+        } bg-[#F2EDE2] dark:bg-[#161F36] flex justify-center items-center py-6 sm:py-10 flex-grow relative transition-colors duration-300`}
       >
         <div className="w-full max-w-[400px] sm:max-w-[450px] md:max-w-[500px] px-6 sm:px-8 py-10">
-          <h2 className="text-3xl sm:text-4xl font-light text-[#161F36] text-left mb-5">
+          <h2 className="text-3xl sm:text-4xl font-light text-[#161F36] dark:text-white text-left mb-5">
             Mulai Perjalananmu
-            <p className="font-semibold mt-2 text-2xl sm:text-4xl">
+            <p className="font-semibold mt-2 text-2xl sm:text-4xl dark:text-white">
               Daftar ke Serenity
             </p>
           </h2>
@@ -179,6 +223,7 @@ const SignUp = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 error={emailError}
+                isDarkMode={isDarkMode} // Teruskan prop isDarkMode
               />
             </div>
             <div>
@@ -187,6 +232,7 @@ const SignUp = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 autocomplete="new-password"
                 error={passwordError}
+                isDarkMode={isDarkMode} // Teruskan prop isDarkMode
               />
               {passwordError && (
                 <p className="text-red-500 text-sm">{passwordError}</p>
@@ -198,6 +244,7 @@ const SignUp = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 autocomplete="new-password"
                 error={confirmPasswordError}
+                isDarkMode={isDarkMode} // Teruskan prop isDarkMode
               />
             </div>
             {/* Terms of Service checkbox */}
@@ -211,11 +258,22 @@ const SignUp = () => {
                     setAcceptTerms(e.target.checked);
                     if (e.target.checked) setTosError("");
                   }}
-                  className="w-4 h-4 text-[#8DAABF] border-gray-300 rounded focus:ring-[#8DAABF]"
+                  className="w-4 h-4 text-[#8DAABF] border-gray-300 rounded-lg focus:ring-[#8DAABF]
+                             dark:bg-gray-700 dark:border-gray-600 dark:checked:bg-[#8DAABF] dark:focus:ring-[#8DAABF] dark:rounded-lg transition-colors duration-300" // Kelas dark mode untuk checkbox
                 />
-                <label htmlFor="terms" className="text-sm text-gray-600">
+                <label
+                  htmlFor="terms"
+                  className="text-sm text-gray-600 dark:text-gray-300"
+                >
+                  {" "}
+                  {/* Teks label menyesuaikan mode */}
                   Saya menyetujui{" "}
-                  <a href="/terms" className="text-[#8DAABF] hover:underline">
+                  <a
+                    href="/terms"
+                    className="text-[#8DAABF] hover:underline dark:text-blue-400"
+                  >
+                    {" "}
+                    {/* Link menyesuaikan mode */}
                     Syarat dan Ketentuan
                   </a>
                 </label>
@@ -225,40 +283,79 @@ const SignUp = () => {
             <Button
               variant="outline"
               type="submit"
-              className={`w-full h-12 mt-6 max-w-sm rounded-sm bg-[#BACBD8] text-black hover:bg-[#bad2e5] ${
-                isClicked ? "bg-white" : ""
-              } ${isAuthenticating ? "opacity-50 cursor-not-allowed" : ""}`}
+              className={`w-full h-12 mt-6 max-w-sm rounded-sm bg-[#BACBD8] text-black hover:bg-[#bad2e5]
+                          dark:bg-[#BACBD8] dark:text-[#18181B] dark:hover:bg-[#8d9097] ${
+                            // Kelas dark mode untuk tombol
+                            isClicked ? "bg-white dark:bg-gray-600" : ""
+                          } ${
+                isAuthenticating ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               disabled={isAuthenticating}
             >
               {isAuthenticating ? "Signing up..." : "Daftar"}
             </Button>
             <div className="w-full max-w-sm flex items-center my-4">
-              <hr className="flex-grow border-t border-gray-300" />
-              <span className="px-4 text-sm text-gray-600">
+              <hr className="flex-grow border-t border-gray-300 dark:border-[#E6E6E6] opacity-50" />{" "}
+              {/* Garis menyesuaikan mode */}
+              <span className="px-4 text-sm text-gray-600 dark:text-[#E6E6E6] opacity-50">
+                {" "}
+                {/* Teks menyesuaikan mode */}
                 atau daftar dengan
               </span>
-              <hr className="flex-grow border-t border-gray-300" />
+              <hr className="flex-grow border-t border-gray-300 dark:border-[#E6E6E6] opacity-50" />{" "}
+              {/* Garis menyesuaikan mode */}
             </div>
           </form>
           <ButtonOutline
             onGoogleClick={handleGoogleSignUp}
             disabled={isAuthenticating}
+            className="dark:border-gray-500 dark:text-white dark:hover:bg-gray-700" // Kelas dark mode untuk ButtonOutline
           />
-          <p
-            className={`${
-              isMobile
-                ? "text-center static mx-auto mt-4"
-                : "absolute bottom-5 left-6"
-            } text-sm text-black`}
-          >
+        </div>
+
+        {/* Elemen bottom-left dan bottom-right */}
+        <div className="absolute bottom-5 left-0 right-0 flex justify-between px-6 sm:px-8">
+          <p className="text-sm text-black dark:text-white">
+            {" "}
+            {/* Teks menyesuaikan mode */}
             Sudah memiliki akun?{" "}
             <a
               href="/signin"
-              className="font-bold text-[#8DAABF] hover:text-white cursor-pointer"
+              className="font-bold text-[#8DAABF] hover:text-blue-700 dark:hover:text-blue-300 cursor-pointer dark:text-[#8DAABF]" // Link menyesuaikan mode
             >
               Masuk
             </a>
           </p>
+          {/* Tombol Dark Mode / Light Mode */}
+          <div className="flex items-center">
+            <button
+              onClick={toggleTheme}
+              className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${navSpecificThemeColors.toggleBg}`}
+              aria-label="Toggle theme"
+            >
+              <span
+                className={`absolute top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white dark:bg-[#161F36] rounded-full shadow-md transform transition-transform duration-300 ${
+                  isDarkMode
+                    ? "translate-x-6 left-0.5"
+                    : "translate-x-0.5 left-0.5"
+                }`}
+              >
+                {isDarkMode ? (
+                  <img
+                    src={Moon}
+                    alt="Moon Icon"
+                    className="w-4 h-4 m-auto absolute inset-0"
+                  />
+                ) : (
+                  <img
+                    src={Sun}
+                    alt="Sun Icon"
+                    className="w-4 h-4 m-auto absolute inset-0"
+                  />
+                )}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 

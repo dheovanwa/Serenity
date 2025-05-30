@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { HomeController } from "../controllers/HomeController";
 import { CarouselDemo } from "../components/RecommendedPsychiatrist";
-import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
+import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater"; // Ini asumsi sebagai komponen React.FC
 import Footer from "../components/Footer";
 import send from "../assets/send.svg";
 import { db } from "../config/firebase";
@@ -18,7 +18,7 @@ import {
 } from "firebase/firestore";
 import ProfilePic from "../assets/default_profile_image.svg";
 
-const Homepage: React.FC = () => {
+const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   const [userName, setUserName] = useState<string>("Loading...");
   const [activeChats, setActiveChats] = useState<any[]>([]);
   const [loadingChats, setLoadingChats] = useState(true);
@@ -31,20 +31,25 @@ const Homepage: React.FC = () => {
   const controller = new HomeController();
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthAndLoadData = async () => {
+      setIsLoading(true); // Mulai loading saat data diambil
       const documentId = localStorage.getItem("documentId");
+
+      // Cek autentikasi
       const isAuthenticated = await controller.checkAuthentication(documentId);
 
       if (!isAuthenticated) {
-        navigate("/signin");
-        return;
+        navigate("/signin"); // Redirect jika tidak terautentikasi
+        return; // Hentikan eksekusi lebih lanjut
       }
 
+      // Ambil nama pengguna jika terautentikasi
       const name = await controller.fetchUserName(documentId);
       setUserName(name);
+      setIsLoading(false); // Akhiri loading setelah data diambil
     };
 
-    checkAuth();
+    checkAuthAndLoadData();
   }, [navigate]);
 
   // Fetch active chat sessions for the user
@@ -297,14 +302,20 @@ const Homepage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden"
-      style={{ backgroundColor: `#F2EDE2` }}
+      className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden
+                 bg-[#F2EDE2] dark:bg-[#161F36] transition-colors duration-300"
     >
+      <AppointmentStatusUpdater />{" "}
+      {/* Pastikan ini adalah komponen React.FC yang di-render */}
       <div className="p-15 text-center pt-20">
-        <h1 className="text-6xl font-extrabold text-[#161F36] mb-4 drop-shadow-md">
-          Selamat datang, <span className="text-[#ce9d85]">{userName}!</span>
+        <h1
+          className="text-6xl font-extrabold mb-4 drop-shadow-md
+                       text-[#161F36] dark:text-white"
+        >
+          Selamat datang,{" "}
+          <span className="text-[#ce9d85] dark:text-blue-300">{userName}!</span>
         </h1>
-        <p className="text-xl text-[#161F36] font-medium">
+        <p className="text-xl font-medium text-[#161F36] dark:text-gray-300">
           Kami siap membantu perjalanan kesehatan mental Anda.
         </p>
       </div>
@@ -456,6 +467,7 @@ const Homepage: React.FC = () => {
           )}
         </div>
       </div>
+      {/* Pertemuan Mendatang Section */}
       <div className="flex justify-center p-4 my-8 flex-col items-center">
         <h2 className="text-3xl font-semibold mb-4 text-[#161F36] w-full max-w-4xl xl:max-w-6xl">
           Sesi pertemuan mendatang
@@ -519,19 +531,20 @@ const Homepage: React.FC = () => {
           )}
         </div>
       </div>
+      {/* Recommended Psychiatrist Section */}
       <div className="mt-20 ml-6 sm:ml-15">
         <div className="flex justify-center p-4 mt-8">
-          <p className="text-2xl font-semibold text-[#161F36] text-center">
+          <p className="text-2xl font-semibold text-[#161F36] text-center dark:text-white">
             Berikut kami pilihkan psikiater pilihan kami
           </p>
         </div>
         <div className="flex justify-center items-center mb-10">
           <div className="w-full" style={{ maxWidth: "1200px" }}>
-            <CarouselDemo />
+            <CarouselDemo isDarkMode={isDarkMode} />
           </div>
         </div>
       </div>
-      <Footer />
+      <Footer isDarkMode={isDarkMode} />
     </div>
   );
 };
