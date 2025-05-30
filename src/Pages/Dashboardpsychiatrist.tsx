@@ -13,14 +13,14 @@ import {
   collection,
   query,
   where,
-  getDocs,
-  getDoc,
-  doc,
   orderBy,
+  getDocs,
+  doc,
+  getDoc,
   limit,
-  addDoc,
-  updateDoc,
-  arrayUnion,
+  onSnapshot,
+  setDoc,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "../config/firebase"; // Adjust the import based on your project structure
 import { HomeController } from "../controllers/HomeController";
@@ -259,6 +259,13 @@ const DashboardPsychiatrist: React.FC = () => {
           (apt) => apt.doctorName === psychiatristName
         );
 
+        // Create chat rooms for Chat appointments that are "Sedang berlangsung"
+        for (const apt of filteredAppointments) {
+          if (apt.method === "Chat") {
+            await createChatRoomForAppointment(apt.id);
+          }
+        }
+
         // For video appointments, check if they're currently active based on time
         const videoAppointments = filteredAppointments.filter((apt) => {
           if (apt.method !== "Video") return false;
@@ -295,7 +302,7 @@ const DashboardPsychiatrist: React.FC = () => {
             const messagesColRef = collection(db, "chats", apt.id, "messages");
             const qMsg = query(
               messagesColRef,
-              orderBy("timestamp", "desc"),
+              orderBy("timeCreated", "desc"),
               limit(1)
             );
             const msgSnap = await getDocs(qMsg);
@@ -315,7 +322,17 @@ const DashboardPsychiatrist: React.FC = () => {
                 date: lastMsg.time || apt.date,
                 content: `${senderDisplayName}: ${lastMsg.text}`,
                 profileImage: apt.patientProfileImage || foto1,
-                isRead: lastMsg.isRead || false,
+                isRead: lastMsg.receiverRead || false,
+              });
+            } else {
+              // If no messages yet, still show the chat session
+              chatMessages.push({
+                id: apt.id,
+                from: apt.patientName,
+                date: new Date().toLocaleDateString(),
+                content: "Sesi chat dimulai",
+                profileImage: apt.patientProfileImage || foto1,
+                isRead: true,
               });
             }
           }
@@ -328,10 +345,30 @@ const DashboardPsychiatrist: React.FC = () => {
 
     fetchActiveAppointmentsAndChats();
 
-    // Set up interval to refresh active appointments every minute
-    const interval = setInterval(fetchActiveAppointmentsAndChats, 60000);
+    // Set up real-time listener for appointment status changes
+    const documentId = localStorage.getItem("documentId");
+    if (documentId) {
+      const appointmentsRef = collection(db, "appointments");
+      const statusQuery = query(
+        appointmentsRef,
+        where("psychiatristId", "==", documentId),
+        where("method", "==", "Chat")
+      );
 
-    return () => clearInterval(interval);
+      const unsubscribe = onSnapshot(statusQuery, (snapshot) => {
+        snapshot.docChanges().forEach((change) => {
+          if (change.type === "modified") {
+            const appointmentData = change.doc.data();
+            // Check if status changed to "Sedang berlangsung"
+            if (appointmentData.status === "Sedang berlangsung") {
+              createChatRoomForAppointment(change.doc.id);
+            }
+          }
+        });
+      });
+
+      return () => unsubscribe();
+    }
   }, []);
 
   // Add helper function to check if a video session is currently active
@@ -579,6 +616,26 @@ const DashboardPsychiatrist: React.FC = () => {
       clearInterval(statusCheckInterval);
     };
   }, []);
+
+  // Function to create chat room when appointment becomes active
+  const createChatRoomForAppointment = async (appointmentId: string) => {
+    try {
+      const chatDocRef = doc(db, "chats", appointmentId);
+      const chatDocSnapshot = await getDoc(chatDocRef);
+
+      if (!chatDocSnapshot.exists()) {
+        // Create chat document with appointmentId reference
+        await setDoc(chatDocRef, {
+          appointmentId: appointmentId,
+          createdAt: serverTimestamp(),
+          hasEnded: false,
+        });
+        console.log(`Chat room created for appointment: ${appointmentId}`);
+      }
+    } catch (error) {
+      console.error("Error creating chat room:", error);
+    }
+  };
 
   return (
     <>
