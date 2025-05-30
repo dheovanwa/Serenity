@@ -15,6 +15,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { shouldRemovePost } from "../utils/profanityFilter";
+import defaultProfileImage from "../assets/default_profile_image.svg";
 
 interface ForumPost {
   id: string;
@@ -201,9 +202,11 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post }) => {
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-[#BACBD8] flex items-center justify-center">
-              <User className="w-7 h-7 text-[#161F36]" />
-            </div>
+            <img
+              src={defaultProfileImage}
+              alt="Default Profile"
+              className="w-12 h-12 rounded-full object-cover"
+            />
           )}
           <div>
             <h3 className="font-semibold text-[#161F36]">{getDisplayName()}</h3>

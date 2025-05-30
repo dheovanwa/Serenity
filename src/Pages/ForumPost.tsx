@@ -18,6 +18,7 @@ import {
 } from "firebase/firestore";
 import { db } from "../config/firebase";
 import { containsProfanity } from "../utils/profanityFilter";
+import defaultProfileImage from "../assets/default_profile_image.svg";
 
 const ForumPost = () => {
   const { forumId } = useParams();
@@ -137,7 +138,9 @@ const ForumPost = () => {
                     const userData = userDoc.data();
                     authorInfo = {
                       name: userData.firstName
-                        ? `${userData.firstName} ${userData.lastName || ""}`.trim()
+                        ? `${userData.firstName} ${
+                            userData.lastName || ""
+                          }`.trim()
                         : "User",
                       profileImage: userData.profileImage || null,
                       role: "user",
@@ -556,9 +559,11 @@ const ForumPost = () => {
               className="w-12 h-12 rounded-full object-cover"
             />
           ) : (
-            <div className="w-12 h-12 rounded-full bg-[#BACBD8] flex items-center justify-center">
-              <User className="w-7 h-7 text-[#161F36]" />
-            </div>
+            <img
+              src={defaultProfileImage}
+              alt="Default Profile"
+              className="w-12 h-12 rounded-full object-cover"
+            />
           )}
           <div>
             <h3 className="font-semibold text-[#161F36]">
@@ -657,9 +662,11 @@ const ForumPost = () => {
                   className="w-10 h-10 rounded-full object-cover"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-[#BACBD8] flex items-center justify-center">
-                  <User className="w-6 h-6 text-[#161F36]" />
-                </div>
+                <img
+                  src={defaultProfileImage}
+                  alt="Default Profile"
+                  className="w-10 h-10 rounded-full object-cover"
+                />
               )}
               <div className="flex-1">
                 <h4 className="font-semibold text-[#161F36] text-sm">
