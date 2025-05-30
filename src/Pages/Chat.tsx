@@ -19,6 +19,7 @@ import {
 } from "firebase/firestore";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
+import ProfilePic from "../assets/default_profile_image.svg";
 
 interface Message {
   id: string;
@@ -200,30 +201,45 @@ const ChatPage: React.FC = () => {
         const apt = docSnap.data() as Appointment;
         let doctorPhoto = "";
         let patientPhoto = "";
-        // Fetch profile photos
+
+        // Fetch psychiatrist profile photo from 'image' field
         if (apt.psychiatristId) {
-          const docRef = doc(db, "psychiatrists", apt.psychiatristId);
-          const docData = await getDoc(docRef);
-          const firestorePhoto = docData.exists()
-            ? docData.data().photoURL
-            : "";
-          doctorPhoto =
-            firestorePhoto && firestorePhoto.trim() !== ""
-              ? firestorePhoto
-              : "";
+          try {
+            const docRef = doc(db, "psychiatrists", apt.psychiatristId);
+            const docData = await getDoc(docRef);
+            if (docData.exists()) {
+              const psychiatristData = docData.data();
+              // Use 'image' field for psychiatrists
+              const firestorePhoto = psychiatristData.image || "";
+              doctorPhoto =
+                firestorePhoto && firestorePhoto.trim() !== ""
+                  ? firestorePhoto
+                  : "";
+            }
+          } catch (error) {
+            console.error("Error fetching psychiatrist photo:", error);
+          }
         }
+
+        // Fetch user profile photo from 'profilePicture' field
         if (apt.patientId) {
-          const docRef = doc(db, "users", apt.patientId);
-          const docData = await getDoc(docRef);
-          // Fetch from 'profilePicture' field instead of 'photoURL'
-          const firestorePhoto = docData.exists()
-            ? docData.data().profilePicture
-            : "";
-          patientPhoto =
-            firestorePhoto && firestorePhoto.trim() !== ""
-              ? firestorePhoto
-              : "";
+          try {
+            const docRef = doc(db, "users", apt.patientId);
+            const docData = await getDoc(docRef);
+            if (docData.exists()) {
+              const userData = docData.data();
+              // Use 'profilePicture' field for users
+              const firestorePhoto = userData.profilePicture || "";
+              patientPhoto =
+                firestorePhoto && firestorePhoto.trim() !== ""
+                  ? firestorePhoto
+                  : "";
+            }
+          } catch (error) {
+            console.error("Error fetching user photo:", error);
+          }
         }
+
         apts.push({ ...apt, id: docSnap.id, doctorPhoto, patientPhoto });
       }
       setAppointments(apts);
@@ -1077,17 +1093,14 @@ const ChatPage: React.FC = () => {
                   }}
                 >
                   <div className="flex flex-row items-center space-x-3 w-full">
-                    {photo ? (
-                      <img
-                        src={photo}
-                        alt={name}
-                        className="w-9 h-9 rounded-full object-cover border border-gray-300"
-                      />
-                    ) : (
-                      <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-lg font-bold">
-                        {name?.[0] || "?"}
-                      </div>
-                    )}
+                    <img
+                      src={photo && photo.trim() !== "" ? photo : ProfilePic}
+                      alt={name}
+                      className="w-9 h-9 rounded-full object-cover border border-gray-300"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).src = ProfilePic;
+                      }}
+                    />
                     <div className="flex flex-col min-w-0 flex-1">
                       <span className="truncate">{name}</span>
                       {apt.status === "Sedang berlangsung" &&
@@ -1177,11 +1190,14 @@ const ChatPage: React.FC = () => {
                 <Menu size={24} />
               </button>
             )}
-            {partnerPhoto ? (
+            {partnerPhoto && partnerPhoto.trim() !== "" ? (
               <img
                 src={partnerPhoto}
                 alt={partnerName || ""}
                 className="w-10 h-10 rounded-full object-cover border border-gray-300"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = ProfilePic;
+                }}
               />
             ) : (
               <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xl font-bold">

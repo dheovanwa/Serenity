@@ -48,6 +48,9 @@ const Forum = () => {
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const sortDropdownRef = useRef<HTMLDivElement>(null);
   const loadMoreUserPostsRef = useRef<HTMLDivElement | null>(null);
+  const [profilePictures, setProfilePictures] = useState<{
+    [key: string]: string;
+  }>({});
 
   // Fetch posts
   useEffect(() => {
@@ -85,28 +88,30 @@ const Forum = () => {
               let authorBirthDate = "";
               let specialty = "";
 
-              // Check in users collection first
-              const userDocRef = doc(db, "users", data.userId);
-              const userDoc = await getDoc(userDocRef);
-              if (userDoc.exists()) {
-                const userData = userDoc.data();
-                profileImage = userData.profileImage || null;
-                userRole = "user";
-                authorName = userData.firstName
-                  ? `${userData.firstName} ${userData.lastName || ""}`.trim()
-                  : "User";
-                authorGender = userData.sex || "";
-                authorBirthDate = userData.birthOfDate || "";
+              // Check in psychiatrists collection first
+              const psyDocRef = doc(db, "psychiatrists", data.userId);
+              const psyDoc = await getDoc(psyDocRef);
+              if (psyDoc.exists()) {
+                console.log("Found in psychiatrists collection");
+                const psyData = psyDoc.data();
+                console.log("psyDoc:", psyData.image);
+                profileImage = psyData.image || null; // Use "image" field for psychiatrists
+                userRole = "psychiatrist";
+                authorName = `Dr. ${psyData.name}`;
+                specialty = psyData.specialty || "";
               } else {
-                // If not found in users, check psychiatrists
-                const psyDocRef = doc(db, "psychiatrists", data.userId);
-                const psyDoc = await getDoc(psyDocRef);
-                if (psyDoc.exists()) {
-                  const psyData = psyDoc.data();
-                  profileImage = psyData.photoURL || null;
-                  userRole = "psychiatrist";
-                  authorName = `Dr. ${psyData.name}`;
-                  specialty = psyData.specialty || ""; // Get specialty
+                // If not found in psychiatrists, check users
+                const userDocRef = doc(db, "users", data.userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                  const userData = userDoc.data();
+                  profileImage = userData.profileImage || null;
+                  userRole = "user";
+                  authorName = userData.firstName
+                    ? `${userData.firstName} ${userData.lastName || ""}`.trim()
+                    : "User";
+                  authorGender = userData.sex || "";
+                  authorBirthDate = userData.birthOfDate || "";
                 }
               }
 
@@ -398,28 +403,28 @@ const Forum = () => {
               let authorBirthDate = "";
               let specialty = "";
 
-              // Check in users collection first
-              const userDocRef = doc(db, "users", data.userId);
-              const userDoc = await getDoc(userDocRef);
-              if (userDoc.exists()) {
-                const userData = userDoc.data();
-                profileImage = userData.profileImage || null;
-                userRole = "user";
-                authorName = userData.firstName
-                  ? `${userData.firstName} ${userData.lastName || ""}`.trim()
-                  : "User";
-                authorGender = userData.sex || "";
-                authorBirthDate = userData.birthOfDate || "";
+              // Check in psychiatrists collection first
+              const psyDocRef = doc(db, "psychiatrists", data.userId);
+              const psyDoc = await getDoc(psyDocRef);
+              if (psyDoc.exists()) {
+                const psyData = psyDoc.data();
+                profileImage = psyData.image || null; // Use "image" field for psychiatrists
+                userRole = "psychiatrist";
+                authorName = `Dr. ${psyData.name}`;
+                specialty = psyData.specialty || ""; // Get specialty
               } else {
-                // If not found in users, check psychiatrists
-                const psyDocRef = doc(db, "psychiatrists", data.userId);
-                const psyDoc = await getDoc(psyDocRef);
-                if (psyDoc.exists()) {
-                  const psyData = psyDoc.data();
-                  profileImage = psyData.photoURL || null;
-                  userRole = "psychiatrist";
-                  authorName = `Dr. ${psyData.name}`;
-                  specialty = psyData.specialty || ""; // Get specialty
+                // If not found in psychiatrists, check users
+                const userDocRef = doc(db, "users", data.userId);
+                const userDoc = await getDoc(userDocRef);
+                if (userDoc.exists()) {
+                  const userData = userDoc.data();
+                  profileImage = userData.profileImage || null;
+                  userRole = "user";
+                  authorName = userData.firstName
+                    ? `${userData.firstName} ${userData.lastName || ""}`.trim()
+                    : "User";
+                  authorGender = userData.sex || "";
+                  authorBirthDate = userData.birthOfDate || "";
                 }
               }
 

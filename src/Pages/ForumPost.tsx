@@ -42,6 +42,10 @@ const ForumPost = () => {
   const [reportReplyReason, setReportReplyReason] = useState("");
   const [isReplyReportSubmitting, setIsReplyReportSubmitting] = useState(false);
   const [selectedReplyId, setSelectedReplyId] = useState<string | null>(null);
+  const [authorProfilePicture, setAuthorProfilePicture] = useState("");
+  const [replyProfilePictures, setReplyProfilePictures] = useState<{
+    [key: string]: string;
+  }>({});
   const navigate = useNavigate();
 
   // Function to calculate age from birthOfDate
@@ -113,34 +117,32 @@ const ForumPost = () => {
                 role: "user" as const,
               };
 
-              // Check in users collection first
+              // Check in psychiatrists collection first
               try {
-                const userDocRef = doc(db, "users", authorId);
-                const userDoc = await getDoc(userDocRef);
-                if (userDoc.exists()) {
-                  const userData = userDoc.data();
+                const psyDocRef = doc(db, "psychiatrists", authorId);
+                const psyDoc = await getDoc(psyDocRef);
+                if (psyDoc.exists()) {
+                  const psyData = psyDoc.data();
                   authorInfo = {
-                    name: userData.firstName
-                      ? `${userData.firstName} ${
-                          userData.lastName || ""
-                        }`.trim()
-                      : "User",
-                    profileImage: userData.profileImage || null,
-                    role: "user",
-                    gender: userData.sex || "",
-                    birthDate: userData.birthOfDate || "",
+                    name: `Dr. ${psyData.name}`,
+                    profileImage: psyData.image || null, // Use "image" field for psychiatrists
+                    role: "psychiatrist",
+                    specialty: psyData.specialty || "",
                   };
                 } else {
-                  // Check in psychiatrists collection
-                  const psyDocRef = doc(db, "psychiatrists", authorId);
-                  const psyDoc = await getDoc(psyDocRef);
-                  if (psyDoc.exists()) {
-                    const psyData = psyDoc.data();
+                  // If not found in psychiatrists, check users
+                  const userDocRef = doc(db, "users", authorId);
+                  const userDoc = await getDoc(userDocRef);
+                  if (userDoc.exists()) {
+                    const userData = userDoc.data();
                     authorInfo = {
-                      name: `Dr. ${psyData.name}`,
-                      profileImage: psyData.photoURL || null,
-                      role: "psychiatrist",
-                      specialty: psyData.specialty || "", // Get specialty
+                      name: userData.firstName
+                        ? `${userData.firstName} ${userData.lastName || ""}`.trim()
+                        : "User",
+                      profileImage: userData.profileImage || null,
+                      role: "user",
+                      gender: userData.sex || "",
+                      birthDate: userData.birthOfDate || "",
                     };
                   }
                 }
@@ -182,29 +184,31 @@ const ForumPost = () => {
           role: "user" as const,
         };
 
-        const userDocRef = doc(db, "users", replyData.userId);
-        const userDoc = await getDoc(userDocRef);
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
+        // Check in psychiatrists collection first
+        const psyDocRef = doc(db, "psychiatrists", replyData.userId);
+        const psyDoc = await getDoc(psyDocRef);
+        if (psyDoc.exists()) {
+          const psyData = psyDoc.data();
           replyAuthor = {
-            name: userData.firstName
-              ? `${userData.firstName} ${userData.lastName || ""}`.trim()
-              : "User",
-            profileImage: userData.profileImage || null,
-            role: "user",
-            gender: userData.sex || "",
-            birthDate: userData.birthOfDate || "",
+            name: `Dr. ${psyData.name}`,
+            profileImage: psyData.image || null, // Use "image" field for psychiatrists
+            role: "psychiatrist",
+            specialty: psyData.specialty || "",
           };
         } else {
-          const psyDocRef = doc(db, "psychiatrists", replyData.userId);
-          const psyDoc = await getDoc(psyDocRef);
-          if (psyDoc.exists()) {
-            const psyData = psyDoc.data();
+          // If not found in psychiatrists, check users
+          const userDocRef = doc(db, "users", replyData.userId);
+          const userDoc = await getDoc(userDocRef);
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
             replyAuthor = {
-              name: `Dr. ${psyData.name}`,
-              profileImage: psyData.photoURL || null,
-              role: "psychiatrist",
-              specialty: psyData.specialty || "", // Get specialty
+              name: userData.firstName
+                ? `${userData.firstName} ${userData.lastName || ""}`.trim()
+                : "User",
+              profileImage: userData.profileImage || null,
+              role: "user",
+              gender: userData.sex || "",
+              birthDate: userData.birthOfDate || "",
             };
           }
         }
@@ -245,6 +249,54 @@ const ForumPost = () => {
 
     fetchLikedReplies();
   }, [userId]);
+
+  // Fetch profile pictures for replies
+  useEffect(() => {
+    const fetchReplyProfilePictures = async () => {
+      if (!replies.length) return;
+
+      const profilePictures: { [key: string]: string } = {};
+
+      for (const reply of replies) {
+        if (!reply.authorId) continue;
+
+        try {
+          let profilePictureUrl = "";
+
+          if (reply.authorRole === "psychiatrist") {
+            // For psychiatrists, use the "image" field
+            const psychiatristDoc = await getDoc(
+              doc(db, "psychiatrists", reply.authorId)
+            );
+            if (psychiatristDoc.exists()) {
+              const psychiatristData = psychiatristDoc.data();
+              profilePictureUrl = psychiatristData.image || "";
+            }
+          } else {
+            // For users, use the "profilePicture" field
+            const userDoc = await getDoc(doc(db, "users", reply.authorId));
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              profilePictureUrl = userData.profilePicture || "";
+            }
+          }
+
+          if (profilePictureUrl) {
+            profilePictures[reply.authorId] = profilePictureUrl;
+          }
+        } catch (error) {
+          console.error(
+            `Error fetching profile picture for ${reply.authorId}:`,
+            error
+          );
+        }
+      }
+
+      setReplyProfilePictures(profilePictures);
+    };
+
+    fetchReplyProfilePictures();
+  }, [replies]);
 
   const handleLike = async () => {
     if (!userId || !forumId) return;
