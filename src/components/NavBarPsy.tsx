@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from "react";
 import {
   Home,
-  Search,
   MessageSquare,
   User,
   Calendar,
   Menu,
   X,
+  MessagesSquare,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import LogoLight from "../assets/Logo - Light.png";
@@ -108,10 +108,9 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
             icon={Calendar}
           />
           <NavItem label="Chat" path="/chat" icon={MessageSquare} />
+          <NavItem label="Forum" path="/forum" icon={MessagesSquare} />
           <NavItem label="Profil" path="/profile" icon={User} />
         </nav>
-        <div className="flex items-center space-x-3 sm:space-x-4">
-          <div className="relative hidden sm:block"> </div>
 
         <div className="flex items-center gap-x-3 sm:gap-x-4 flex-shrink-0">
           <div className="flex items-center">
@@ -165,12 +164,6 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
               label="Halaman Utama"
               path="/"
               icon={Home}
-              onClick={() => setIsMobileMenuOpen(false)}
-            />
-            <NavItem
-              label="Cari"
-              path="/Search-psi"
-              icon={Search}
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <NavItem
