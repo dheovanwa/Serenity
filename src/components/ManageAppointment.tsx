@@ -766,7 +766,7 @@ const ManageAppointment = () => {
           </div>
 
           {/* Desktop View */}
-          <div className="w-full max-w-screen-2xl bg-[#E4DCCC] rounded-lg p-6 sm:p-10 shadow-lg overflow-x-auto hidden md:block min-h-[600px] flex flex-col justify-between">
+          <div className="w-full max-w-screen-2xl bg-[#E4DCCC] rounded-lg p-6 sm:p-10 shadow-lg overflow-x-auto hidden md:flex flex-col min-h-[600px]">
             {/* Table section */}
             <div className="min-w-[900px]">
               <table className="w-full text-left border-collapse">
@@ -804,9 +804,10 @@ const ManageAppointment = () => {
                 </tbody>
               </table>
             </div>
-
+            
             {/* Pagination */}
-            <div className="w-full flex justify-between items-center mt-6 gap-4">
+            <div className="flex grow"></div>
+            <div className="w-full flex justify-between items-center mt-5 gap-2">
               <button
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
@@ -814,7 +815,7 @@ const ManageAppointment = () => {
                   currentPage === 1 ? "invisible" : "visible" // Sembunyikan jika di halaman pertama
                 }`}
               >
-                Sebelumnya
+                Sebelumnya 
               </button>
 
               <div className="pagination-dots flex gap-2">
@@ -833,7 +834,7 @@ const ManageAppointment = () => {
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
                 className={`bg-sky-700 text-white font-semibold px-4 py-2 rounded w-full sm:w-auto ${
-                  currentPage === totalPages ? "invisible" : "visible" // Sembunyikan jika di halaman terakhir
+                  currentPage === totalPages ? "invisible" : "visible" 
                 }`}
               >
                 Selanjutnya

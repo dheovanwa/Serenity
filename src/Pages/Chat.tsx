@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Video, Phone, Send } from "lucide-react";
+import { Video, Search, Phone, Send, Menu, X } from "lucide-react";
 import { db } from "../config/firebase";
 import {
   collection,
@@ -14,9 +14,11 @@ import {
   getDoc,
   updateDoc,
   setDoc,
+  limit,
 } from "firebase/firestore";
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
+
 
 interface Message {
   id: string;
@@ -63,6 +65,13 @@ const ChatPage: React.FC = () => {
   const [showSummary, setShowSummary] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [isConfirmingEnd, setIsConfirmingEnd] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+ const [unreadCounts, setUnreadCounts] = useState<Record<string, number>>({});
+ const [lastSeenMessageIds, setLastSeenMessageIds] = useState<Record<string, string>>({});
+ const [latestTime, setLatestTime] = useState<Record<string, string>>({}); 
+ const [searchQuery, setSearchQuery] = useState("");
+
 
   const handleEndConversationClick = () => {
     setIsConfirmingEnd(true); // Tampilkan pop-up konfirmasi
@@ -290,6 +299,14 @@ const ChatPage: React.FC = () => {
         });
       });
       setMessages(msgs);
+
+      if (msgs.length > 0) {
+        const lastMsgId = msgs[msgs.length - 1].id;
+        setLastSeenMessageIds(prev => ({
+          ...prev,
+          [activeAppointment.id]: lastMsgId,
+        }));
+      }
     });
 
     return () => unsub();
@@ -423,6 +440,7 @@ const ChatPage: React.FC = () => {
 
   // Sidebar resize handlers
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (isMobile) return;
     resizing.current = true;
     document.body.style.cursor = "col-resize";
     document.body.style.userSelect = "none"; // Prevent text selection
@@ -448,7 +466,7 @@ const ChatPage: React.FC = () => {
   }, []);
 
   // Set activeAppointment based on chatId param
-  useEffect(() => {
+   useEffect(() => {
     if (!appointments.length) return;
     const chatId = searchParams.get("chatId");
     if (chatId) {
@@ -460,76 +478,196 @@ const ChatPage: React.FC = () => {
         appointments.find((a) => a.status === "Sedang berlangsung") ||
         appointments[0];
       setActiveAppointment(active);
-      setSearchParams({ chatId: active.id });
+       if (active) {
+        setSearchParams({ chatId: active.id });
+      }
     }
     // eslint-disable-next-line
-  }, [appointments, searchParams]);
+  }, [appointments, searchParams, activeAppointment, setSearchParams]);
 
-  return (
-    <div className="flex h-screen font-sans bg-[#FDFBF6]">
-      {/* Sidebar */}
-      <aside
-        className="bg-[#E0E7EF] border-r border-gray-200 flex flex-col relative"
-        style={{ width: sidebarWidth }}
-      >
-        <div className="p-4 font-bold text-lg text-gray-700 border-b border-gray-300">
-          Chat Sessions
-        </div>
-        <div className="flex-1 overflow-y-auto">
-          {appointments.length === 0 && (
-            <div className="p-4 text-gray-500">No chat sessions found.</div>
-          )}
-          {appointments.map((apt) => {
-            const name = userType === "user" ? apt.doctorName : apt.patientName;
-            const photo =
-              userType === "user" ? apt.doctorPhoto : apt.patientPhoto;
-            // Determine if we should show latest message
-            const showLatest =
-              apt.status === "Sedang berlangsung" && latestMessages[apt.id];
-            return (
-              <button
-                key={apt.id}
-                className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-blue-100 transition
-                  ${
-                    activeAppointment?.id === apt.id
-                      ? "bg-blue-200 font-semibold"
-                      : ""
+
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768;
+      setIsMobile(mobile);
+      // Jika beralih ke desktop, pastikan sidebar tidak tersembunyi
+      if (!mobile) {
+        setIsSidebarOpen(true);
+      } else {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    handleResize(); 
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+
+  // Ganti useEffect notifikasi Anda dengan yang ini
+  useEffect(() => {
+  if (!userId || appointments.length === 0) return;
+
+  const unsubscribes = appointments
+    .filter(apt => apt.status === 'Sedang berlangsung')
+    .map(apt => {
+      const messagesRef = collection(db, "chats", apt.id, "messages");
+      const q = query(
+        messagesRef,
+        where('senderId', '!=', userId),
+        orderBy('timeCreated', 'desc')
+      );
+
+      const unsub = onSnapshot(q, (snapshot) => {
+        if (activeAppointment?.id === apt.id) return;
+
+        const lastSeenId = lastSeenMessageIds[apt.id];
+        let newMessages = snapshot.docs;
+
+        if (lastSeenId) {
+          const index = newMessages.findIndex(doc => doc.id === lastSeenId);
+          if (index !== -1) {
+            newMessages = newMessages.slice(0, index);
+          }
+        }
+
+        const newCount = newMessages.length;
+        if (newCount > 0) {
+          setUnreadCounts(prev => ({
+            ...prev,
+            [apt.id]: newCount,
+          }));
+        }
+      });
+
+      return unsub;
+    });
+
+      return () => unsubscribes.forEach(unsub => unsub());
+    }, [appointments, userId, activeAppointment, lastSeenMessageIds]);
+
+
+
+    
+return (
+  <div className="flex h-screen font-sans bg-[#FDFBF6] relative overflow-hidden"
+    style={{ fontFamily: '"Josefin Sans", sans-serif' }}>
+    {isMobile && isSidebarOpen && (
+      <div onClick={() => setIsSidebarOpen(false)} className="fixed inset-0 bg-black bg-opacity-50 z-20"></div>
+    )}
+
+    {/* SIDEBAR */}
+    <aside
+      className={`bg-[#E0E7EF] border-r border-gray-200 flex flex-col transition-transform transform ${
+        isMobile
+          ? `fixed top-0 left-0 h-full z-30 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}`
+          : "relative"
+      }`}
+      style={{ width: isMobile ? '80vw' : sidebarWidth, maxWidth: isMobile ? '320px' : '500px' }}
+    >
+      <div className=" p-4 font-bold text-lg text-gray-700 border-b border-gray-300 flex justify-between items-center">
+        <span>Chat Sessions</span>
+        {isMobile && (
+          <button onClick={() => setIsSidebarOpen(false)} className="text-gray-600 hover:text-gray-900">
+            <X size={24} />
+          </button>
+        )}
+      </div>
+      <div className="p-3">
+         <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Cari nama atau sesi..."
+              className="w-full pl-10 pr-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm "
+            />
+          </div>
+      </div>
+      <div className="flex-1 overflow-y-auto">
+        {appointments.length === 0 && (
+          <div className="p-4 text-gray-500">No chat sessions found.</div>
+        )}
+
+        {appointments.map((apt) => {
+          const name = userType === "user" ? apt.doctorName : apt.patientName;
+          const photo = userType === "user" ? apt.doctorPhoto : apt.patientPhoto;
+          const showLatest = apt.status === "Sedang berlangsung" && latestMessages[apt.id];
+          const unreadCount = unreadCounts[apt.id] || 0;
+
+          return (
+            <button
+              key={apt.id}
+              className={`w-full text-left px-4 py-3 border-b border-gray-100 hover:bg-blue-100 transition ${
+                activeAppointment?.id === apt.id ? "bg-blue-200 font-semibold" : ""
+              }`}
+              onClick={() => {
+                setActiveAppointment(apt);
+                setSearchParams({ chatId: apt.id });
+
+                
+                setUnreadCounts((prev) => ({ ...prev, [apt.id]: 0 }));
+
+                
+                const chatRef = collection(db, "chats", apt.id, "messages");
+                const q = query(chatRef, orderBy("timeCreated", "desc"), limit(1));
+                getDocs(q).then((snap) => {
+                  if (!snap.empty) {
+                    const lastId = snap.docs[0].id;
+                    setLastSeenMessageIds((prev) => ({ ...prev, [apt.id]: lastId }));
                   }
-                `}
-                onClick={() => {
-                  setActiveAppointment(apt);
-                  setSearchParams({ chatId: apt.id });
-                }}
-              >
-                <div className="flex flex-row items-center space-x-3">
-                  {photo ? (
-                    <img
-                      src={photo}
-                      alt={name}
-                      className="w-9 h-9 rounded-full object-cover border border-gray-300"
-                    />
-                  ) : (
-                    <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-lg font-bold">
-                      {name?.[0] || "?"}
-                    </div>
-                  )}
-                  <div className="flex flex-col min-w-0">
-                    <span className="truncate">{name}</span>
-                    <span className="text-xs text-gray-500">{apt.status}</span>
-                    {showLatest && (
-                      <span className="text-xs text-gray-700 truncate">
-                        {latestMessages[apt.id].sender === "me"
-                          ? `Saya: ${latestMessages[apt.id].text}`
-                          : latestMessages[apt.id].text}
-                      </span>
-                    )}
+                });
+
+                if (isMobile) setIsSidebarOpen(false);
+              }}
+            >
+              <div className="flex flex-row items-center space-x-3 w-full">
+                {photo ? (
+                  <img
+                    src={photo}
+                    alt={name}
+                    className="w-9 h-9 rounded-full object-cover border border-gray-300"
+                  />
+                ) : (
+                  <div className="w-9 h-9 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-lg font-bold">
+                    {name?.[0] || "?"}
                   </div>
+                )}
+                <div className="flex flex-col min-w-0 flex-1">
+                  <span className="truncate">{name}</span>
+                  <span className="text-xs text-gray-500">{apt.status}</span>
+                  {showLatest && (
+                    <span
+                      className={`text-xs truncate ${
+                        unreadCount > 0 ? "text-black font-bold" : "text-gray-700"
+                      }`}
+                    >
+                      {latestMessages[apt.id].sender === "me"
+                        ? `Saya: ${latestMessages[apt.id].text}`
+                        : latestMessages[apt.id].text}
+                    </span>
+                  )}
                 </div>
-              </button>
-            );
-          })}
-        </div>
-        {/* Resizer */}
+                {unreadCount > 0 && (
+                  <div className="flex flex-col items-center ml-2 mt-1 space-y-1">
+                    <span className="text-[11px] text-gray-500 font-medium">
+                      {latestTime[apt.id] || "19:45"}
+                    </span>
+
+                    {/* Badge notif */}
+                    <div className="ml-2 bg-blue-500 text-white text-[11px] font-semibold rounded-full h-5 w-5 flex justify-center items-center">
+                      {unreadCount}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {!isMobile && (
         <div
           onMouseDown={handleMouseDown}
           style={{
@@ -544,143 +682,142 @@ const ChatPage: React.FC = () => {
           }}
           className="hover:bg-blue-200 transition"
         />
-      </aside>
-      {/* Main Chat Area */}
-      <div className="flex flex-col flex-1 h-full">
-        <header className="flex items-center justify-between p-4 bg-[#E0E7EF] border-b border-gray-200">
-          <div className="flex items-center space-x-3">
-            {partnerPhoto ? (
-              <img
-                src={partnerPhoto}
-                alt={partnerName || ""}
-                className="w-10 h-10 rounded-full object-cover border border-gray-300"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xl font-bold">
-                {partnerName?.[0] || "?"}
-              </div>
-            )}
-            <span className="font-semibold text-lg text-gray-800">
-              {partnerName || ""}
-            </span>
-          </div>
-          <div className="flex items-center space-x-2">
-            {activeAppointment &&
-              userType === "psychiatrist" &&
-              activeAppointment.status !== "Selesai" &&
-              !hasEnded && (
-                <button
-                  onClick={handleEndConversationClick}
-                  disabled={isEnding}
-                  className="ml-4 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-60"
-                >
-                  {isEnding ? "Menyelesaikan..." : "Selesaikan Percakapan"}
-                </button>
-              )}
-          </div>
-        </header>
+      )}
+    </aside>
 
-        {isConfirmingEnd && (
-          <div className="fixed inset-0 bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-white p-6 rounded-lg shadow-xl w-80">
-              <h3 className="text-xl font-semibold mb-4">Konfirmasi</h3>
-              <p className="mb-6">
-                Apakah Anda yakin ingin menyelesaikan percakapan?
-              </p>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={cancelEndConversation}
-                  className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1"
-                >
-                  Batal
-                </button>
-                <button
-                  onClick={confirmEndConversation}
-                  className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 "
-                >
-                  Ya, Selesaikan
-                </button>
-              </div>
+    
+    <div className="flex flex-col flex-1 h-full">
+      <header className="flex items-center justify-between p-4 bg-[#E0E7EF] border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          {isMobile && (
+            <button onClick={() => setIsSidebarOpen(true)} className="mr-2 text-gray-700">
+              <Menu size={24} />
+            </button>
+          )}
+          {partnerPhoto ? (
+            <img
+              src={partnerPhoto}
+              alt={partnerName || ""}
+              className="w-10 h-10 rounded-full object-cover border border-gray-300"
+            />
+          ) : (
+            <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-gray-600 text-xl font-bold">
+              {partnerName?.[0] || "?"}
+            </div>
+          )}
+          <span className="font-semibold text-lg text-gray-800">{partnerName || ""}</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          {activeAppointment &&
+            userType === "psychiatrist" &&
+            activeAppointment.status !== "Selesai" &&
+            !hasEnded && (
+              <button
+                onClick={handleEndConversationClick}
+                disabled={isEnding}
+                className="ml-4 px-3 py-2 text-sm md:px-4 md:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-60"
+              >
+                {isEnding ? "..." : "Selesaikan"}
+              </button>
+            )}
+        </div>
+      </header>
+
+      {isConfirmingEnd && (
+        <div className="fixed inset-0 bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-80">
+            <h3 className="text-xl font-semibold mb-4">Konfirmasi</h3>
+            <p className="mb-6">Apakah Anda yakin ingin menyelesaikan percakapan?</p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={cancelEndConversation}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1"
+              >
+                Batal
+              </button>
+              <button
+                onClick={confirmEndConversation}
+                className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300"
+              >
+                Ya, Selesaikan
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {loading ? (
-          <div className="flex items-center justify-center flex-1">
-            <span>Loading chat...</span>
-          </div>
-        ) : !activeAppointment ? (
-          <div className="flex items-center justify-center flex-1">
-            <span>Tidak ada sesi chat yang sedang berlangsung.</span>
-          </div>
-        ) : (
-          <>
-            <main className="flex-1 overflow-y-auto p-6 space-y-4 bg-[#FDFBF6]">
-              {messages.map((msg) => (
+      {loading ? (
+        <div className="flex items-center justify-center flex-1">
+          <span>Loading chat...</span>
+        </div>
+      ) : !activeAppointment ? (
+        <div className="flex items-center justify-center flex-1 text-center p-4">
+          <span>
+            Tidak ada sesi chat yang sedang berlangsung. <br /> Pilih sesi chat dari menu.
+          </span>
+        </div>
+      ) : (
+        <>
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 bg-[#FDFBF6]">
+            {messages.map((msg) => (
+              <div
+                key={msg.id}
+                className={`flex ${msg.sender === "me" ? "justify-end" : "justify-start"}`}
+              >
                 <div
-                  key={msg.id}
-                  className={`flex ${
-                    msg.sender === "me" ? "justify-end" : "justify-start"
+                  className={`flex items-end max-w-[85%] md:max-w-md lg:max-w-lg ${
+                    msg.sender === "me" ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
                   <div
-                    className={`flex items-end max-w-xs md:max-w-md lg:max-w-lg ${
-                      msg.sender === "me" ? "flex-row-reverse" : "flex-row"
+                    className={`py-2 px-4 rounded-2xl ${
+                      msg.sender === "me"
+                        ? "bg-[#D1DCEB] text-gray-800 rounded-br-none"
+                        : "bg-[#E4DCCC] text-gray-800 rounded-tl-none"
                     }`}
                   >
-                    <div
-                      className={`py-2 px-4 rounded-2xl ${
-                        msg.sender === "me"
-                          ? "bg-[#D1DCEB] text-gray-800 rounded-br-none"
-                          : "bg-[#E4DCCC] text-gray-800 rounded-tl-none"
-                      }`}
-                    >
-                      <p className="text-sm">{msg.text}</p>
-                    </div>
-                    <p className="text-xs text-gray-500 mx-2 self-end mb-1">
-                      {msg.time}
-                    </p>
+                    <p className="text-sm break-words">{msg.text}</p>
                   </div>
+                  <p className="text-xs text-gray-500 mx-2 self-end mb-1">{msg.time}</p>
                 </div>
-              ))}
-              <div ref={messagesEndRef} />
-            </main>
-            {userType === "user" && showSummary && summary && (
-              <div className="p-4 bg-yellow-50 border-t border-b border-yellow-200 text-yellow-900">
-                <div className="font-semibold mb-2">
-                  Ringkasan Saran Psikiater:
-                </div>
-                <div style={{ whiteSpace: "pre-line" }}>{summary}</div>
               </div>
-            )}
-            <div className="p-4 bg-[#F0EBE3] border-t border-gray-200 flex items-center space-x-3">
-              <input
-                type="text"
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-                placeholder={
-                  activeAppointment.status === "Selesai" || hasEnded
-                    ? "Percakapan telah selesai."
-                    : "Ketik pesan Anda di sini..."
-                }
-                className="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
-                disabled={activeAppointment.status === "Selesai" || hasEnded}
-              />
-              {activeAppointment.status !== "Selesai" && !hasEnded && (
-                <button
-                  onClick={handleSendMessage}
-                  className="p-3 rounded-lg text-white bg-[#BACBD8] hover:bg-[#93A3AF] transition-colors"
-                >
-                  <Send size={22} />
-                </button>
-              )}
+            ))}
+            <div ref={messagesEndRef} />
+          </main>
+          {userType === "user" && showSummary && summary && (
+            <div className="p-4 bg-yellow-50 border-t border-b border-yellow-200 text-yellow-900">
+              <div className="font-semibold mb-2">Ringkasan Saran Psikiater:</div>
+              <div style={{ whiteSpace: "pre-line" }}>{summary}</div>
             </div>
-          </>
-        )}
-      </div>
+          )}
+          <div className="p-4 bg-[#F0EBE3] border-t border-gray-200 flex items-center space-x-3">
+            <input
+              type="text"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+              placeholder={
+                activeAppointment.status === "Selesai" || hasEnded
+                  ? "Percakapan telah selesai."
+                  : "Ketik pesan Anda di sini..."
+              }
+              className="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white text-gray-700"
+              disabled={activeAppointment.status === "Selesai" || hasEnded}
+            />
+            {activeAppointment.status !== "Selesai" && !hasEnded && (
+              <button
+                onClick={handleSendMessage}
+                className="p-3 rounded-lg text-white bg-[#BACBD8] hover:bg-[#93A3AF] transition-colors"
+              >
+                <Send size={22} />
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
-  );
+  </div>
+);
 };
 
 export default ChatPage;

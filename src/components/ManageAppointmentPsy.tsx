@@ -183,7 +183,7 @@ const ManageAppointmentPsy = () => {
             ))}
           </div>
           {/* Desktop View */}
-          <div className="w-full max-w-screen-2xl bg-[#E4DCCC] rounded-lg p-6 sm:p-10 shadow-lg overflow-x-auto hidden md:block min-h-[600px] flex flex-col justify-between">
+          <div className="w-full max-w-screen-2xl bg-[#E4DCCC] rounded-lg p-6 sm:p-10 shadow-lg overflow-x-auto hidden md:flex flex-col min-h-[600px]">
             <div className="min-w-[900px]">
               <table className="w-full text-left border-collapse">
                 <thead>
@@ -212,6 +212,7 @@ const ManageAppointmentPsy = () => {
                 </tbody>
               </table>
             </div>
+            <div className="flex grow"></div>
             {/* Pagination */}
             <div className="w-full flex justify-between items-center mt-6 gap-4">
               <button
