@@ -440,10 +440,8 @@ export function InputWithLabelPass({
   };
 
   return (
-    <div className="grid w-full max-w-sm items-center mt-10 text-black dark:text-white">
-      <Label htmlFor="password" className="dark:text-white mb-1.5">
-        Kata Sandi
-      </Label>
+    <div className="grid w-full max-w-sm items-center gap-1.5 mt-10 text-black">
+      <Label htmlFor="password">Kata Sandi</Label>
       <div className="relative">
         <Input
           type={isPasswordVisible ? "text" : "password"}
@@ -489,10 +487,8 @@ export function InputWithLabelPassConfirm({
   };
 
   return (
-    <div className="grid w-full max-w-sm items-center mt-10 text-black dark:text-white">
-      <Label htmlFor="password" className="dark:text-white">
-        Konfirmasi Kata Sandi
-      </Label>
+    <div className="grid w-full max-w-sm items-center gap-1.5 mt-10 text-black">
+      <Label htmlFor="password">Konfirmasi Kata Sandi</Label>
       <div className="relative">
         <Input
           type={isPasswordVisible ? "text" : "password"}
