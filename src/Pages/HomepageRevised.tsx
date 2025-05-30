@@ -322,7 +322,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
       </div>
       {/* Sesi yang sedang Aktif (for user, only Video method) */}
       <div className="flex justify-center p-4 my-8 flex-col items-center">
-        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] w-full max-w-4xl xl:max-w-6xl">
+        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-4xl xl:max-w-6xl">
           Sesi yang sedang Aktif
         </h2>
         <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
@@ -363,11 +363,13 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                     </p>
                   </div>
                   <div className="flex items-center gap-4 mt-1">
-                    <span className="text-base text-[#161F36]">Video Call</span>
-                    <span className="text-base text-[#161F36]">
+                    <span className="text-base text-[#161F36] dark:text-[#E6E6E6]">
+                      Video Call
+                    </span>
+                    <span className="text-base text-[#161F36] dark:text-[#E6E6E6]">
                       {session.time}
                     </span>
-                    <span className="text-base text-[#161F36]">
+                    <span className="text-base text-[#161F36] dark:text-[#E6E6E6]">
                       {session.date
                         ? new Date(session.date).toLocaleDateString("id-ID", {
                             day: "numeric",
@@ -377,12 +379,12 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                         : ""}
                     </span>
                   </div>
-                  <p className="text-lg text-[#161F36]">
+                  <p className="text-lg text-[#161F36] dark:text-[#E6E6E6]">
                     {session.symptoms ? `Gejala: ${session.symptoms}` : ""}
                   </p>
                 </div>
                 <button
-                  className="flex items-center text-[#161F36] font-bold text-2xl ml-6"
+                  className="flex items-center text-[#161F36] dark:text-white font-bold text-2xl ml-6"
                   tabIndex={-1}
                   type="button"
                   style={{ pointerEvents: "none", opacity: 0.7 }}
@@ -401,7 +403,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
         </div>
       </div>
       <div className="flex justify-center p-4 my-8 flex-col items-center ">
-        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] w-full max-w-4xl xl:max-w-6xl">
+        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-4xl xl:max-w-6xl">
           Sesi chat yang sedang aktif
         </h2>
         <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
@@ -472,7 +474,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
       </div>
       {/* Pertemuan Mendatang Section */}
       <div className="flex justify-center p-4 my-8 flex-col items-center">
-        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] w-full max-w-4xl xl:max-w-6xl">
+        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-4xl xl:max-w-6xl">
           Sesi pertemuan mendatang
         </h2>
         <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
@@ -488,7 +490,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
             upcomingAppointments.map((apt) => (
               <div className="flex items-center mb-4" key={apt.id}>
                 <div className="flex flex-col items-center justify-center bg-[#F9F1E0] rounded-lg p-2 w-20 h-20 mr-6 shadow-sm">
-                  <p className="text-sm font-semibold text-[#161F36]">
+                  <p className="text-sm font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                     {apt.day}
                   </p>
                   <p className="text-4xl font-bold text-gray-900">{apt.date}</p>
@@ -498,25 +500,27 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                     <p className="text-xl font-semibold text-gray-900">
                       {apt.psychiatristName}
                     </p>
-                    <p className="text-base text-[#161F36]">
+                    <p className="text-base text-[#161F36] dark:text-[#E6E6E6]">
                       {apt.appointmentDate}
                     </p>
                   </div>
                   <div className="flex flex-col items-center flex-1">
-                    <p className="text-lg font-semibold text-[#161F36]">
+                    <p className="text-lg font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                       {apt.method === "Video" ? apt.time : ""}
                     </p>
                     {apt.method === "Video" ? (
-                      <p className="text-base text-[#161F36]">Video Call</p>
+                      <p className="text-base text-[#161F36] dark:text-[#E6E6E6]">
+                        Video Call
+                      </p>
                     ) : (
-                      <p className="text-base text-[#161F36] text-center w-full">
+                      <p className="text-base text-[#161F36] dark:text-[#E6E6E6] text-center w-full">
                         Obrolan Chat
                       </p>
                     )}
                   </div>
                   <div className="flex justify-end items-center flex-1">
                     <button
-                      className="text-[#161F36] font-semibold py-3 px-4 text-xl"
+                      className="text-[#161F36] dark:text-[#E6E6E6] font-semibold py-3 px-4 text-xl"
                       onClick={() => {
                         if (apt.method === "Video") {
                           // Implement join video call logic here if needed
@@ -537,7 +541,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
       {/* Recommended Psychiatrist Section */}
       <div className="mt-20 ml-6 sm:ml-15">
         <div className="flex justify-center p-4 mt-8">
-          <p className="text-2xl font-semibold text-[#161F36] text-center dark:text-white">
+          <p className="text-2xl font-semibold text-[#161F36] text-center dark:text-[#E6E6E6]">
             Berikut kami pilihkan psikiater pilihan kami
           </p>
         </div>
