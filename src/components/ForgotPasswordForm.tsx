@@ -43,12 +43,15 @@ const ForgotPasswordForm = () => {
       {/* Form Section */}
       <div className="w-full sm:w-1/2 bg-[#F2EDE2] flex justify-center items-center py-6 sm:py-10 flex-grow relative">
         <div className="w-full max-w-[500px] sm:max-w-[450px] md:max-w-[500px] px-6 sm:px-8 py-10 mb-12">
-          <h2 className="text-3xl sm:text-4xl font-light text-[#161F36] text-left">
-            Lupa Kata Sandi?
-            <p className="font-semibold mt-2 text-2xl sm:text-4xl">
+         <div className="flex flex-col text-center sm:text-left items-center sm:items-start">
+            <h2 className="text-3xl sm:text-4xl font-light text-[#161F36]">
+              Lupa Kata Sandi?
+            </h2>
+            <p className="font-semibold mt-2 text-2xl sm:text-4xl text-[#161F36]">
               Reset Password Anda
             </p>
-          </h2>
+          </div>
+          
 
           <form onSubmit={handleSubmit} className="space-y-3 mt-6">
             <InputWithLabel

@@ -1,12 +1,21 @@
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import background from "../assets/backgroundSignin.png";
 import logoLight from "../assets/Logo - Light.png";
 import Loading from "../components/Loading";
 
 const EmailSent = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col sm:flex-row overflow-hidden relative">
@@ -18,40 +27,41 @@ const EmailSent = () => {
         <h1 className="text-xl text-[#78716C]">Serenity</h1>
       </div>
 
-      {/* Form Section */}
-      <div className="w-full sm:w-1/2 bg-[#F2EDE2] flex justify-center items-center py-6 sm:py-10 flex-grow relative">
-        <div className="w-full max-w-[500px] sm:max-w-[450px] md:max-w-[500px] px-6 sm:px-8 py-10 mb-12">
-          <h2 className="text-4xl font-bold mb-5">Check Your Email!</h2>
-          <p className="text-lg">A password reset link has been sent.</p>
-          <button
-            onClick={() => navigate("/forgot-password/reset-password")}
-            className="w-full max-w-[310px] mt-5 bg-[#BACBD8] text-black py-2 px-6 rounded-lg font-semibold hover:bg-[#bad2e5] transition shadow"
-          >
-            Continue
-          </button>
-
-          <p className="text-sm text-black text-center sm:text-left mt-6 sm:absolute sm:bottom-5 sm:left-6">
-            Sudah ingat password Anda?{" "}
-            <a
-              href="/login"
-              className="font-bold text-[#8DAABF] hover:text-white cursor-pointer"
+      <div
+        className={`${
+          isMobile ? "w-full" : "w-1/2"
+        } bg-[#F2EDE2] relative flex flex-col px-6 sm:px-8`}
+        style={{ minHeight: "100vh" }}
+      >
+        {/* Spacer to avoid overlapping logo */}
+        <div className="flex-grow flex items-center justify-center">
+          <div className="flex flex-col items-center justify-center text-center gap-4">
+            <h2 className="text-3xl sm:text-4xl font-bold">Check Your Email!</h2>
+            <p className="text-base sm:text-lg">
+              A password reset link has been sent.
+            </p>
+            <button
+              onClick={() => navigate("/forgot-password/reset-password")}
+              className="w-full max-w-[310px] bg-[#BACBD8] text-black py-2 px-6 rounded-lg font-semibold hover:bg-[#bad2e5] transition shadow"
             >
-              Masuk
-            </a>
-          </p>
+              Continue
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Right side with background image */}
-      <div
-        className="hidden sm:block w-1/2 bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${background})`,
-          backgroundRepeat: "no-repeat",
-          backgroundSize: "cover",
-          minHeight: "100vh",
-        }}
-      />
+      {/* Right background for desktop */}
+      {!isMobile && (
+        <div
+          className="w-1/2 bg-cover bg-center"
+          style={{
+            backgroundImage: `url(${background})`,
+            backgroundRepeat: "no-repeat",
+            backgroundSize: "cover",
+            minHeight: "100vh",
+          }}
+        />
+      )}
     </div>
   );
 };
