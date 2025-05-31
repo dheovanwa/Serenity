@@ -33,7 +33,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
     useNotifications();
 
   const navSpecificThemeColors = {
-    bgNav: isDarkMode ? "bg-[#161F36]" : "bg-[#BACBD8]",
+    bgNav: isDarkMode ? "bg-[#202C4B]" : "bg-[#BACBD8]",
     textNav: isDarkMode ? "text-[#E6E6E6]" : "text-gray-700",
     textNavActive: isDarkMode ? "text-[#161F36]" : "text-[#E6E6E6]",
     bgNavButtonActive: isDarkMode ? "bg-[#BACBD8]" : "bg-[#161F36]",

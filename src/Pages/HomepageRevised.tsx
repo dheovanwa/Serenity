@@ -690,15 +690,17 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
           ) : (
             upcomingAppointments.map((apt) => (
               <div className="flex items-center mb-4" key={apt.id}>
-                <div className="flex flex-col items-center justify-center bg-[#F9F1E0] rounded-lg p-2 w-20 h-20 mr-6 shadow-sm">
+                <div className="flex flex-col items-center justify-center bg- rounded-lg p-2 w-20 h-20 mr-6 shadow-sm bg-[#F9F1E0] dark:bg-[#293c63]">
                   <p className="text-sm font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                     {apt.day}
                   </p>
-                  <p className="text-4xl font-bold text-gray-900">{apt.date}</p>
+                  <p className="text-4xl font-bold text-gray-900 dark:text-[#E6E6E6]">
+                    {apt.date}
+                  </p>
                 </div>
-                <div className="flex flex-row flex-1 bg-[#F9F1E0] rounded-lg p-4 shadow-sm items-center">
+                <div className="flex flex-row flex-1 bg-[#F9F1E0] dark:bg-[#293c63] rounded-lg p-4 shadow-sm items-center">
                   <div className="flex flex-col flex-1">
-                    <p className="text-xl font-semibold text-gray-900">
+                    <p className="text-xl font-semibold text-gray-900 dark:text-[#E6E6E6]">
                       {apt.psychiatristName}
                     </p>
                     <p className="text-base text-[#161F36] dark:text-[#E6E6E6]">

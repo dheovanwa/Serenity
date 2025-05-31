@@ -7,7 +7,6 @@ import { signOut } from "firebase/auth";
 import cameraIcon from "../assets/83574.png";
 import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
-import calender from "../assets/Calendar.svg";
 import { Calendar } from "lucide-react";
 
 const UserProfile = () => {
@@ -525,7 +524,7 @@ const UserProfile = () => {
 
       {/*MOBILE*/}
       {isMobile && (
-        <div className="bg-[#F2EDE2] flex h-screen w-full px-4 ml-2">
+        <div className="bg-[#F2EDE2] dark:bg-[#151515] flex h-screen w-full px-4 ml-2">
           <div className="relative z-1 flex flex-col w-full max-w-screen-sm mx-auto overflow-hidden">
             {/*middle */}
             <div className="flex flex-col">
@@ -572,7 +571,7 @@ const UserProfile = () => {
               <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
                 <div>
                   <InputField
-                    icon={<img src={calender} alt="calendar" className="" />}
+                    icon={<Calendar />}
                     iconPosition="left"
                     label="Tanggal Lahir"
                     type="text"
