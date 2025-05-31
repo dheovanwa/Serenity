@@ -108,19 +108,37 @@ const AppointmentStatusUpdater = () => {
                 `Updated chat appointment ${docSnap.id} to "Sedang berlangsung"`
               );
             }
+          } else if (appointmentDateStr < today) {
+            // Handle past appointments - mark as completed
+            if (appointment.method === "Chat") {
+              await updateDoc(doc(db, "appointments", docSnap.id), {
+                status: "Selesai",
+              });
+              console.log(
+                `Updated past chat appointment ${docSnap.id} to "Selesai"`
+              );
+            } else if (appointment.method === "Video") {
+              // Also handle past video appointments
+              await updateDoc(doc(db, "appointments", docSnap.id), {
+                status: "Selesai",
+              });
+              console.log(
+                `Updated past video appointment ${docSnap.id} to "Selesai"`
+              );
+            }
           }
         }
 
-        // Also check "Sedang berlangsung" video appointments to see if they should be "Selesai"
-        const ongoingQuery = query(
+        // Check "Sedang berlangsung" chat appointments from previous days
+        const ongoingChatQuery = query(
           appointmentsRef,
           where("status", "==", "Sedang berlangsung"),
-          where("method", "==", "Video")
+          where("method", "==", "Chat")
         );
 
-        const ongoingSnapshot = await getDocs(ongoingQuery);
+        const ongoingChatSnapshot = await getDocs(ongoingChatQuery);
 
-        for (const docSnap of ongoingSnapshot.docs) {
+        for (const docSnap of ongoingChatSnapshot.docs) {
           const appointment = docSnap.data();
           const appointmentDate = new Date(appointment.date);
           const appointmentDateStr =
@@ -130,33 +148,14 @@ const AppointmentStatusUpdater = () => {
             "-" +
             String(appointmentDate.getDate()).padStart(2, "0");
 
-          if (appointmentDateStr === today && appointment.time !== "today") {
-            const timeRange = appointment.time;
-            const [, endTime] = timeRange.split(" - ");
-
-            if (endTime) {
-              const [endHour, endMinute] = endTime.split(".").map(Number);
-              const currentHour = now.getHours();
-              const currentMinute = now.getMinutes();
-
-              const currentTotalMinutes = currentHour * 60 + currentMinute;
-              const endTotalMinutes = endHour * 60 + (endMinute || 0);
-
-              // If current time is past the end time, mark as completed
-              if (currentTotalMinutes > endTotalMinutes) {
-                // Cancel any remaining notification
-                await notificationScheduler.cancelScheduledNotification(
-                  docSnap.id
-                );
-
-                await updateDoc(doc(db, "appointments", docSnap.id), {
-                  status: "Selesai",
-                });
-                console.log(
-                  `Updated ongoing appointment ${docSnap.id} to "Selesai"`
-                );
-              }
-            }
+          // If chat appointment is from a previous day, mark as completed
+          if (appointmentDateStr < today) {
+            await updateDoc(doc(db, "appointments", docSnap.id), {
+              status: "Selesai",
+            });
+            console.log(
+              `Updated ongoing past chat appointment ${docSnap.id} to "Selesai"`
+            );
           }
         }
       } catch (error) {

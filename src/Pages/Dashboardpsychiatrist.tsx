@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Instagram from "../assets/instagram.png";
 import Whatsapp from "../assets/whatsapp.png";
 import email from "../assets/email.png";
@@ -31,6 +31,7 @@ import { notificationScheduler } from "../utils/notificationScheduler";
 const DashboardPsychiatrist: React.FC = () => {
   // Add new state for dialog
   const [showEndedDialog, setShowEndedDialog] = useState(false);
+  const [showPatientEndedDialog, setShowPatientEndedDialog] = useState(false);
   const [userName, setUserName] = useState<string>("Loading...");
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
@@ -45,6 +46,7 @@ const DashboardPsychiatrist: React.FC = () => {
     useState<string>("");
   const [upcomingSchedule, setUpcomingSchedule] = useState<any[]>([]);
   const [activeAppointments, setActiveAppointments] = useState<any[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const controller = new HomeController();
 
@@ -642,6 +644,21 @@ const DashboardPsychiatrist: React.FC = () => {
     }
   };
 
+  // Add useEffect to check for call ended dialog
+  useEffect(() => {
+    // Check if psychiatrist was redirected due to patient ending the call
+    if (searchParams.get("callEnded") === "patient") {
+      setShowPatientEndedDialog(true);
+      // Remove the query parameter from URL
+      searchParams.delete("callEnded");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  const handleClosePatientEndedDialog = () => {
+    setShowPatientEndedDialog(false);
+  };
+
   return (
     <>
       <div className="min-h-screen bg-[#F2EDE2] w-full bg-cover flex flex-col overflow-x-hidden">
@@ -989,6 +1006,29 @@ const DashboardPsychiatrist: React.FC = () => {
               >
                 OK
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Patient Ended Call Dialog */}
+        {showPatientEndedDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px] max-w-md mx-4">
+              <h2 className="text-xl font-semibold text-black dark:text-white mb-4">
+                Video Call Berakhir
+              </h2>
+              <p className="text-black dark:text-gray-300 mb-6">
+                Pasien telah mengakhiri sesi video call. Sesi telah berakhir
+                secara otomatis.
+              </p>
+              <div className="flex justify-center">
+                <button
+                  className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                  onClick={handleClosePatientEndedDialog}
+                >
+                  Saya Mengerti
+                </button>
+              </div>
             </div>
           </div>
         )}

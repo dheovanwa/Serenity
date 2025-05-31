@@ -298,13 +298,13 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
           <nav className="flex flex-col space-y-2 items-center">
             <NavItem
               label="Halaman Utama"
-              path="/"
+              path="/dashboard"
               icon={Home}
               onClick={() => setIsMobileMenuOpen(false)}
             />
             <NavItem
               label="Janji Temu"
-              path="/manage-appointment"
+              path="/psy-manage-appointment"
               icon={Calendar}
               onClick={() => setIsMobileMenuOpen(false)}
             />
@@ -316,7 +316,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
             />
             <NavItem
               label="Profil"
-              path="/profile"
+              path="/doctor-profile"
               icon={User}
               onClick={() => setIsMobileMenuOpen(false)}
             />

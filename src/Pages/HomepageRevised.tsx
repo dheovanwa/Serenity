@@ -441,6 +441,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
               // 2. The call status is "waiting" or "connected" (not ended)
               // 3. User is not already in a video call page
               // 4. Call was created more than 2 seconds ago (to avoid immediate re-navigation)
+              // 5. User explicitly clicked to join (removed automatic navigation)
               const callAge = Date.now() - (callData.createdAt || 0);
 
               if (
@@ -451,14 +452,11 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                 callAge > 2000 // 2 second cooldown
               ) {
                 console.log(
-                  `Found matching active call for appointmentId: ${callData.appointmentId}`
+                  `Found matching active call for appointmentId: ${callData.appointmentId}, but not auto-navigating`
                 );
 
-                // Mark this call as navigated to prevent repeated navigation
+                // Mark this call as seen but don't navigate automatically
                 navigatedCalls.current.add(callId);
-
-                // Navigate to the video call
-                navigate(`/video-call/${callId}`);
               }
             } else if (change.type === "removed") {
               // Remove from navigated calls when call is deleted
@@ -543,14 +541,13 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
               <div
                 key={session.id}
                 className="flex items-center pb-6 mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
-                onClick={() => navigate(`/video-call/${session.id}`)}
+                onClick={() => {
+                  // Store the appointmentId before navigating
+                  localStorage.setItem("currentAppointmentId", session.id);
+                  navigate(`/video-call`);
+                }}
                 tabIndex={0}
                 role="button"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    navigate(`/video-call/${session.id}`);
-                  }
-                }}
               >
                 <img
                   src={session.psychiatristImage}

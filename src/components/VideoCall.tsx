@@ -370,6 +370,26 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       );
     }
 
+    // Listen for patient ending call (for psychiatrists)
+    if (isCaller && callId) {
+      if (callerActivityListenerRef.current) {
+        callerActivityListenerRef.current();
+        callerActivityListenerRef.current = undefined;
+      }
+      callerActivityListenerRef.current = onSnapshot(
+        doc(db, "calls", callId),
+        (snapshot) => {
+          if (!snapshot.exists()) return;
+          const data = snapshot.data();
+          // If joinerActive is false and joinerJoined is false, patient has left
+          if (data.joinerActive === false && data.joinerJoined === false) {
+            console.log("Patient has ended the call, ending for psychiatrist");
+            navigate("/dashboard?callEnded=patient");
+          }
+        }
+      );
+    }
+
     const checkCallerActivityAndOffer = async () => {
       if (!callId || isCaller) return true; // Callers don't need to check
 
@@ -828,40 +848,56 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       unsubSignal.current = undefined;
     }
 
-    // Only handle session end and appointment completion
+    // Handle call end based on user type
     if (currentCallId) {
       try {
         const callDoc = await getDoc(doc(db, "calls", currentCallId));
         if (callDoc.exists()) {
           const callData = callDoc.data();
+          const userType = localStorage.getItem("userType");
 
-          // If session has ended naturally, mark appointment as completed and clean up
+          if (userType === "psychiatrist") {
+            // Psychiatrist ending call - set both to false and delete document
+            await updateDoc(doc(db, "calls", currentCallId), {
+              callerActive: false,
+              callerJoined: false,
+            });
+
+            // Small delay then delete the document
+            setTimeout(async () => {
+              try {
+                await deleteDoc(doc(db, "calls", currentCallId));
+              } catch (error) {
+                console.log("Error deleting call document:", error);
+              }
+            }, 1000);
+          } else {
+            // User (patient) ending call - set joiner status to false and delete document
+            await updateDoc(doc(db, "calls", currentCallId), {
+              joinerActive: false,
+              joinerJoined: false,
+            });
+
+            // Small delay then delete the document
+            setTimeout(async () => {
+              try {
+                await deleteDoc(doc(db, "calls", currentCallId));
+                console.log("Call document deleted after patient ended call");
+              } catch (error) {
+                console.log("Error deleting call document:", error);
+              }
+            }, 1000);
+          }
+
+          // Update appointment status if session has ended
           if (hasSessionEnded()) {
-            const appointmentId = callData.appointmentId;
-            if (appointmentId) {
-              await updateDoc(doc(db, "appointments", appointmentId), {
+            const appointmentDoc = await getDoc(
+              doc(db, "appointments", callData.appointmentId)
+            );
+            if (appointmentDoc.exists()) {
+              await updateDoc(doc(db, "appointments", callData.appointmentId), {
                 status: "Selesai",
               });
-            }
-            // Delete the call document when session ends
-            await deleteDoc(doc(db, "calls", currentCallId));
-          } else {
-            // For manual end calls, always delete the call document to prevent auto-rejoin
-            if (isCaller) {
-              // Caller ends call - delete the entire call document
-              await deleteDoc(doc(db, "calls", currentCallId));
-              console.log("Caller ended call - call document deleted");
-            } else {
-              // When joiner leaves, also delete the call document to prevent auto-rejoin
-              await deleteDoc(doc(db, "calls", currentCallId));
-              console.log("Joiner ended call - call document deleted");
-
-              // Cancel any scheduled notifications when call ends early
-              if (callData.appointmentId) {
-                await notificationScheduler.cancelScheduledNotification(
-                  callData.appointmentId
-                );
-              }
             }
           }
         }
@@ -877,8 +913,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       const userType = localStorage.getItem("userType");
       if (onEnd) {
         onEnd();
-      }
-      if (userType === "psychiatrist") {
+      } else if (userType === "psychiatrist") {
         navigate("/dashboard");
       } else {
         navigate("/");
