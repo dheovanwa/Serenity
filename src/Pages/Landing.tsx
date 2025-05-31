@@ -67,7 +67,7 @@ const MentalHealthPage: React.FC = () => {
           <p className="text-black font-regular text-sm leading-relaxed">
             Merasa kosong, lelah, atau tidak bersemangat setiap hari? Anda tidak sendirian.
           </p>
-          <img src={dep2} alt="depre" className="md:max-w-[290px] "/>
+          <img src={dep2} alt="depre" className=""/>
         </article>
 
         <article className="bg-[#ffe6cc] rounded-3xl p-10 md:max-w-[380px] md:flex-1 flex-shrink-0">
