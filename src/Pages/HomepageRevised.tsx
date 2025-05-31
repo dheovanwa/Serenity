@@ -46,6 +46,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
 
   // Add ref at component level
   const navigatedCalls = useRef<Set<string>>(new Set());
+  const recentlyEndedCalls = useRef<Set<string>>(new Set());
 
   const navigate = useNavigate();
   const controller = new HomeController();
@@ -425,6 +426,11 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                 return;
               }
 
+              // Skip if this call was recently ended by the user
+              if (recentlyEndedCalls.current.has(callId)) {
+                return;
+              }
+
               // Check if this call's appointmentId matches any of user's active video sessions
               const matchingSession = activeSessions.find(
                 (session) => session.id === callData.appointmentId
@@ -434,11 +440,15 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
               // 1. There's a matching session
               // 2. The call status is "waiting" or "connected" (not ended)
               // 3. User is not already in a video call page
+              // 4. Call was created more than 2 seconds ago (to avoid immediate re-navigation)
+              const callAge = Date.now() - (callData.createdAt || 0);
+
               if (
                 matchingSession &&
                 (callData.status === "waiting" ||
                   callData.status === "connected") &&
-                !window.location.pathname.includes("/video-call/")
+                !window.location.pathname.includes("/video-call/") &&
+                callAge > 2000 // 2 second cooldown
               ) {
                 console.log(
                   `Found matching active call for appointmentId: ${callData.appointmentId}`
@@ -454,6 +464,14 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
               // Remove from navigated calls when call is deleted
               const callId = change.doc.id;
               navigatedCalls.current.delete(callId);
+
+              // Add to recently ended calls to prevent immediate re-navigation
+              recentlyEndedCalls.current.add(callId);
+
+              // Remove from recently ended after 10 seconds
+              setTimeout(() => {
+                recentlyEndedCalls.current.delete(callId);
+              }, 10000);
             }
           });
         });

@@ -846,26 +846,16 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
             // Delete the call document when session ends
             await deleteDoc(doc(db, "calls", currentCallId));
           } else {
-            // Update active status based on role
+            // For manual end calls, always delete the call document to prevent auto-rejoin
             if (isCaller) {
-              await updateDoc(doc(db, "calls", currentCallId), {
-                callerActive: false,
-                callerJoined: false, // Mark that caller has left
-                lastCallerDisconnect: Date.now(),
-              });
-              console.log("Caller marked as inactive and left");
+              // Caller ends call - delete the entire call document
+              await deleteDoc(doc(db, "calls", currentCallId));
+              console.log("Caller ended call - call document deleted");
             } else {
-              // When joiner leaves, set callerActive to false, answer to null, and refresh caller page
-              await updateDoc(doc(db, "calls", currentCallId), {
-                joinerActive: false,
-                joinerJoined: false,
-                callerActive: false, // Set callerActive to false
-                answer: null, // Set answer to null
-                lastJoinerDisconnect: Date.now(),
-              });
-              console.log(
-                "Joiner marked as inactive and left, callerActive set to false, answer set to null"
-              );
+              // When joiner leaves, also delete the call document to prevent auto-rejoin
+              await deleteDoc(doc(db, "calls", currentCallId));
+              console.log("Joiner ended call - call document deleted");
+
               // Cancel any scheduled notifications when call ends early
               if (callData.appointmentId) {
                 await notificationScheduler.cancelScheduledNotification(
