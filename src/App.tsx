@@ -14,7 +14,6 @@ import NavBar from "./components/Navbar";
 import SignUpComplete from "./Pages/CompleteSignUp";
 import TermsOfService from "./Pages/TermsOfService";
 import ManageApt from "./components/ManageAppointmentContent";
-// import ManageAppointment from "./components/ManageAppointment";
 import ManageAppointment from "./components/ManageAppointment";
 import ManageAppointmentPsy from "./components/ManageAppointmentPsy";
 import Layout from "./components/Layout";
@@ -22,143 +21,175 @@ import ChatPage from "./Pages/Chat";
 import VideoCallPage from "./Pages/VideoCallPage";
 import Forum from "./Pages/Forum";
 import ForumPost from "./Pages/ForumPost";
-// import { initializeQuotaReset } from "./utils/storePsychiatrists";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const App: React.FC = () => {
-  // useEffect(() => {
-  //   initializeQuotaReset();
-  // }, []);
-
   return (
     <Router>
       <Routes>
-        {/* Auth routes without navbar */}
+        {/* Auth routes without protection */}
         <Route path="/signin" element={<Login />} />
         <Route path="/signup" element={<Register />} />
-        <Route path="/complete-register" element={<SignUpComplete />} />
         <Route path="/verify-email" element={<Verif />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        <Route path="/forgot-password/*" element={<ForgotPassword />} />
-
-        {/* Routes with navbar */}
+        {/* Protected routes with navbar */}
         <Route
           path="/"
           element={
-            <Layout>
-              <Homepage />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <Homepage />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/complete-register"
+          element={
+            <ProtectedRoute>
+              <SignUpComplete />
+            </ProtectedRoute>
           }
         />
         <Route
           path="/profile"
           element={
-            <Layout>
-              <UserProfile />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <UserProfile />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/Search-psi"
           element={
-            <Layout>
-              <SearchPskiater />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <SearchPskiater />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/dashboard"
           element={
-            <Layout>
-              <Dashboardpsychiatrist />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <Dashboardpsychiatrist />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/doctor-profile"
           element={
-            <Layout>
-              <PsychiatristProfile />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <PsychiatristProfile />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/schedule-appointment/:id?"
           element={
-            <Layout>
-              <ManageApt />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ManageApt />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/welcome"
           element={
-            <Layout>
-              <LandingPage />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <LandingPage />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/terms"
           element={
-            <Layout>
-              <TermsOfService />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <TermsOfService />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/manage-appointment"
           element={
-            <Layout>
-              <ManageAppointment />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ManageAppointment />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/psy-manage-appointment"
           element={
-            <Layout>
-              <ManageAppointmentPsy />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ManageAppointmentPsy />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/chat"
           element={
-            <Layout>
-              <ChatPage />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ChatPage />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/video-call"
           element={
-            <Layout>
-              <VideoCallPage />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <VideoCallPage />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/video-call/:callId"
           element={
-            <Layout>
-              <VideoCallPage />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <VideoCallPage />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/forum"
           element={
-            <Layout>
-              <Forum />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <Forum />
+              </Layout>
+            </ProtectedRoute>
           }
         />
         <Route
           path="/forum/:forumId"
           element={
-            <Layout>
-              <ForumPost />
-            </Layout>
+            <ProtectedRoute>
+              <Layout>
+                <ForumPost />
+              </Layout>
+            </ProtectedRoute>
           }
         />
       </Routes>

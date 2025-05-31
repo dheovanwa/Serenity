@@ -1,6 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  onSnapshot,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "../config/firebase";
 import VideoCall from "../components/VideoCall";
 
@@ -10,6 +17,7 @@ const VideoCallPage: React.FC = () => {
   const [isValidSession, setIsValidSession] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isCaller, setIsCaller] = useState(false);
+  const [waitingForRoom, setWaitingForRoom] = useState(false);
 
   useEffect(() => {
     const validateSession = async () => {
@@ -78,7 +86,56 @@ const VideoCallPage: React.FC = () => {
         } else {
           // Only psychiatrists can create calls
           if (userType !== "psychiatrist") {
-            throw new Error("Only psychiatrists can create calls");
+            // For patients, wait for psychiatrist to create the room
+            setWaitingForRoom(true);
+
+            // Get appointmentId from localStorage
+            const appointmentId = localStorage.getItem("currentAppointmentId");
+
+            if (!appointmentId) {
+              console.error("No appointment ID found in localStorage");
+              // Instead of throwing error, redirect to home
+              navigate("/");
+              return;
+            }
+
+            // Listen for calls with this specific appointmentId
+            const callsQuery = query(collection(db, "calls"));
+
+            console.log(
+              "Listening for calls with appointmentId:",
+              appointmentId
+            );
+
+            const unsubscribeCalls = onSnapshot(callsQuery, (callSnapshot) => {
+              console.log("Received call snapshot:", callSnapshot.docs.length);
+              // Check all documents for matching appointmentId
+              callSnapshot.docs.forEach((callDoc) => {
+                const callData = callDoc.data();
+                if (callData.appointmentId === appointmentId) {
+                  const roomId = callDoc.id;
+                  console.log("Found matching call document:", roomId);
+
+                  // Navigate to the created room
+                  navigate(`/video-call/${roomId}`);
+
+                  window.location.reload(); // Reload to ensure state is fresh
+                  // Clean up listener
+                  unsubscribeCalls();
+                }
+              });
+            });
+
+            // Set a timeout to stop waiting after 2 minutes
+            setTimeout(() => {
+              if (waitingForRoom) {
+                console.log("Timeout waiting for psychiatrist to start call");
+                unsubscribeCalls();
+                navigate("/");
+              }
+            }, 120000); // 2 minutes timeout
+
+            return; // Don't set isValidSession yet, keep waiting
           }
           setIsCaller(true); // Psychiatrist creating new call is always the caller
           setIsValidSession(true);
@@ -87,38 +144,46 @@ const VideoCallPage: React.FC = () => {
         console.error("Session validation error:", error);
         navigate("/");
       } finally {
-        setIsLoading(false);
+        if (!waitingForRoom) {
+          setIsLoading(false);
+        }
       }
     };
 
     validateSession();
   }, [callId, navigate]);
 
-  // Add cleanup effect for page-level navigation
-  useEffect(() => {
-    return () => {
-      console.log("VideoCallPage unmounting - ensuring cleanup");
-      // Additional cleanup can be added here if needed
-    };
-  }, []);
-
-  if (isLoading) {
-    return <div>Loading...</div>;
+  if (isLoading || waitingForRoom) {
+    return (
+      <div className="min-h-screen bg-[#E4DCCC] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#161F36] mx-auto mb-4"></div>
+          <p className="text-[#161F36] text-lg">
+            {waitingForRoom
+              ? "Menunggu sesi dimulai oleh psikiater..."
+              : "Memvalidasi sesi..."}
+          </p>
+        </div>
+      </div>
+    );
   }
 
-  if (!isValidSession && callId) {
-    return null; // Will redirect in useEffect
+  if (!isValidSession) {
+    return (
+      <div className="min-h-screen bg-[#E4DCCC] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#161F36] text-lg">Sesi tidak valid</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F2EDE2]">
+    <div className="min-h-screen bg-[#E4DCCC]">
       <VideoCall
         callId={callId}
         isCaller={isCaller}
-        onEnd={() => {
-          console.log("VideoCall ended, navigating away");
-          navigate("/");
-        }}
+        onEnd={() => navigate("/")}
       />
     </div>
   );

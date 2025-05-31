@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import SimplePeer from "simple-peer";
 import { useNavigate } from "react-router-dom";
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 // Import SVG assets
 import MicrophoneIcon from "../assets/Microphone.svg";
@@ -345,7 +346,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
         (snapshot) => {
           if (!snapshot.exists()) {
             // Call document deleted, end call for joiner
-            navigate("/");
+            navigate("/?callEnded=psychiatrist");
             return;
           }
           const data = snapshot.data();
@@ -363,7 +364,27 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
               lastCallerDisconnect: null,
               lastJoinerDisconnect: null,
             });
-            navigate("/");
+            navigate("/?callEnded=psychiatrist");
+          }
+        }
+      );
+    }
+
+    // Listen for patient ending call (for psychiatrists)
+    if (isCaller && callId) {
+      if (callerActivityListenerRef.current) {
+        callerActivityListenerRef.current();
+        callerActivityListenerRef.current = undefined;
+      }
+      callerActivityListenerRef.current = onSnapshot(
+        doc(db, "calls", callId),
+        (snapshot) => {
+          if (!snapshot.exists()) return;
+          const data = snapshot.data();
+          // If joinerActive is false and joinerJoined is false, patient has left
+          if (data.joinerActive === false && data.joinerJoined === false) {
+            console.log("Patient has ended the call, ending for psychiatrist");
+            navigate("/dashboard?callEnded=patient");
           }
         }
       );
@@ -827,50 +848,56 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       unsubSignal.current = undefined;
     }
 
-    // Only handle session end and appointment completion
+    // Handle call end based on user type
     if (currentCallId) {
       try {
         const callDoc = await getDoc(doc(db, "calls", currentCallId));
         if (callDoc.exists()) {
           const callData = callDoc.data();
+          const userType = localStorage.getItem("userType");
 
-          // If session has ended naturally, mark appointment as completed and clean up
+          if (userType === "psychiatrist") {
+            // Psychiatrist ending call - set both to false and delete document
+            await updateDoc(doc(db, "calls", currentCallId), {
+              callerActive: false,
+              callerJoined: false,
+            });
+
+            // Small delay then delete the document
+            setTimeout(async () => {
+              try {
+                await deleteDoc(doc(db, "calls", currentCallId));
+              } catch (error) {
+                console.log("Error deleting call document:", error);
+              }
+            }, 1000);
+          } else {
+            // User (patient) ending call - set joiner status to false and delete document
+            await updateDoc(doc(db, "calls", currentCallId), {
+              joinerActive: false,
+              joinerJoined: false,
+            });
+
+            // Small delay then delete the document
+            setTimeout(async () => {
+              try {
+                await deleteDoc(doc(db, "calls", currentCallId));
+                console.log("Call document deleted after patient ended call");
+              } catch (error) {
+                console.log("Error deleting call document:", error);
+              }
+            }, 1000);
+          }
+
+          // Update appointment status if session has ended
           if (hasSessionEnded()) {
-            const appointmentId = callData.appointmentId;
-            if (appointmentId) {
-              await updateDoc(doc(db, "appointments", appointmentId), {
+            const appointmentDoc = await getDoc(
+              doc(db, "appointments", callData.appointmentId)
+            );
+            if (appointmentDoc.exists()) {
+              await updateDoc(doc(db, "appointments", callData.appointmentId), {
                 status: "Selesai",
               });
-            }
-            // Delete the call document when session ends
-            await deleteDoc(doc(db, "calls", currentCallId));
-          } else {
-            // Update active status based on role
-            if (isCaller) {
-              await updateDoc(doc(db, "calls", currentCallId), {
-                callerActive: false,
-                callerJoined: false, // Mark that caller has left
-                lastCallerDisconnect: Date.now(),
-              });
-              console.log("Caller marked as inactive and left");
-            } else {
-              // When joiner leaves, set callerActive to false, answer to null, and refresh caller page
-              await updateDoc(doc(db, "calls", currentCallId), {
-                joinerActive: false,
-                joinerJoined: false,
-                callerActive: false, // Set callerActive to false
-                answer: null, // Set answer to null
-                lastJoinerDisconnect: Date.now(),
-              });
-              console.log(
-                "Joiner marked as inactive and left, callerActive set to false, answer set to null"
-              );
-              // Notify the caller to refresh (simulate by reloading the page for both roles)
-              if (!isCaller) {
-                setTimeout(() => {
-                  window.location.reload();
-                }, 500);
-              }
             }
           }
         }
@@ -886,8 +913,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       const userType = localStorage.getItem("userType");
       if (onEnd) {
         onEnd();
-      }
-      if (userType === "psychiatrist") {
+      } else if (userType === "psychiatrist") {
         navigate("/dashboard");
       } else {
         navigate("/");

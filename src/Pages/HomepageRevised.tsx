@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { HomeController } from "../controllers/HomeController";
 import { CarouselDemo } from "../components/RecommendedPsychiatrist";
-import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater"; // Ini asumsi sebagai komponen React.FC
+import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
 import Footer from "../components/Footer";
 import send from "../assets/send.svg";
 import { db } from "../config/firebase";
@@ -16,11 +16,15 @@ import {
   doc,
   getDoc,
   limit,
+  onSnapshot,
 } from "firebase/firestore";
 import ProfilePic from "../assets/default_profile_image.svg";
+import { notificationScheduler } from "../utils/notificationScheduler";
+import VideoRatingDialog from "../components/VideoRatingDialog";
 
 const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   const [userName, setUserName] = useState<string>("Loading...");
+  const [firstName, setFirstName] = useState<string>("Loading...");
   const [activeChats, setActiveChats] = useState<any[]>([]);
   const [loadingChats, setLoadingChats] = useState(true);
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
@@ -28,28 +32,45 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [showVideoRatingDialog, setShowVideoRatingDialog] = useState(false);
+  const [pendingVideoRating, setPendingVideoRating] = useState<{
+    id: string;
+    psychiatristId: string;
+    doctorName: string;
+  } | null>(null);
+  const [checkedAppointments, setCheckedAppointments] = useState<Set<string>>(
+    new Set()
+  );
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showCallEndedDialog, setShowCallEndedDialog] = useState(false);
+
+  // Add ref at component level
+  const navigatedCalls = useRef<Set<string>>(new Set());
+  const recentlyEndedCalls = useRef<Set<string>>(new Set());
 
   const navigate = useNavigate();
   const controller = new HomeController();
 
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
-      setIsLoading(true); // Mulai loading saat data diambil
-      const documentId = localStorage.getItem("documentId");
-
-      // Cek autentikasi
-      const isAuthenticated = await controller.checkAuthentication(documentId);
-
-      if (!isAuthenticated) {
-        navigate("/signin"); // Redirect jika tidak terautentikasi
-        return; // Hentikan eksekusi lebih lanjut
+      const userId = localStorage.getItem("documentId");
+      if (userId) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", userId));
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            setFirstName(userData.firstName || "Pengguna");
+            setUserName(userData.firstName || "Pengguna");
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+          setFirstName("Pengguna");
+        }
       }
+      setIsLoading(false);
 
-      // Ambil nama pengguna jika terautentikasi
-      const name = await controller.fetchUserName(documentId);
-      console.log(name);
-      setUserName(name);
-      setIsLoading(false); // Akhiri loading setelah data diambil
+      // Initialize notification scheduler
+      await notificationScheduler.restoreScheduledNotifications();
     };
 
     checkAuthAndLoadData();
@@ -301,6 +322,183 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
     fetchUpcomingAppointments();
   }, [userName]);
 
+  // Check for completed video appointments that need rating
+  useEffect(() => {
+    const checkForCompletedVideoAppointments = async () => {
+      const documentId = localStorage.getItem("documentId");
+      const userType = localStorage.getItem("userType");
+
+      if (!documentId || userType !== "user") return;
+
+      try {
+        // Get user's video appointments with "Selesai" status
+        const appointmentsRef = collection(db, "appointments");
+        const q = query(
+          appointmentsRef,
+          where("patientId", "==", documentId),
+          where("method", "==", "Video"),
+          where("status", "==", "Selesai")
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        for (const appointmentDoc of querySnapshot.docs) {
+          const appointmentData = appointmentDoc.data();
+          console.log(
+            `Found completed video appointment: ${appointmentData.patientName}`
+          );
+          const appointmentId = appointmentDoc.id;
+
+          // Skip if already checked this session
+          if (checkedAppointments.has(appointmentId)) continue;
+          console.log(`Checking appointment ${appointmentId} for video rating`);
+
+          // Check if this appointment has already been rated
+          const videoRatingRef = doc(db, "videoRatings", appointmentId);
+          const existingRating = await getDoc(videoRatingRef);
+
+          if (!existingRating.exists()) {
+            // This appointment needs rating
+            setPendingVideoRating({
+              id: appointmentId,
+              psychiatristId: appointmentData.psychiatristId,
+              doctorName: appointmentData.doctorName,
+            });
+            setShowVideoRatingDialog(true);
+
+            // Mark as checked to avoid showing again in this session
+            setCheckedAppointments((prev) => new Set([...prev, appointmentId]));
+            break; // Only show one dialog at a time
+          } else {
+            // Mark as checked since it's already rated
+            setCheckedAppointments((prev) => new Set([...prev, appointmentId]));
+          }
+        }
+      } catch (error) {
+        console.error(
+          "Error checking for completed video appointments:",
+          error
+        );
+      }
+    };
+
+    // Check every 30 seconds for newly completed appointments
+    const interval = setInterval(checkForCompletedVideoAppointments, 30000);
+
+    // Also check immediately
+    checkForCompletedVideoAppointments();
+
+    return () => clearInterval(interval);
+  }, [checkedAppointments]);
+
+  // Add useEffect to check for call ended dialog
+  useEffect(() => {
+    // Check if user was redirected due to psychiatrist ending the call
+    if (searchParams.get("callEnded") === "psychiatrist") {
+      setShowCallEndedDialog(true);
+      // Remove the query parameter from URL
+      searchParams.delete("callEnded");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // Add useEffect to listen for calls with matching appointmentId
+  useEffect(() => {
+    const documentId = localStorage.getItem("documentId");
+    if (!documentId) return;
+
+    let unsubscribe: (() => void) | undefined;
+
+    const setupCallListener = () => {
+      try {
+        // Listen for calls collection changes
+        const callsQuery = query(collection(db, "calls"));
+
+        unsubscribe = onSnapshot(callsQuery, async (callSnapshot) => {
+          callSnapshot.docChanges().forEach(async (change) => {
+            if (change.type === "added") {
+              const callDoc = change.doc;
+              const callData = callDoc.data();
+              const callId = callDoc.id;
+
+              // Skip if we've already navigated to this call
+              if (navigatedCalls.current.has(callId)) {
+                return;
+              }
+
+              // Skip if this call was recently ended by the user
+              if (recentlyEndedCalls.current.has(callId)) {
+                return;
+              }
+
+              // Check if this call's appointmentId matches any of user's active video sessions
+              const matchingSession = activeSessions.find(
+                (session) => session.id === callData.appointmentId
+              );
+
+              // Only navigate if:
+              // 1. There's a matching session
+              // 2. The call status is "waiting" or "connected" (not ended)
+              // 3. User is not already in a video call page
+              // 4. Call was created more than 2 seconds ago (to avoid immediate re-navigation)
+              // 5. User explicitly clicked to join (removed automatic navigation)
+              const callAge = Date.now() - (callData.createdAt || 0);
+
+              if (
+                matchingSession &&
+                (callData.status === "waiting" ||
+                  callData.status === "connected") &&
+                !window.location.pathname.includes("/video-call/") &&
+                callAge > 2000 // 2 second cooldown
+              ) {
+                console.log(
+                  `Found matching active call for appointmentId: ${callData.appointmentId}, but not auto-navigating`
+                );
+
+                // Mark this call as seen but don't navigate automatically
+                navigatedCalls.current.add(callId);
+              }
+            } else if (change.type === "removed") {
+              // Remove from navigated calls when call is deleted
+              const callId = change.doc.id;
+              navigatedCalls.current.delete(callId);
+
+              // Add to recently ended calls to prevent immediate re-navigation
+              recentlyEndedCalls.current.add(callId);
+
+              // Remove from recently ended after 10 seconds
+              setTimeout(() => {
+                recentlyEndedCalls.current.delete(callId);
+              }, 10000);
+            }
+          });
+        });
+      } catch (error) {
+        console.error("Error setting up call listener:", error);
+      }
+    };
+
+    // Only setup listener if there are active sessions
+    if (activeSessions.length > 0) {
+      setupCallListener();
+    }
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [navigate, activeSessions]);
+
+  const handleCloseVideoRatingDialog = () => {
+    setShowVideoRatingDialog(false);
+    setPendingVideoRating(null);
+  };
+
+  const handleCloseCallEndedDialog = () => {
+    setShowCallEndedDialog(false);
+  };
+
   AppointmentStatusUpdater();
 
   return (
@@ -316,7 +514,9 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                        text-[#161F36] dark:text-white"
         >
           Selamat datang,{" "}
-          <span className="text-[#ce9d85] dark:text-blue-300">{userName}!</span>
+          <span className="text-[#ce9d85] dark:text-blue-300">
+            {firstName}!
+          </span>
         </h1>
         <p className="text-xl font-medium text-[#161F36] dark:text-gray-300">
           Kami siap membantu perjalanan kesehatan mental Anda.
@@ -341,14 +541,13 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
               <div
                 key={session.id}
                 className="flex items-center pb-6 mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
-                onClick={() => navigate(`/video-call/${session.id}`)}
+                onClick={() => {
+                  // Store the appointmentId before navigating
+                  localStorage.setItem("currentAppointmentId", session.id);
+                  navigate(`/video-call`);
+                }}
                 tabIndex={0}
                 role="button"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    navigate(`/video-call/${session.id}`);
-                  }
-                }}
               >
                 <img
                   src={session.psychiatristImage}
@@ -554,6 +753,39 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
         </div>
       </div>
       <Footer isDarkMode={isDarkMode} />
+      {/* Video Rating Dialog */}
+      {showVideoRatingDialog && pendingVideoRating && (
+        <VideoRatingDialog
+          isOpen={showVideoRatingDialog}
+          onClose={handleCloseVideoRatingDialog}
+          appointment={pendingVideoRating}
+          userId={localStorage.getItem("documentId") || ""}
+          isDarkMode={false} // You can pass the actual dark mode state here
+        />
+      )}
+      {/* Call Ended Dialog */}
+      {showCallEndedDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px] max-w-md mx-4">
+            <h2 className="text-xl font-semibold text-black dark:text-white mb-4">
+              Video Call Berakhir
+            </h2>
+            <p className="text-black dark:text-gray-300 mb-6">
+              Psikiater telah mengakhiri sesi video call. Jika ini adalah
+              kesalahan, Anda dapat bergabung kembali atau menghubungi customer
+              support.
+            </p>
+            <div className="flex justify-center">
+              <button
+                className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                onClick={handleCloseCallEndedDialog}
+              >
+                Saya Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

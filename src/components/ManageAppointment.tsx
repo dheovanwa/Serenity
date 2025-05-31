@@ -16,6 +16,7 @@ import Loading from "./Loading"; // Assuming this Loading component is dark mode
 import { generateInvoicePDF } from "../utils/invoiceGenerator";
 import { format } from "date-fns";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater"; // Assuming this component is dark mode aware
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 interface Appointment {
   id?: string;
@@ -347,6 +348,13 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
       );
       const dateStr = format(Number(appointment.date), "yyyy-MM-dd");
 
+      // Cancel scheduled notification if it's a video appointment
+      if (appointment.method === "Video") {
+        await notificationScheduler.cancelScheduledNotification(
+          appointment.id!
+        );
+      }
+
       const docSnap = await getDoc(psychiatristRef);
       if (!docSnap.exists()) {
         throw new Error("Psychiatrist not found");
@@ -477,6 +485,11 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
     if (!appointment.id) return;
 
     try {
+      // Cancel scheduled notification for expired payments
+      if (appointment.method === "Video") {
+        await notificationScheduler.cancelScheduledNotification(appointment.id);
+      }
+
       const appointmentRef = doc(db, "appointments", appointment.id);
       await updateDoc(appointmentRef, {
         status: "Pembayaran tidak berhasil",

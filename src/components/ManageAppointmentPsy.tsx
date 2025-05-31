@@ -4,6 +4,7 @@ import { db } from "../config/firebase";
 import Loading from "./Loading";
 import { format } from "date-fns";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 interface Appointment {
   id?: string;
@@ -112,6 +113,9 @@ const ManageAppointmentPsy = () => {
         });
 
         setAppointments(fetchedAppointments);
+
+        // Initialize notification scheduler
+        await notificationScheduler.restoreScheduledNotifications();
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {

@@ -49,13 +49,6 @@ const UserProfile = () => {
   const [isOverlayVisible, setIsOverlayVisible] = useState(false);
   const handleLogoutClick = async () => {
     setIsOverlayVisible(true);
-    try {
-      await signOut(auth);
-      localStorage.removeItem("documentId");
-      navigate("/signin");
-    } catch (error) {
-      console.error("Error signing out:", error);
-    }
   };
 
   const handleCloseOverlay = () => {
@@ -510,9 +503,14 @@ const UserProfile = () => {
                     Batalkan
                   </button>
                   <button
-                    onClick={() => {
-                      localStorage.removeItem("documentId");
-                      window.location.href = "/signin";
+                    onClick={async () => {
+                      try {
+                        await signOut(auth);
+                        localStorage.removeItem("documentId");
+                        navigate("/signin");
+                      } catch (error) {
+                        console.error("Error signing out:", error);
+                      }
                     }}
                     className="bg-[#BACBD8] text-[#181818] font-medium px-4 py-2 rounded-md w-full sm:w-auto text-sm "
                   >

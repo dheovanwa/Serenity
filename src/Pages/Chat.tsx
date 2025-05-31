@@ -28,6 +28,7 @@ import {
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import ProfilePic from "../assets/default_profile_image.svg"; // Asumsi ini gelap dan perlu di-invert
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 interface Message {
   id: string;
@@ -78,6 +79,16 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
   const [latestMessages, setLatestMessages] = useState<
     Record<string, { text: string; sender: "me" | "them" }>
   >({});
+
+  // Initialize notification scheduler on component mount
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      await notificationScheduler.restoreScheduledNotifications();
+    };
+
+    initializeNotifications();
+  }, []);
+
   const [isEnding, setIsEnding] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
@@ -897,6 +908,29 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
       </div>
     );
   };
+
+  // Add FCM notification handling
+  useEffect(() => {
+    // Listen for messages from service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "NAVIGATE_TO_CHAT") {
+          const appointmentId = event.data.appointmentId;
+          if (appointmentId && appointmentId !== activeAppointment?.id) {
+            // Navigate to the specific chat
+            const newParams = new URLSearchParams();
+            newParams.set("appointmentId", appointmentId);
+            window.history.pushState(
+              {},
+              "",
+              `${window.location.pathname}?${newParams}`
+            );
+            window.location.reload();
+          }
+        }
+      });
+    }
+  }, [activeAppointment]);
 
   return (
     <div
