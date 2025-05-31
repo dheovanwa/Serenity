@@ -12,6 +12,7 @@ import {
 } from "firebase/firestore";
 import SimplePeer from "simple-peer";
 import { useNavigate } from "react-router-dom";
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 // Import SVG assets
 import MicrophoneIcon from "../assets/Microphone.svg";
@@ -345,7 +346,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
         (snapshot) => {
           if (!snapshot.exists()) {
             // Call document deleted, end call for joiner
-            navigate("/");
+            navigate("/?callEnded=psychiatrist");
             return;
           }
           const data = snapshot.data();
@@ -363,7 +364,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
               lastCallerDisconnect: null,
               lastJoinerDisconnect: null,
             });
-            navigate("/");
+            navigate("/?callEnded=psychiatrist");
           }
         }
       );
@@ -865,11 +866,11 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
               console.log(
                 "Joiner marked as inactive and left, callerActive set to false, answer set to null"
               );
-              // Notify the caller to refresh (simulate by reloading the page for both roles)
-              if (!isCaller) {
-                setTimeout(() => {
-                  window.location.reload();
-                }, 500);
+              // Cancel any scheduled notifications when call ends early
+              if (callData.appointmentId) {
+                await notificationScheduler.cancelScheduledNotification(
+                  callData.appointmentId
+                );
               }
             }
           }

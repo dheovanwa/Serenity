@@ -4,156 +4,201 @@ import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 interface ScheduledNotification {
   id: string;
   appointmentId: string;
-  userId: string;
-  doctorName: string;
-  date: string;
-  time: string;
-  timeoutId?: number;
+  timeoutId: number;
+  scheduledTime: number;
+  type: "video-reminder";
 }
 
 class NotificationScheduler {
   private scheduledNotifications: Map<string, ScheduledNotification> =
     new Map();
 
+  // Schedule a video appointment reminder 10 minutes before start time
   async scheduleVideoAppointmentReminder(
     appointmentId: string,
     userId: string,
     doctorName: string,
-    date: string,
-    time: string
+    dateStr: string,
+    timeRange: string
   ) {
     try {
-      // Parse the time string (e.g., "10.00 - 11.00")
-      const [startTime] = time.split(" - ");
+      // Parse the time range (e.g., "09.00 - 10.00")
+      const [startTime] = timeRange.split(" - ");
       const [hours, minutes] = startTime.split(".").map(Number);
 
-      // Create appointment date
-      const appointmentDate = new Date(date);
+      // Create appointment date-time
+      const appointmentDate = new Date(dateStr);
       appointmentDate.setHours(hours, minutes || 0, 0, 0);
 
-      // Schedule notification 10 minutes before
-      const notificationTime = new Date(
-        appointmentDateTime.getTime() - 10 * 60 * 1000
-      );
+      // Calculate reminder time (10 minutes before)
+      const reminderTime = new Date(appointmentDate.getTime() - 2 * 60 * 1000);
       const now = new Date();
 
-      if (notificationTime > now) {
-        const delay = notificationTime.getTime() - now.getTime();
+      // Only schedule if reminder time is in the future
+      if (reminderTime > now) {
+        const delay = reminderTime.getTime() - now.getTime();
+
+        // Cancel any existing notification for this appointment
+        this.cancelScheduledNotification(appointmentId);
 
         const timeoutId = window.setTimeout(() => {
-          this.showVideoAppointmentReminder(appointmentId, doctorName, time);
-          this.scheduledNotifications.delete(appointmentId);
+          this.sendVideoAppointmentReminder(
+            appointmentId,
+            doctorName,
+            timeRange
+          );
         }, delay);
 
         const notification: ScheduledNotification = {
-          id: appointmentId,
+          id: `video-reminder-${appointmentId}`,
           appointmentId,
-          userId,
-          doctorName,
-          date,
-          time,
           timeoutId,
+          scheduledTime: reminderTime.getTime(),
+          type: "video-reminder",
         };
 
         this.scheduledNotifications.set(appointmentId, notification);
 
-        // Store in localStorage for persistence
+        // Save to localStorage for persistence
         this.saveScheduledNotifications();
 
         console.log(
-          `Scheduled notification for appointment ${appointmentId} at ${notificationTime}`
+          `Scheduled video reminder for appointment ${appointmentId} at ${reminderTime.toLocaleString()}`
         );
       }
     } catch (error) {
-      console.error("Error scheduling notification:", error);
+      console.error("Error scheduling video appointment reminder:", error);
     }
   }
 
+  // Send the actual video appointment reminder notification
+  private sendVideoAppointmentReminder(
+    appointmentId: string,
+    doctorName: string,
+    timeRange: string
+  ) {
+    try {
+      // Remove from scheduled notifications
+      this.scheduledNotifications.delete(appointmentId);
+      this.saveScheduledNotifications();
+
+      // Show browser notification if permission granted
+      if ("Notification" in window && Notification.permission === "granted") {
+        const notification = new Notification("Pengingat Sesi Video Call", {
+          body: `Sesi video call dengan Dr. ${doctorName} akan dimulai dalam 10 menit (${timeRange}). Bersiaplah!`,
+          icon: "/vite.svg",
+          tag: `video-reminder-${appointmentId}`,
+          requireInteraction: true,
+        });
+
+        notification.onclick = () => {
+          window.focus();
+          window.location.href = "/manage-appointment";
+          notification.close();
+        };
+
+        setTimeout(() => {
+          notification.close();
+        }, 30000); // Auto close after 30 seconds
+      }
+
+      // Also try to send via service worker for better reliability
+      if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+          type: "SHOW_VIDEO_REMINDER",
+          data: {
+            appointmentId,
+            doctorName,
+            timeRange,
+            title: "Pengingat Sesi Video Call",
+            body: `Sesi video call dengan Dr. ${doctorName} akan dimulai dalam 10 menit (${timeRange}). Bersiaplah!`,
+          },
+        });
+      }
+    } catch (error) {
+      console.error("Error sending video appointment reminder:", error);
+    }
+  }
+
+  // Cancel a scheduled notification
   async cancelScheduledNotification(appointmentId: string) {
     const notification = this.scheduledNotifications.get(appointmentId);
-    if (notification && notification.timeoutId) {
+    if (notification) {
       clearTimeout(notification.timeoutId);
       this.scheduledNotifications.delete(appointmentId);
       this.saveScheduledNotifications();
-      console.log(`Cancelled notification for appointment ${appointmentId}`);
+      console.log(
+        `Cancelled scheduled notification for appointment ${appointmentId}`
+      );
     }
   }
 
-  private showVideoAppointmentReminder(
-    appointmentId: string,
-    doctorName: string,
-    time: string
-  ) {
-    if ("Notification" in window && Notification.permission === "granted") {
-      const notification = new Notification("Pengingat Konsultasi Video", {
-        body: `Konsultasi dengan Dr. ${doctorName} akan dimulai dalam 30 menit (${time})`,
-        icon: "/vite.svg",
-        tag: `video-reminder-${appointmentId}`,
-        requireInteraction: true,
-      });
-
-      notification.onclick = () => {
-        window.focus();
-        window.location.href = "/manage-appointment";
-        notification.close();
-      };
-
-      setTimeout(() => {
-        notification.close();
-      }, 30000); // Auto close after 30 seconds
-    }
-  }
-
+  // Save scheduled notifications to localStorage
   private saveScheduledNotifications() {
-    const notifications = Array.from(this.scheduledNotifications.values()).map(
-      (notif) => ({
-        ...notif,
-        timeoutId: undefined, // Don't serialize timeout IDs
-      })
-    );
-    localStorage.setItem(
-      "scheduledNotifications",
-      JSON.stringify(notifications)
-    );
+    try {
+      const serializable = Array.from(
+        this.scheduledNotifications.entries()
+      ).map(([key, notification]) => [
+        key,
+        {
+          ...notification,
+          timeoutId: 0, // Don't save timeout IDs
+        },
+      ]);
+      localStorage.setItem(
+        "scheduledNotifications",
+        JSON.stringify(serializable)
+      );
+    } catch (error) {
+      console.error("Error saving scheduled notifications:", error);
+    }
   }
 
+  // Restore scheduled notifications from localStorage
   async restoreScheduledNotifications() {
     try {
-      const stored = localStorage.getItem("scheduledNotifications");
-      if (stored) {
-        const notifications: ScheduledNotification[] = JSON.parse(stored);
-        const now = new Date();
+      const saved = localStorage.getItem("scheduledNotifications");
+      if (!saved) return;
 
-        for (const notif of notifications) {
-          // Parse the time string
-          const [startTime] = notif.time.split(" - ");
-          const [hours, minutes] = startTime.split(".").map(Number);
+      const notifications = JSON.parse(saved) as [
+        string,
+        Omit<ScheduledNotification, "timeoutId">
+      ][];
+      const now = Date.now();
 
-          // Create appointment date
-          const appointmentDate = new Date(notif.date);
-          appointmentDate.setHours(hours, minutes || 0, 0, 0);
+      for (const [appointmentId, notificationData] of notifications) {
+        // Only restore if the scheduled time hasn't passed
+        if (notificationData.scheduledTime > now) {
+          const delay = notificationData.scheduledTime - now;
 
-          // Schedule notification 30 minutes before
-          const notificationTime = new Date(
-            appointmentDate.getTime() - 30 * 60 * 1000
-          );
-
-          if (notificationTime > now) {
-            // Reschedule if still in the future
-            await this.scheduleVideoAppointmentReminder(
-              notif.appointmentId,
-              notif.userId,
-              notif.doctorName,
-              notif.date,
-              notif.time
+          const timeoutId = window.setTimeout(() => {
+            // Get appointment details from the ID to send reminder
+            this.sendVideoAppointmentReminder(
+              appointmentId,
+              "Psikiater",
+              "Segera"
             );
-          }
+          }, delay);
+
+          this.scheduledNotifications.set(appointmentId, {
+            ...notificationData,
+            timeoutId,
+          });
         }
       }
+
+      // Clean up expired notifications
+      this.saveScheduledNotifications();
     } catch (error) {
       console.error("Error restoring scheduled notifications:", error);
     }
   }
+
+  // Get all scheduled notifications (for debugging)
+  getScheduledNotifications() {
+    return Array.from(this.scheduledNotifications.values());
+  }
 }
 
+// Create singleton instance
 export const notificationScheduler = new NotificationScheduler();

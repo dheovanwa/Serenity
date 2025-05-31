@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../config/firebase";
 import { HomeController } from "../controllers/HomeController";
 import backgroundImage from "../assets/Master Background11.png";
 import Instagram from "../assets/instagram.png";
@@ -34,6 +36,8 @@ const Homepage: React.FC = () => {
     mspss: [],
     cope: [],
   });
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showCallEndedDialog, setShowCallEndedDialog] = useState(false);
 
   const navigate = useNavigate();
   const controller = new HomeController();
@@ -61,11 +65,102 @@ const Homepage: React.FC = () => {
     checkAuth();
   }, [navigate]);
 
+  useEffect(() => {
+    // Check if user was redirected due to psychiatrist ending the call
+    if (searchParams.get("callEnded") === "psychiatrist") {
+      setShowCallEndedDialog(true);
+      // Remove the query parameter from URL
+      searchParams.delete("callEnded");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
+
+  // Add useEffect to listen for calls with matching appointmentId
+  useEffect(() => {
+    const documentId = localStorage.getItem("documentId");
+    if (!documentId) return;
+
+    let unsubscribe: (() => void) | undefined;
+
+    const setupCallListener = async () => {
+      try {
+        // Get user's active appointments
+        const userAppointmentsQuery = query(
+          collection(db, "appointments"),
+          where("patientId", "==", documentId),
+          where("status", "in", ["Sedang berlangsung"])
+        );
+        console.log("Listening for user appointments...");
+
+        // Listen for user appointments to get appointmentIds
+        const unsubAppointments = onSnapshot(
+          userAppointmentsQuery,
+          (appointmentSnapshot) => {
+            const appointmentIds = appointmentSnapshot.docs.map(
+              (doc) => doc.id
+            );
+
+            console.log("Active appointmentIds:", appointmentIds);
+
+            if (appointmentIds.length === 0) return;
+
+            // Listen for calls with matching appointmentIds
+            const callsQuery = query(
+              collection(db, "calls"),
+              where("appointmentId", "in", appointmentIds)
+            );
+
+            if (unsubscribe) {
+              unsubscribe();
+            }
+
+            unsubscribe = onSnapshot(callsQuery, (callSnapshot) => {
+              callSnapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                  const callDoc = change.doc;
+                  const callData = callDoc.data();
+
+                  // Navigate to the video call
+                  console.log(
+                    `Found matching call for appointmentId: ${callData.appointmentId}`
+                  );
+                  navigate(`/video-call/${callDoc.id}`);
+                }
+              });
+            });
+          }
+        );
+
+        // Return cleanup function for appointments listener
+        return () => {
+          unsubAppointments();
+          if (unsubscribe) {
+            unsubscribe();
+          }
+        };
+      } catch (error) {
+        console.error("Error setting up call listener:", error);
+      }
+    };
+
+    setupCallListener();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [navigate]);
+
   AppointmentStatusUpdater();
 
   const handleLogout = () => {
     controller.handleLogout();
     navigate("/signin");
+  };
+
+  const handleCloseCallEndedDialog = () => {
+    setShowCallEndedDialog(false);
   };
 
   return (
@@ -288,6 +383,30 @@ const Homepage: React.FC = () => {
           </p>
         </div>
       </footer>
+
+      {/* Call Ended Dialog */}
+      {showCallEndedDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px] max-w-md mx-4">
+            <h2 className="text-xl font-semibold text-black dark:text-white mb-4">
+              Video Call Berakhir
+            </h2>
+            <p className="text-black dark:text-gray-300 mb-6">
+              Psikiater telah mengakhiri sesi video call. Jika ini adalah
+              kesalahan, Anda dapat bergabung kembali atau menghubungi customer
+              support.
+            </p>
+            <div className="flex justify-center">
+              <button
+                className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                onClick={handleCloseCallEndedDialog}
+              >
+                Saya Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

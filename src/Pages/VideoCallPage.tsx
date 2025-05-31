@@ -94,31 +94,33 @@ const VideoCallPage: React.FC = () => {
     validateSession();
   }, [callId, navigate]);
 
-  // Add cleanup effect for page-level navigation
-  useEffect(() => {
-    return () => {
-      console.log("VideoCallPage unmounting - ensuring cleanup");
-      // Additional cleanup can be added here if needed
-    };
-  }, []);
-
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="min-h-screen bg-[#E4DCCC] flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#161F36] mx-auto mb-4"></div>
+          <p className="text-[#161F36] text-lg">Memvalidasi sesi...</p>
+        </div>
+      </div>
+    );
   }
 
-  if (!isValidSession && callId) {
-    return null; // Will redirect in useEffect
+  if (!isValidSession) {
+    return (
+      <div className="min-h-screen bg-[#E4DCCC] flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-[#161F36] text-lg">Sesi tidak valid</p>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#F2EDE2]">
+    <div className="min-h-screen bg-[#E4DCCC]">
       <VideoCall
         callId={callId}
         isCaller={isCaller}
-        onEnd={() => {
-          console.log("VideoCall ended, navigating away");
-          navigate("/");
-        }}
+        onEnd={() => navigate("/")}
       />
     </div>
   );

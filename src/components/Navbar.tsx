@@ -176,13 +176,6 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
-              {/* Show permission status indicator */}
-              {notificationPermission === "denied" && (
-                <span
-                  className="absolute -bottom-1 -right-1 bg-yellow-500 rounded-full w-2 h-2"
-                  title="Notifikasi browser diblokir"
-                ></span>
-              )}
             </button>
 
             {/* Notification Popup */}

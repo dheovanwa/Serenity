@@ -108,6 +108,8 @@ const ManageAppointmentContent = ({
   const [showCustomInput, setShowCustomInput] = React.useState(false);
   const [customSessions, setCustomSessions] = React.useState(2); // minimal 2 x 15m = 30m
   const [showModal, setShowModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleCancel = () => {
     setShowModal(true);
@@ -124,8 +126,30 @@ const ManageAppointmentContent = ({
     setTotalPrice(0);
     setCustomSessions(2);
     setShowModal(false);
+    navigate("/search-psi");
     // navigate("/schedule-appointment/:id?"); // Ganti dengan halaman yang sesuai
   };
+
+  const handleLanjut = () => {
+    setShowConfirmModal(true);
+  };
+
+  const handleCloseConfirmModal = () => {
+    setShowConfirmModal(false);
+  };
+
+  const handleConfirmLanjut = async () => {
+    setIsProcessing(true);
+    try {
+      await handleSaveAppointment();
+    } catch (error) {
+      console.error("Error during appointment confirmation:", error);
+    } finally {
+      setIsProcessing(false);
+      setShowConfirmModal(false);
+    }
+  };
+
   const handleDateSelectM = (newDate: Date | undefined) => {
     setDate(newDate);
   };
@@ -173,9 +197,21 @@ const ManageAppointmentContent = ({
     const dateStr = format(selectedDate, "yyyy-MM-dd");
     const bookedSlots = psychiatrist?.bookedVideo?.[dateStr] || [];
 
+    // Check if selected date is today
+    const now = new Date();
+    const isToday = selectedDate.toDateString() === now.toDateString();
+    const currentTimeMinutes = isToday
+      ? now.getHours() * 60 + now.getMinutes()
+      : 0;
+
     for (let i = 0; i <= totalMinutes - sessionMinutes; i += 15) {
       const startTotalMinutes = daySchedule.start + i;
       const endTotalMinutes = startTotalMinutes + sessionMinutes;
+
+      // Skip time slots that have already passed today
+      if (isToday && startTotalMinutes <= currentTimeMinutes) {
+        continue;
+      }
 
       const isSlotBooked =
         Array.isArray(bookedSlots) && bookedSlots.length >= 2
@@ -524,7 +560,7 @@ const ManageAppointmentContent = ({
               className="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover mt-4"
             />
             <h2 className="text-xl sm:text-2xl font-semibold text-[#000000] mt-2 dark:text-white">
-              Dr. {psychiatrist?.name}
+              {psychiatrist?.name}
             </h2>
             <p className="text-sky-500 font-semibold dark:text-blue-300">
               {psychiatrist?.specialty}
@@ -773,18 +809,6 @@ const ManageAppointmentContent = ({
         </div>
         {/* Right Section */}
         <div className="flex flex-col gap-4 w-full lg:w-2/5 ">
-          <div>
-            <p className="text-xl font-semibold text-black dark:text-white">
-              Gejala
-            </p>
-            <Textarea
-              placeholder="Masukkan gejalamu disini..."
-              className="resize-y mt-2 h-32 border-gray-600 bg-[#F2F2E2] dark:border-gray-500 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
-              value={gejala}
-              onChange={(e) => setGejala(e.target.value)}
-            />
-          </div>
-
           <div className="text-xl font-semibold text-black dark:text-white">
             <h1>Jadwal Konsultasi</h1>
           </div>
@@ -814,7 +838,7 @@ const ManageAppointmentContent = ({
                     ? "bg-[#BACBD8] text-black hover:bg-[#9FB6C6] dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800"
                     : "bg-gray-400 text-white cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
                 )}
-                onClick={handleSaveAppointment}
+                onClick={handleLanjut}
                 disabled={!isFormValid()}
               >
                 Lanjut
@@ -823,6 +847,43 @@ const ManageAppointmentContent = ({
           </div>
         </div>
       </div>
+      {/* Modal Konfirmasi Lanjut */}
+      {showConfirmModal && (
+        <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex justify-center items-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px] dark:bg-gray-800 dark:text-white">
+            <h2 className="text-xl font-semibold text-black dark:text-white">
+              Konfirmasi ke Pembayaran
+            </h2>
+            <p className="mt-2 text-black dark:text-gray-300">
+              Apakah Anda yakin ingin melanjutkan dengan jadwal ini?
+            </p>
+            <div className="flex justify-end gap-5 mt-5">
+              <Button
+                variant="outline"
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400 flex-1 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
+                onClick={handleCloseConfirmModal}
+                disabled={isProcessing}
+              >
+                Batal
+              </Button>
+              <Button
+                className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleConfirmLanjut}
+                disabled={isProcessing}
+              >
+                {isProcessing ? (
+                  <div className="flex items-center gap-2">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                    Processing...
+                  </div>
+                ) : (
+                  "Ya, Lanjutkan"
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Modal Konfirmasi Batal */}
       {showModal && (
         <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 flex justify-center items-center z-50">
@@ -845,7 +906,7 @@ const ManageAppointmentContent = ({
                 className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800"
                 onClick={handleConfirmCancel}
               >
-                Ya, Lanjutkan
+                Ya, Batalkan
               </Button>
             </div>
           </div>

@@ -28,22 +28,36 @@ messaging.onBackgroundMessage((payload) => {
   console.log("Received background message:", payload);
 
   const notificationTitle =
-    payload.notification?.title || "Pesan Baru dari Psikiater";
+    payload.notification?.title ||
+    (payload.data?.type === "video-reminder"
+      ? "Pengingat Sesi Video Call"
+      : "Pesan Baru dari Psikiater");
+
   const notificationOptions = {
-    body: payload.notification?.body || "Anda memiliki pesan baru",
+    body:
+      payload.notification?.body ||
+      (payload.data?.type === "video-reminder"
+        ? "Sesi video call Anda akan dimulai dalam 10 menit"
+        : "Anda memiliki pesan baru"),
     icon: "/vite.svg",
     badge: "/vite.svg",
     tag: payload.data?.appointmentId || "chat-notification",
     data: {
       appointmentId: payload.data?.appointmentId,
+      type: payload.data?.type,
       url:
-        payload.data?.url ||
-        `/chat?appointmentId=${payload.data?.appointmentId}`,
+        payload.data?.type === "video-reminder"
+          ? "/manage-appointment"
+          : payload.data?.url ||
+            `/chat?appointmentId=${payload.data?.appointmentId}`,
     },
     actions: [
       {
         action: "view",
-        title: "Buka Chat",
+        title:
+          payload.data?.type === "video-reminder"
+            ? "Lihat Jadwal"
+            : "Buka Chat",
       },
       {
         action: "close",
@@ -70,7 +84,8 @@ self.addEventListener("notificationclick", (event) => {
       urlToOpen = event.notification.data.url;
     } else if (
       event.notification.data?.appointmentId &&
-      event.notification.tag?.includes("reminder")
+      (event.notification.tag?.includes("reminder") ||
+        event.notification.data?.type === "video-reminder")
     ) {
       urlToOpen = "/manage-appointment";
     } else if (event.notification.data?.appointmentId) {
@@ -112,5 +127,35 @@ self.addEventListener("notificationclick", (event) => {
   } else if (event.action === "dismiss" || event.action === "close") {
     // Just close the notification - no action needed
     return;
+  }
+});
+
+// Listen for messages from the main thread (for video reminders)
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SHOW_VIDEO_REMINDER") {
+    const { data } = event.data;
+
+    self.registration.showNotification(data.title, {
+      body: data.body,
+      icon: "/vite.svg",
+      badge: "/vite.svg",
+      tag: `video-reminder-${data.appointmentId}`,
+      data: {
+        appointmentId: data.appointmentId,
+        type: "video-reminder",
+        url: "/manage-appointment",
+      },
+      actions: [
+        {
+          action: "view",
+          title: "Lihat Jadwal",
+        },
+        {
+          action: "close",
+          title: "Tutup",
+        },
+      ],
+      requireInteraction: true,
+    });
   }
 });

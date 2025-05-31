@@ -26,6 +26,7 @@ import {
 import { db } from "../config/firebase"; // Adjust the import based on your project structure
 import { HomeController } from "../controllers/HomeController";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 const DashboardPsychiatrist: React.FC = () => {
   // Add new state for dialog
@@ -339,6 +340,9 @@ const DashboardPsychiatrist: React.FC = () => {
           }
         }
         setMessages(chatMessages);
+
+        // Initialize notification scheduler
+        await notificationScheduler.restoreScheduledNotifications();
       } catch (error) {
         console.error("Error fetching active appointments or chats:", error);
       }

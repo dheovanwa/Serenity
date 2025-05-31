@@ -74,7 +74,12 @@ export const useFCMNotifications = () => {
             notif.onclick = () => {
               window.focus();
               if (payload.data?.appointmentId) {
-                window.location.href = `/chat?appointmentId=${payload.data.appointmentId}`;
+                // Handle different notification types
+                if (payload.data?.type === "video-reminder") {
+                  window.location.href = "/manage-appointment";
+                } else {
+                  window.location.href = `/chat?appointmentId=${payload.data.appointmentId}`;
+                }
               }
               notif.close();
             };

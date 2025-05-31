@@ -109,3 +109,63 @@ exports.sendChatNotification = functions.firestore
       return null;
     }
   });
+
+exports.sendVideoAppointmentReminder = functions.https.onCall(
+  async (data, context) => {
+    try {
+      const { appointmentId, userId, doctorName, timeRange } = data;
+
+      if (!appointmentId || !userId || !doctorName || !timeRange) {
+        throw new functions.https.HttpsError(
+          "invalid-argument",
+          "Missing required parameters"
+        );
+      }
+
+      // Get user's FCM token
+      const userDoc = await admin.firestore().doc(`users/${userId}`).get();
+
+      if (!userDoc.exists) {
+        throw new functions.https.HttpsError("not-found", "User not found");
+      }
+
+      const userData = userDoc.data();
+      const fcmToken = userData.fcmToken;
+
+      if (!fcmToken) {
+        console.log("No FCM token found for user");
+        return { success: false, message: "No FCM token found" };
+      }
+
+      // Prepare notification payload
+      const payload = {
+        notification: {
+          title: "Pengingat Sesi Video Call",
+          body: `Sesi video call dengan Dr. ${doctorName} akan dimulai dalam 10 menit (${timeRange}). Bersiaplah!`,
+          icon: "/vite.svg",
+          click_action: "https://your-domain.com/manage-appointment",
+        },
+        data: {
+          appointmentId: appointmentId,
+          type: "video-reminder",
+          doctorName: doctorName,
+          timeRange: timeRange,
+          url: "/manage-appointment",
+        },
+        token: fcmToken,
+      };
+
+      // Send notification
+      const response = await admin.messaging().send(payload);
+      console.log("Video reminder notification sent successfully:", response);
+
+      return { success: true, messageId: response };
+    } catch (error) {
+      console.error("Error sending video reminder notification:", error);
+      throw new functions.https.HttpsError(
+        "internal",
+        "Failed to send notification"
+      );
+    }
+  }
+);

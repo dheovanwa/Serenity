@@ -28,6 +28,7 @@ import {
 import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import ProfilePic from "../assets/default_profile_image.svg"; // Asumsi ini gelap dan perlu di-invert
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 interface Message {
   id: string;
@@ -78,6 +79,16 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
   const [latestMessages, setLatestMessages] = useState<
     Record<string, { text: string; sender: "me" | "them" }>
   >({});
+
+  // Initialize notification scheduler on component mount
+  useEffect(() => {
+    const initializeNotifications = async () => {
+      await notificationScheduler.restoreScheduledNotifications();
+    };
+
+    initializeNotifications();
+  }, []);
+
   const [isEnding, setIsEnding] = useState(false);
   const [hasEnded, setHasEnded] = useState(false);
   const [summary, setSummary] = useState<string | null>(null);
