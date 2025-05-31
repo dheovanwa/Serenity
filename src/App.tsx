@@ -23,6 +23,7 @@ import VideoCallPage from "./Pages/VideoCallPage";
 import Forum from "./Pages/Forum";
 import ForumPost from "./Pages/ForumPost";
 // import { initializeQuotaReset } from "./utils/storePsychiatrists";
+import Landing from "./Pages/Landing";
 
 const App: React.FC = () => {
   // useEffect(() => {
@@ -39,7 +40,14 @@ const App: React.FC = () => {
         <Route path="/verify-email" element={<Verif />} />
 
         <Route path="/forgot-password/*" element={<ForgotPassword />} />
+        <Route
+          path="/Landing"
+          element={
 
+              <Landing/>
+
+          }
+        />
         {/* Routes with navbar */}
         <Route
           path="/"
@@ -161,6 +169,7 @@ const App: React.FC = () => {
             </Layout>
           }
         />
+        
       </Routes>
     </Router>
   );
