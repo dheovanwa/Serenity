@@ -8,6 +8,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { db } from "../config/firebase";
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 const AppointmentStatusUpdater = () => {
   useEffect(() => {
@@ -68,6 +69,11 @@ const AppointmentStatusUpdater = () => {
                   currentTotalMinutes >= startTotalMinutes &&
                   currentTotalMinutes <= endTotalMinutes
                 ) {
+                  // Cancel notification since appointment has started
+                  await notificationScheduler.cancelScheduledNotification(
+                    docSnap.id
+                  );
+
                   // Update appointment status to "Sedang berlangsung"
                   await updateDoc(doc(db, "appointments", docSnap.id), {
                     status: "Sedang berlangsung",
@@ -76,6 +82,11 @@ const AppointmentStatusUpdater = () => {
                     `Updated video appointment ${docSnap.id} to "Sedang berlangsung"`
                   );
                 } else if (currentTotalMinutes > endTotalMinutes) {
+                  // Cancel notification since appointment is finished
+                  await notificationScheduler.cancelScheduledNotification(
+                    docSnap.id
+                  );
+
                   // Update to "Selesai" if current time is past the end time
                   await updateDoc(doc(db, "appointments", docSnap.id), {
                     status: "Selesai",
@@ -133,6 +144,11 @@ const AppointmentStatusUpdater = () => {
 
               // If current time is past the end time, mark as completed
               if (currentTotalMinutes > endTotalMinutes) {
+                // Cancel any remaining notification
+                await notificationScheduler.cancelScheduledNotification(
+                  docSnap.id
+                );
+
                 await updateDoc(doc(db, "appointments", docSnap.id), {
                   status: "Selesai",
                 });

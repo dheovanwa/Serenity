@@ -9,6 +9,7 @@ import { collection, addDoc, doc, updateDoc, getDoc } from "firebase/firestore";
 import { db } from "../config/firebase";
 import starIcon from "../assets/star.svg";
 import briefcase from "../assets/briefcase.svg";
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -417,7 +418,18 @@ const ManageAppointmentContent = ({
       console.log(newAppointment);
 
       const appointmentsRef = collection(db, "appointments");
-      await addDoc(appointmentsRef, newAppointment);
+      const appointmentDoc = await addDoc(appointmentsRef, newAppointment);
+
+      // Schedule notification for video appointments
+      if (selectedMethod === "Video" && selectedTime) {
+        await notificationScheduler.scheduleVideoAppointmentReminder(
+          appointmentDoc.id,
+          documentId,
+          psychiatrist.name,
+          dateStr,
+          selectedTime
+        );
+      }
 
       navigate("/manage-appointment");
     } catch (error) {

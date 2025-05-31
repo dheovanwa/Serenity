@@ -18,6 +18,7 @@ import {
   limit,
 } from "firebase/firestore";
 import ProfilePic from "../assets/default_profile_image.svg";
+import { notificationScheduler } from "../utils/notificationScheduler";
 
 const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   const [userName, setUserName] = useState<string>("Loading...");
@@ -34,22 +35,11 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
 
   useEffect(() => {
     const checkAuthAndLoadData = async () => {
-      setIsLoading(true); // Mulai loading saat data diambil
-      const documentId = localStorage.getItem("documentId");
-
-      // Cek autentikasi
-      const isAuthenticated = await controller.checkAuthentication(documentId);
-
-      if (!isAuthenticated) {
-        navigate("/signin"); // Redirect jika tidak terautentikasi
-        return; // Hentikan eksekusi lebih lanjut
-      }
-
-      // Ambil nama pengguna jika terautentikasi
-      const name = await controller.fetchUserName(documentId);
-      console.log(name);
       setUserName(name);
-      setIsLoading(false); // Akhiri loading setelah data diambil
+      setIsLoading(false);
+
+      // Initialize notification scheduler
+      await notificationScheduler.restoreScheduledNotifications();
     };
 
     checkAuthAndLoadData();

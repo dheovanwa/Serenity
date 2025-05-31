@@ -898,6 +898,29 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
     );
   };
 
+  // Add FCM notification handling
+  useEffect(() => {
+    // Listen for messages from service worker
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.addEventListener("message", (event) => {
+        if (event.data && event.data.type === "NAVIGATE_TO_CHAT") {
+          const appointmentId = event.data.appointmentId;
+          if (appointmentId && appointmentId !== activeAppointment?.id) {
+            // Navigate to the specific chat
+            const newParams = new URLSearchParams();
+            newParams.set("appointmentId", appointmentId);
+            window.history.pushState(
+              {},
+              "",
+              `${window.location.pathname}?${newParams}`
+            );
+            window.location.reload();
+          }
+        }
+      });
+    }
+  }, [activeAppointment]);
+
   return (
     <div
       className={`flex h-screen font-sans relative overflow-hidden ${
