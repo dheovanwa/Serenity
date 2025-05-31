@@ -27,6 +27,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   const [loadingUpcoming, setLoadingUpcoming] = useState(true);
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
   const controller = new HomeController();
@@ -46,6 +47,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
 
       // Ambil nama pengguna jika terautentikasi
       const name = await controller.fetchUserName(documentId);
+      console.log(name);
       setUserName(name);
       setIsLoading(false); // Akhiri loading setelah data diambil
     };

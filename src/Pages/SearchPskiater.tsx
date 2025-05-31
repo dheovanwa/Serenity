@@ -3,8 +3,14 @@ import searchIcon from "../assets/search1.png"; // Asumsi ikon ini hitam/gelap
 import chevronDownIcon from "../assets/con1.png"; // Asumsi ikon ini hitam/gelap
 import SparklingIcon from "../assets/Sparkling.svg"; // Asumsi ikon ini mungkin sudah berwarna (misal: emas/putih)
 import PsychiatristSearchProfile from "../components/PsychiatristSearchProfile";
-import { collection, getDocs } from "firebase/firestore";
+import { collection, getDocs, query, where } from "firebase/firestore";
 import { db } from "../config/firebase";
+import {
+  getContentBasedRecommendations,
+  getUserPreferencesFromProfile,
+} from "../utils/recommendation";
+import { UserProfile, Psikolog } from "../models/types";
+import { getAuth, onAuthStateChanged } from "firebase/auth";
 
 // Import logo dark dan light untuk komponen ini jika perlu
 import logoLight from "../assets/Logo - Light.png"; // Contoh, jika logo muncul di sini
@@ -77,7 +83,6 @@ const specialties = [
 ];
 
 const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
-  // Terima prop isDarkMode
   const [searchText, setSearchText] = useState("");
   const [selectedSort, setSelectedSort] = useState("");
   const [isSortOpen, setIsSortOpen] = useState(false);
@@ -87,6 +92,7 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedSpecialty, setSelectedSpecialty] = useState<string>("");
   const [isSpecialtyOpen, setIsSpecialtyOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -114,6 +120,37 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
     };
 
     fetchPsychiatrists();
+  }, []);
+
+  useEffect(() => {
+    // Fetch user profile from Firestore
+    const fetchUserProfile = async () => {
+      try {
+        const auth = getAuth();
+        // Tunggu hingga auth state siap
+        onAuthStateChanged(auth, async (user) => {
+          if (!user) {
+            setUserProfile(null);
+            return;
+          }
+          const userId = user.uid;
+          const usersRef = collection(db, "users");
+          const q = query(usersRef, where("uid", "==", userId));
+          const querySnapshot = await getDocs(q);
+          if (!querySnapshot.empty) {
+            const docSnap = querySnapshot.docs[0];
+            setUserProfile({ uid: docSnap.id, ...docSnap.data() });
+          } else {
+            setUserProfile(null);
+          }
+        });
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+        setUserProfile(null);
+      }
+    };
+
+    fetchUserProfile();
   }, []);
 
   useEffect(() => {
@@ -166,6 +203,16 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
     return matchesSearch && matchesSpecialty;
   });
 
+  // Use content-based recommendation for sorting
+  const userPreferences = userProfile
+    ? getUserPreferencesFromProfile(userProfile)
+    : { preferredSpecialties: [], preferredGayaInteraksi: [] };
+  const recommendedPsychiatrists = getContentBasedRecommendations(
+    filteredPsychiatrists as Psikolog[],
+    userPreferences
+  );
+
+  // Sort psychiatrists: if jadwal[today] === null, group them at the bottom
   const isNotAvailableToday = (psychiatrist: Psychiatrist): boolean => {
     const days = [
       "minggu",
@@ -177,12 +224,25 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
       "sabtu",
     ];
     const today = days[new Date().getDay()];
-    return (
-      !psychiatrist.jadwal ||
-      !psychiatrist.jadwal[today] ||
-      psychiatrist.jadwal[today] === null
-    );
+    return !psychiatrist.jadwal || psychiatrist.jadwal[today] === null;
   };
+
+  const sortedPsychiatrists = (() => {
+    const list =
+      recommendedPsychiatrists.length > 0
+        ? recommendedPsychiatrists
+        : filteredPsychiatrists;
+    const available = [];
+    const holiday = [];
+    for (const psy of list) {
+      if (isNotAvailableToday(psy)) {
+        holiday.push(psy);
+      } else {
+        available.push(psy);
+      }
+    }
+    return [...available, ...holiday];
+  })();
 
   const sortPsychiatrists = (
     list: Psychiatrist[],
@@ -212,11 +272,11 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
     });
   };
 
-  const sortedPsychiatrists = sortPsychiatrists(
-    filteredPsychiatrists,
-    selectedSort,
-    sortOrder
-  );
+  // const sortedPsychiatrists = sortPsychiatrists(
+  //   filteredPsychiatrists,
+  //   selectedSort,
+  //   sortOrder
+  // );
 
   return (
     <div
