@@ -22,6 +22,7 @@ import VideoCallPage from "./Pages/VideoCallPage";
 import Forum from "./Pages/Forum";
 import ForumPost from "./Pages/ForumPost";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Landing from "./Pages/Landing";
 
 const App: React.FC = () => {
   return (
@@ -33,7 +34,9 @@ const App: React.FC = () => {
         <Route path="/verify-email" element={<Verif />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
-        {/* Protected routes with navbar */}
+        <Route path="/forgot-password/*" element={<ForgotPassword />} />
+        <Route path="/Landing" element={<Landing />} />
+        {/* Routes with navbar */}
         <Route
           path="/"
           element={
