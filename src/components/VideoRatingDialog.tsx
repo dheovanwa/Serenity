@@ -109,15 +109,15 @@ const VideoRatingDialog: React.FC<VideoRatingDialogProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
       <div
         className={`p-6 rounded-lg shadow-xl w-80 max-w-sm mx-4 ${
-          isDarkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"
+          isDarkMode ? "bg-gray-800 text-white" : "bg-[#161F36] text-gray-800"
         }`}
       >
         <h3
           className={`text-xl font-semibold mb-4 text-center ${
-            isDarkMode ? "text-white" : "text-gray-800"
+            isDarkMode ? "text-white" : "text-[#E6E6E6]"
           }`}
         >
           Beri Rating untuk Sesi Video
@@ -125,7 +125,7 @@ const VideoRatingDialog: React.FC<VideoRatingDialogProps> = ({
 
         <p
           className={`text-center mb-4 ${
-            isDarkMode ? "text-gray-300" : "text-gray-600"
+            isDarkMode ? "text-gray-300" : "text-[#E6E6E6]"
           }`}
         >
           Bagaimana pengalaman Anda dengan Dr. {appointment.doctorName}?
@@ -166,7 +166,7 @@ const VideoRatingDialog: React.FC<VideoRatingDialogProps> = ({
         {rating > 0 && (
           <p
             className={`text-sm text-center mb-4 ${
-              isDarkMode ? "text-gray-300" : "text-gray-600"
+              isDarkMode ? "text-gray-300" : "text-[#E6E6E6]"
             }`}
           >
             Anda akan memberi rating {rating} bintang
@@ -199,7 +199,7 @@ const VideoRatingDialog: React.FC<VideoRatingDialogProps> = ({
                 ? "bg-gray-400 text-white cursor-not-allowed"
                 : isDarkMode
                 ? "bg-blue-700 text-white hover:bg-blue-800"
-                : "bg-blue-500 text-white hover:bg-blue-600"
+                : "bg-[#293c63] text-white hover:bg-[#2b3447]"
             }`}
           >
             {isSubmitting ? "Mengirim..." : "Kirim Rating"}

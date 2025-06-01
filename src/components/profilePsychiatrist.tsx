@@ -12,6 +12,7 @@ import user from "../assets/User.svg";
 import setting from "../assets/Settings.svg";
 import chevronDownIcon from "../assets/con1.png";
 import calender from "../assets/Calendar.svg";
+import { Calendar } from "lucide-react";
 import { Separator } from "../components/Seperator";
 
 const PsychiatristProfile = () => {
@@ -408,7 +409,7 @@ const PsychiatristProfile = () => {
 
   return (
     <div className="w-full h-screen flex flex-col">
-      <div className="w-full bg-white items-center justify-center mt-40 ">
+      <div className="w-full items-center justify-center mt-40 ">
         <div className="flex items-center justify-center">
           <div className="relative w-24 h-24 sm:w-55 sm:h-55 rounded-full overflow-hidden">
             <img
@@ -440,13 +441,13 @@ const PsychiatristProfile = () => {
           </div>
         </div>
 
-        <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left mt-6">
+        <div className="flex text-[#161F36] dark:text-[#E6E6E6] text-center items-center justify-center sm:text-left mt-6">
           <h1 className="text-2xl sm:text-4xl font-medium">{formData.name}</h1>
         </div>
-        <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left ">
+        <div className="flex text-[#161F36] dark:text-[#E6E6E6] text-center items-center justify-center sm:text-left ">
           <h2 className="text-xl font-light">{formData.specialization}</h2>
         </div>
-        <div className="flex justify-center text-md items-center text-[#161F36] font-light mb-10">
+        <div className="flex justify-center text-md items-center text-[#161F36] dark:text-[#E6E6E6] font-light mb-10">
           {formData.email}
         </div>
 
@@ -456,16 +457,20 @@ const PsychiatristProfile = () => {
             {/* Profile Button */}
             <button
               className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${
-                isProfileClicked ? "bg-[#BACBD8]" : ""
+                isProfileClicked
+                  ? "bg-[#BACBD8] dark:text-[#161F36]"
+                  : "text-[] dark:text-[#E6E6E6]"
               } transition-all duration-300`}
               onClick={handleProfileClick}
             >
-              <h1 className="text-lg text-center ">Profile</h1>
+              <h1 className="text-lg text-center">Profile</h1>
             </button>
 
             <button
               className={`flex justify-center items-center rounded-lg mb-5 w-[30%] h-[40px] ${
-                isSettingsClicked ? "bg-[#BACBD8]" : ""
+                isSettingsClicked
+                  ? "bg-[#BACBD8] dark:text-[#161F36]"
+                  : "text-[] dark:text-[#E6E6E6]"
               } transition-all duration-300`}
               onClick={handleSettingsClick}
             >
@@ -477,21 +482,21 @@ const PsychiatristProfile = () => {
 
       {/*DESKTOP*/}
       {!isMobile && (
-        <div className=" bg-[#F2EDE2] flex h-screen">
+        <div className=" bg-[#F2EDE2] dark:bg-[#151515] flex h-screen">
           <div className="relative z-1 flex flex-col lg:flex-row w-full ">
             {/*Left*/}
 
             <div className="w-full lg:w-1/4 flex flex-col xl:mr-1 lg:pt-10 lg:mr-10  ">
-              <h2 className="text-[#161F36]  mb-1 lg:text-[22px] font-regular text-left sm:ml-12 md:ml-10 lg:ml-20">
+              <h2 className="text-[#161F36] dark:text-[#E6E6E6] mb-1 lg:text-[22px] font-regular text-left sm:ml-12 md:ml-10 lg:ml-20">
                 Jam Kerja
               </h2>
 
-              <div className="bg-transparent lg:w-[70%] md:w-[40%] sm:w-[40%] text-[#161F36] border-2 border-[#161F36] sm:ml-12 md:ml-10 md:mr-10 lg:ml-20 rounded-[6px] p-4">
+              <div className="bg-transparent lg:w-[70%] md:w-[40%] sm:w-[40%] text-[#161F36] dark:text-[#E6E6E6] border-2 border-[#161F36] dark:border-[#E6E6E6] sm:ml-12 md:ml-10 md:mr-10 lg:ml-20 rounded-[6px] p-4">
                 <div className="flex flex-col gap-2">
                   {Object.entries(workSchedule).map(([day, time]) => (
                     <div
                       key={day}
-                      className="flex justify-between items-center "
+                      className="flex justify-between items-center"
                     >
                       <span className="text-left text-xl flex-1">
                         {day}, {time}
@@ -562,7 +567,7 @@ const PsychiatristProfile = () => {
               <div className="grid grid-cols-1 w-full gap-4 mt-10 ">
                 <div>
                   <InputField
-                    icon={<img src={calender} alt="calendar" className="" />}
+                    icon={<Calendar />}
                     iconPosition="left"
                     label="Tahun Bergabung"
                     type="text"
@@ -607,18 +612,6 @@ const PsychiatristProfile = () => {
                 </div>
               </div>
               <div className="flex justify-end items-end w-full gap-6 lg:gap-10 lg:mb-20 md:mb-5 sm:pr-10 sm:mb-5 pt-10 lg:pr-17 md:pr-10 col-span-2">
-                <button
-                  onClick={() => {
-                    if (isEditing) {
-                      handleCancelEdit();
-                    } else {
-                      setIsEditing(true);
-                    }
-                  }}
-                  className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer"
-                >
-                  {isEditing ? "Batal" : "Ubah"}
-                </button>
                 {isEditing && (
                   <div className="flex justify-center">
                     <button
@@ -636,8 +629,8 @@ const PsychiatristProfile = () => {
             </div>
           </div>
           {isOverlayVisible && (
-            <div className="fixed inset-0 bg-white bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
-              <div className="bg-[#F2EDE2] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
+            <div className="fixed inset-0 bg-black/50 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
+              <div className="bg-[#F2EDE2] dark:bg-[#161F36] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
                 <h2 className="text-lg font-semibold mb-4">
                   Apakah kamu yakin?
                 </h2>
@@ -648,7 +641,7 @@ const PsychiatristProfile = () => {
                 <div className="flex flex-wrap justify-end gap-4">
                   <button
                     onClick={handleCloseOverlay}
-                    className="bg-transparent border-1 font-medium text-sm text-[#161F36] border-black px-4 py-2 rounded-md w-full sm:w-auto "
+                    className="bg-transparent border-1 font-medium text-sm text-[#161F36] dark:text-[#E6E6E6] border-black dark:border-[#E6E6E6] px-4 py-2 rounded-md w-full sm:w-auto "
                   >
                     Batalkan
                   </button>
@@ -675,10 +668,10 @@ const PsychiatristProfile = () => {
 
       {/*MOBILE*/}
       {isMobile && isProfileClicked && (
-        <div className=" bg-[#F2EDE2] flex h-screen w-full ml-0 ">
+        <div className=" bg-[#F2EDE2] dark:bg-[#151515] flex h-screen w-full ml-0 ">
           <div className="relative z-1 flex flex-col w-full ">
             <div className="flex flex-col">
-              <div className="grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
+              <div className="grid grid-cols-1 w-full text-[#161F36] dark:text-[#E6E6E6] gap-3 mt-5 pl-5">
                 <div className="md:col-span-2">
                   <InputField
                     label="Nama Lengkap"
@@ -727,7 +720,7 @@ const PsychiatristProfile = () => {
               <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
                 <div>
                   <InputField
-                    icon={<img src={calender} alt="calendar" className="" />}
+                    icon={<Calendar />}
                     iconPosition="left"
                     label="Tahun Bergabung"
                     type="text"
@@ -777,10 +770,10 @@ const PsychiatristProfile = () => {
       )}
 
       {isMobile && isSettingsClicked && (
-        <div className=" bg-[#F2EDE2] flex h-screen w-full  ">
+        <div className=" bg-[#F2EDE2] dark:bg-[#151515] flex h-screen w-full  ">
           <div className="relative z-1 flex flex-col w-full ">
             <div className="flex flex-col justify-center items-center">
-              <div className="bg-transparent  w-[80%]  mt-10  text-[#161F36] border-2 border-[#161F36] rounded-[6px] p-4">
+              <div className="bg-transparent  w-[80%]  mt-10  text-[#161F36] dark:text-[#E6E6E6] border-2 border-[#161F36] dark:border-[#E6E6E6] rounded-[6px] p-4">
                 <div className="flex flex-col gap-2">
                   {Object.entries(workSchedule).map(([day, time]) => (
                     <div

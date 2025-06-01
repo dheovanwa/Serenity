@@ -581,7 +581,7 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
       return (
         <button
           className={`bg-[#187DA8] text-white px-3 py-1 rounded hover:bg-sky-600 relative
-                      dark:bg-blue-700 dark:hover:bg-blue-800 ${
+                      dark:bg-[#1E9DD3] dark:hover:bg-[#378cb1] dark:text-[#E6E6E6] ${
                         // Dark mode styles
                         isLoading ? "cursor-not-allowed opacity-70" : ""
                       }`}

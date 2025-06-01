@@ -835,7 +835,7 @@ const ManageAppointmentContent = ({
                   // Use cn for conditional classes
                   `h-auto py-2 px-6 rounded-md font-semibold`, // Base button classes
                   isFormValid()
-                    ? "bg-[#BACBD8] text-black hover:bg-[#9FB6C6] dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800"
+                    ? "bg-[#BACBD8] text-black hover:bg-[#9FB6C6] dark:bg-[#BACBD8] dark:text-[#161F36] dark:hover:bg-[#96a5b1]"
                     : "bg-gray-400 text-white cursor-not-allowed dark:bg-gray-600 dark:text-gray-400"
                 )}
                 onClick={handleLanjut}
@@ -867,7 +867,7 @@ const ManageAppointmentContent = ({
                 Batal
               </Button>
               <Button
-                className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 flex-1 dark:bg-[#BACBD8] dark:text-[#161F36] dark:hover:bg-[#96a5b1] disabled:opacity-50 disabled:cursor-not-allowed"
                 onClick={handleConfirmLanjut}
                 disabled={isProcessing}
               >

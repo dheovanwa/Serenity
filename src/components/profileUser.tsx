@@ -485,7 +485,7 @@ const UserProfile = () => {
 
           {isOverlayVisible && (
             <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
-              <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
+              <div className="bg-[#F2EDE2] dark:bg-[#161F36] p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
                 <h2 className="text-xl font-bold mb-4">Apakah kamu yakin?</h2>
                 <p className="text-sm mb-4">
                   Aksi ini akan mengeluarkanmu dari akunmu <br />
@@ -494,7 +494,7 @@ const UserProfile = () => {
                 <div className="flex flex-wrap justify-end gap-4">
                   <button
                     onClick={handleCloseOverlay}
-                    className="bg-transparent border-2 text-[#161F36] px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
+                    className="bg-transparent border-2 border-gray-400 text-[#161F36] dark:text-white px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
                   >
                     Batalkan
                   </button>

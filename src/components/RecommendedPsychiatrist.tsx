@@ -201,12 +201,12 @@ export function CarouselDemo() {
                     {psychiatrist.name}
                   </span>
                   {/* Spesialisasi Psikiater */}
-                  <p className="text-lg text-gray-500">
+                  <p className="text-lg text-gray-500 dark:text-[#E6E6E6]">
                     {psychiatrist.specialty}
                   </p>
                   {/* Rating */}
                   {psychiatrist.rating !== undefined && (
-                    <p className="text-md text-gray-600 flex items-center gap-1">
+                    <p className="text-md text-gray-600 dark:text-[#E6E6E6] flex items-center gap-1">
                       Rating:{" "}
                       {parseFloat(psychiatrist.rating as any).toFixed(1)}
                       <img

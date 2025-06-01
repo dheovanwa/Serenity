@@ -504,43 +504,43 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   return (
     <div
       className="min-h-screen w-full bg-cover flex flex-col overflow-x-hidden
-                 bg-[#F2EDE2] dark:bg-[#161F36] transition-colors duration-300"
+                   bg-[#F2EDE2] dark:bg-[#161F36] transition-colors duration-300"
     >
       <AppointmentStatusUpdater />{" "}
       {/* Pastikan ini adalah komponen React.FC yang di-render */}
-      <div className="p-15 text-center pt-20">
+      <div className="p-4 sm:p-8 md:p-10 lg:p-15 text-center pt-10 sm:pt-16 md:pt-20">
         <h1
-          className="text-6xl font-extrabold mb-4 drop-shadow-md
-                       text-[#161F36] dark:text-white"
+          className="text-4xl sm:text-5xl md:text-6xl font-extrabold mb-2 sm:mb-4 drop-shadow-md
+                           text-[#161F36] dark:text-white"
         >
           Selamat datang,{" "}
           <span className="text-[#ce9d85] dark:text-blue-300">
             {firstName}!
           </span>
         </h1>
-        <p className="text-xl font-medium text-[#161F36] dark:text-gray-300">
+        <p className="text-base sm:text-lg md:text-xl font-medium text-[#161F36] dark:text-gray-300 px-4">
           Kami siap membantu perjalanan kesehatan mental Anda.
         </p>
       </div>
       {/* Sesi yang sedang Aktif (for user, only Video method) */}
-      <div className="flex justify-center p-4 my-8 flex-col items-center">
-        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-4xl xl:max-w-6xl">
+      <div className="flex justify-center p-4 my-4 sm:my-8 flex-col items-center">
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-sm sm:max-w-xl md:max-w-4xl xl:max-w-6xl text-center sm:text-left">
           Sesi yang sedang Aktif
         </h2>
-        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
+        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-4 sm:p-6 md:p-10 w-full max-w-sm sm:max-w-xl md:max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
           {loadingSessions ? (
-            <div className="text-center text-gray-500 text-lg">
+            <div className="text-center text-gray-500 text-base sm:text-lg">
               Memuat sesi aktif...
             </div>
           ) : activeSessions.length === 0 ? (
-            <div className="text-center text-gray-500 text-lg mt-8">
+            <div className="text-center text-gray-500 text-base sm:text-lg mt-4 sm:mt-8">
               Tidak ada sesi video yang sedang aktif.
             </div>
           ) : (
             activeSessions.map((session) => (
               <div
                 key={session.id}
-                className="flex items-center pb-6 mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
+                className="flex flex-col sm:flex-row items-center pb-4 sm:pb-6 mb-4 sm:mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
                 onClick={() => {
                   // Store the appointmentId before navigating
                   localStorage.setItem("currentAppointmentId", session.id);
@@ -552,25 +552,25 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                 <img
                   src={session.psychiatristImage}
                   alt={session.psychiatristName}
-                  className="w-20 h-20 rounded-full mr-6 object-cover"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-4 sm:mb-0 sm:mr-6 object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = ProfilePic;
                   }}
                 />
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <p className="text-xl font-semibold text-gray-900 dark:text-[#E6E6E6]">
+                <div className="flex-1 text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start">
+                    <p className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-[#E6E6E6]">
                       {session.psychiatristName}
                     </p>
                   </div>
-                  <div className="flex items-center gap-4 mt-1">
-                    <span className="text-base text-[#161F36] dark:text-[#E6E6E6]">
+                  <div className="flex flex-col sm:flex-row items-center sm:items-start gap-1 sm:gap-4 mt-1">
+                    <span className="text-sm sm:text-base text-[#161F36] dark:text-[#E6E6E6]">
                       Video Call
                     </span>
-                    <span className="text-base text-[#161F36] dark:text-[#E6E6E6]">
+                    <span className="text-sm sm:text-base text-[#161F36] dark:text-[#E6E6E6]">
                       {session.time}
                     </span>
-                    <span className="text-base text-[#161F36] dark:text-[#E6E6E6]">
+                    <span className="text-sm sm:text-base text-[#161F36] dark:text-[#E6E6E6]">
                       {session.date
                         ? new Date(session.date).toLocaleDateString("id-ID", {
                             day: "numeric",
@@ -580,12 +580,12 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                         : ""}
                     </span>
                   </div>
-                  <p className="text-lg text-[#161F36] dark:text-[#E6E6E6]">
+                  <p className="text-sm sm:text-lg text-[#161F36] dark:text-[#E6E6E6] mt-2 sm:mt-0">
                     {session.symptoms ? `Gejala: ${session.symptoms}` : ""}
                   </p>
                 </div>
                 <button
-                  className="flex items-center text-[#161F36] dark:text-white font-bold text-2xl ml-6"
+                  className="flex items-center text-[#161F36] dark:text-white font-bold text-lg sm:text-2xl mt-4 sm:mt-0 sm:ml-6"
                   tabIndex={-1}
                   type="button"
                   style={{ pointerEvents: "none", opacity: 0.7 }}
@@ -595,7 +595,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                   <img
                     src={send}
                     alt="Send icon"
-                    className="h-8 w-8 ml-2 object-contain dark:invert"
+                    className="h-6 w-6 sm:h-8 sm:w-8 ml-1 sm:ml-2 object-contain dark:invert"
                   />
                 </button>
               </div>
@@ -603,24 +603,24 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
           )}
         </div>
       </div>
-      <div className="flex justify-center p-4 my-8 flex-col items-center ">
-        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-4xl xl:max-w-6xl">
+      <div className="flex justify-center p-4 my-4 sm:my-8 flex-col items-center ">
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-sm sm:max-w-xl md:max-w-4xl xl:max-w-6xl text-center sm:text-left">
           Sesi chat yang sedang aktif
         </h2>
-        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
+        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-4 sm:p-6 md:p-10 w-full max-w-sm sm:max-w-xl md:max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
           {loadingChats ? (
-            <div className="text-center text-gray-500 text-lg">
+            <div className="text-center text-gray-500 text-base sm:text-lg">
               Memuat sesi chat...
             </div>
           ) : activeChats.length === 0 ? (
-            <div className="text-center text-gray-500 text-lg mt-8">
+            <div className="text-center text-gray-500 text-base sm:text-lg mt-4 sm:mt-8">
               Tidak ada sesi chat yang sedang aktif.
             </div>
           ) : (
             activeChats.map((chat) => (
               <div
                 key={chat.id}
-                className="flex items-center pb-6 mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
+                className="flex flex-col sm:flex-row items-center pb-4 sm:pb-6 mb-4 sm:mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
                 onClick={() => navigate(`/chat?chatId=${chat.id}`)}
                 tabIndex={0}
                 role="button"
@@ -633,29 +633,29 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                 <img
                   src={chat.psychiatristImage}
                   alt={chat.psychiatristName}
-                  className="w-20 h-20 rounded-full mr-6 object-cover"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full mb-4 sm:mb-0 sm:mr-6 object-cover"
                   onError={(e) => {
                     (e.target as HTMLImageElement).src = ProfilePic;
                   }}
                 />
-                <div className="flex-1">
-                  <div className="flex items-center">
-                    <p className="text-xl font-semibold text-[#161F36] dark:text-[#E6E6E6]">
+                <div className="flex-1 text-center sm:text-left">
+                  <div className="flex items-center justify-center sm:justify-start">
+                    <p className="text-lg sm:text-xl font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                       {chat.psychiatristName}
                     </p>
                     {!chat.latestReceiverRead && (
                       <span
-                        className="ml-2 inline-block w-3 h-3 rounded-full bg-red-600"
+                        className="ml-2 inline-block w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-600"
                         title="Pesan belum dibaca"
                       ></span>
                     )}
                   </div>
-                  <p className="text-lg text-[#161F36] dark:text-[#E6E6E6]">
+                  <p className="text-sm sm:text-lg text-[#161F36] dark:text-[#E6E6E6] mt-2 sm:mt-0">
                     {chat.latestMessage}
                   </p>
                 </div>
                 <button
-                  className="flex items-center text-[#161F36] dark:text-white font-bold text-2xl ml-6"
+                  className="flex items-center text-[#161F36] dark:text-white font-bold text-lg sm:text-2xl mt-4 sm:mt-0 sm:ml-6"
                   tabIndex={-1}
                   type="button"
                   style={{ pointerEvents: "none", opacity: 0.7 }}
@@ -665,7 +665,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                   <img
                     src={send}
                     alt="Send icon"
-                    className="h-8 w-8 ml-2 object-contain dark:invert"
+                    className="h-6 w-6 sm:h-8 sm:w-8 ml-1 sm:ml-2 object-contain dark:invert"
                   />
                 </button>
               </div>
@@ -674,56 +674,59 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
         </div>
       </div>
       {/* Pertemuan Mendatang Section */}
-      <div className="flex justify-center p-4 my-8 flex-col items-center">
-        <h2 className="text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-4xl xl:max-w-6xl">
+      <div className="flex justify-center p-4 my-4 sm:my-8 flex-col items-center">
+        <h2 className="text-2xl sm:text-3xl font-semibold mb-4 text-[#161F36] dark:text-[#E6E6E6] w-full max-w-sm sm:max-w-xl md:max-w-4xl xl:max-w-6xl text-center sm:text-left">
           Sesi pertemuan mendatang
         </h2>
-        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-10 w-full max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
+        <div className="bg-[#E4DCCC] rounded-lg shadow-md p-4 sm:p-6 md:p-10 w-full max-w-sm sm:max-w-xl md:max-w-4xl xl:max-w-6xl mt-4 dark:bg-[#1A2947]">
           {loadingUpcoming ? (
-            <div className="text-center text-gray-500 text-lg">
+            <div className="text-center text-gray-500 text-base sm:text-lg">
               Memuat sesi pertemuan...
             </div>
           ) : upcomingAppointments.length === 0 ? (
-            <div className="text-center text-gray-500 text-lg mt-8">
+            <div className="text-center text-gray-500 text-base sm:text-lg mt-4 sm:mt-8">
               Tidak ada sesi pertemuan mendatang.
             </div>
           ) : (
             upcomingAppointments.map((apt) => (
-              <div className="flex items-center mb-4" key={apt.id}>
-                <div className="flex flex-col items-center justify-center bg- rounded-lg p-2 w-20 h-20 mr-6 shadow-sm bg-[#F9F1E0] dark:bg-[#293c63]">
-                  <p className="text-sm font-semibold text-[#161F36] dark:text-[#E6E6E6]">
+              <div
+                className="flex flex-col sm:flex-row items-center mb-4 last:mb-0"
+                key={apt.id}
+              >
+                <div className="flex flex-col items-center justify-center rounded-lg p-2 sm:p-4 w-16 h-16 sm:w-21 sm:h-21 mb-4 sm:mb-0 sm:mr-4 shadow-sm bg-[#F9F1E0] dark:bg-[#293c63]">
+                  <p className="text-xs sm:text-sm font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                     {apt.day}
                   </p>
-                  <p className="text-4xl font-bold text-gray-900 dark:text-[#E6E6E6]">
+                  <p className="text-2xl sm:text-4xl font-bold text-gray-900 dark:text-[#E6E6E6]">
                     {apt.date}
                   </p>
                 </div>
-                <div className="flex flex-row flex-1 bg-[#F9F1E0] dark:bg-[#293c63] rounded-lg p-4 shadow-sm items-center">
-                  <div className="flex flex-col flex-1">
-                    <p className="text-xl font-semibold text-gray-900 dark:text-[#E6E6E6]">
+                <div className="flex flex-col sm:flex-row flex-1 bg-[#F9F1E0] dark:bg-[#293c63] rounded-lg p-4 shadow-sm items-center w-full">
+                  <div className="flex flex-col flex-1 text-center sm:text-left mb-2 sm:mb-0">
+                    <p className="text-base sm:text-xl font-semibold text-gray-900 dark:text-[#E6E6E6]">
                       {apt.psychiatristName}
                     </p>
-                    <p className="text-base text-[#161F36] dark:text-[#E6E6E6]">
+                    <p className="text-sm sm:text-base text-[#161F36] dark:text-[#E6E6E6]">
                       {apt.appointmentDate}
                     </p>
                   </div>
-                  <div className="flex flex-col items-center flex-1">
-                    <p className="text-lg font-semibold text-[#161F36] dark:text-[#E6E6E6]">
+                  <div className="flex flex-col items-center flex-1 text-center mb-2 sm:mb-0">
+                    <p className="text-base sm:text-lg font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                       {apt.method === "Video" ? apt.time : ""}
                     </p>
                     {apt.method === "Video" ? (
-                      <p className="text-base text-[#161F36] dark:text-[#E6E6E6]">
+                      <p className="text-sm sm:text-base text-[#161F36] dark:text-[#E6E6E6]">
                         Video Call
                       </p>
                     ) : (
-                      <p className="text-base text-[#161F36] dark:text-[#E6E6E6] text-center w-full">
+                      <p className="text-sm sm:text-base text-[#161F36] dark:text-[#E6E6E6] text-center w-full">
                         Obrolan Chat
                       </p>
                     )}
                   </div>
-                  <div className="flex justify-end items-center flex-1">
+                  <div className="flex justify-center sm:justify-end items-center flex-1 w-full sm:w-auto">
                     <button
-                      className="text-[#161F36] dark:text-[#E6E6E6] font-semibold py-3 px-4 text-xl"
+                      className="text-[#161F36] dark:text-[#E6E6E6] font-semibold py-2 px-3 sm:py-3 sm:px-4 text-base sm:text-xl"
                       onClick={() => {
                         if (apt.method === "Video") {
                           // Implement join video call logic here if needed
@@ -742,13 +745,13 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
         </div>
       </div>
       {/* Recommended Psychiatrist Section */}
-      <div className="mt-20 ml-6 sm:ml-15">
-        <div className="flex justify-center p-4 mt-8">
-          <p className="text-2xl font-semibold text-[#161F36] text-center dark:text-[#E6E6E6]">
+      <div className="mt-10 sm:mt-20 ml-0 sm:ml-6 lg:ml-15 text-center sm:text-left">
+        <div className="flex justify-center p-4 mt-4 sm:mt-8">
+          <p className="text-xl sm:text-2xl font-semibold text-[#161F36] text-center dark:text-[#E6E6E6] max-w-sm sm:max-w-none">
             Berikut kami pilihkan psikiater pilihan kami
           </p>
         </div>
-        <div className="flex justify-center items-center mb-10">
+        <div className="flex justify-center items-center mb-10 px-4 sm:px-0">
           <div className="w-full" style={{ maxWidth: "1200px" }}>
             <CarouselDemo isDarkMode={isDarkMode} />
           </div>
@@ -767,19 +770,19 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
       )}
       {/* Call Ended Dialog */}
       {showCallEndedDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px] max-w-md mx-4">
-            <h2 className="text-xl font-semibold text-black dark:text-white mb-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm sm:max-w-md">
+            <h2 className="text-lg sm:text-xl font-semibold text-black dark:text-white mb-3 sm:mb-4">
               Video Call Berakhir
             </h2>
-            <p className="text-black dark:text-gray-300 mb-6">
+            <p className="text-sm sm:text-base text-black dark:text-gray-300 mb-4 sm:mb-6">
               Psikiater telah mengakhiri sesi video call. Jika ini adalah
               kesalahan, Anda dapat bergabung kembali atau menghubungi customer
               support.
             </p>
             <div className="flex justify-center">
               <button
-                className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                className="px-4 py-2 sm:px-6 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm sm:text-base"
                 onClick={handleCloseCallEndedDialog}
               >
                 Saya Mengerti

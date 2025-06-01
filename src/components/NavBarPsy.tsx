@@ -143,7 +143,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
         </div>
 
         <nav className="hidden md:flex flex-grow justify-center gap-5">
-          <NavItem label="Halaman Utama" path="/" icon={Home} />
+          <NavItem label="Halaman Utama" path="/dashboard" icon={Home} />
           <NavItem
             label="Janji Temu"
             path="/manage-appointment"
@@ -151,7 +151,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
           />
           <NavItem label="Chat" path="/chat" icon={MessageSquare} />
           <NavItem label="Forum" path="/forum" icon={MessagesSquare} />
-          <NavItem label="Profil" path="/profile" icon={User} />
+          <NavItem label="Profil" path="/doctor-profile" icon={User} />
         </nav>
 
         <div className="flex items-center gap-x-3 sm:gap-x-4 flex-shrink-0">

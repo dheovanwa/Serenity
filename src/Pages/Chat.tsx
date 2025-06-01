@@ -966,7 +966,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
       {isMobile && isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-black bg-opacity-50 z-20"
+          className="fixed inset-0 bg-black/50 z-20"
         ></div>
       )}
 
@@ -1290,7 +1290,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
         </header>
 
         {isConfirmingEnd && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-80 dark:bg-gray-800 dark:text-white">
               <h3 className="text-xl font-semibold mb-4 dark:text-white">
                 Konfirmasi
@@ -1307,7 +1307,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
                 </button>
                 <button
                   onClick={confirmEndConversation}
-                  className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 dark:bg-blue-700 dark:text-white dark:hover:bg-blue-800"
+                  className="px-4 py-2 bg-blue-200 text-black rounded-md hover:bg-blue-300 dark:bg-[#BACBD8] dark:text-[#161F36] dark:hover:bg-[#96a5b1]"
                 >
                   Ya, Selesaikan
                 </button>
@@ -1321,7 +1321,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
             <span>Loading chat...</span>
           </div>
         ) : !activeAppointment ? (
-          <div className="flex items-center justify-center flex-1 text-center p-4 text-gray-700 dark:text-gray-300">
+          <div className="flex items-center justify-center flex-1 text-center p-4 text-gray-700 dark:text-gray-300 bg-[#F2EDE2] dark:bg-[#161F36]">
             <span>
               Tidak ada sesi chat yang sedang berlangsung. <br /> Pilih sesi
               chat dari menu.

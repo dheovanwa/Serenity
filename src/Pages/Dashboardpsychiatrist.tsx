@@ -5,10 +5,6 @@ import Whatsapp from "../assets/whatsapp.png";
 import email from "../assets/email.png";
 import CancelAppointmentModal from "../components/Cancel";
 import foto1 from "../assets/p1.png";
-import foto2 from "../assets/p2.png";
-import foto3 from "../assets/p3.png";
-import foto4 from "../assets/p4.png";
-import foto5 from "../assets/p5.png";
 import {
   collection,
   query,
@@ -28,6 +24,7 @@ import { db } from "../config/firebase"; // Adjust the import based on your proj
 import { HomeController } from "../controllers/HomeController";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
 import { notificationScheduler } from "../utils/notificationScheduler";
+import Footer from "../components/Footer";
 
 const DashboardPsychiatrist: React.FC = () => {
   // Add new state for dialog
@@ -721,44 +718,53 @@ const DashboardPsychiatrist: React.FC = () => {
 
   return (
     <>
-      <div className="min-h-screen bg-[#F2EDE2] w-full bg-cover flex flex-col overflow-x-hidden">
+      <div className="min-h-screen bg-[#F2EDE2] dark:bg-[#161F36] w-full bg-cover flex flex-col overflow-x-hidden">
         <AppointmentStatusUpdater />
-        <div className="h-[370px] bg-white w-full bg-cover flex flex-col overflow-x-hidden">
-          <h1 className="text-[#161F36] text-4xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-center leading-snug mt-40 sm:mt-20 md:mt-32 lg:mt-40">
-            Selamat datang,
-            <br /> <span>{psychiatristName}</span>
+        <div className="p-15 text-center pt-20">
+          <h1
+            className="text-6xl font-extrabold mb-4 drop-shadow-md
+                       text-[#161F36] dark:text-white"
+          >
+            Selamat datang, <br />
+            <span className="text-[#ce9d85] dark:text-blue-300">
+              {psychiatristName}!
+            </span>
           </h1>
+          <p className="text-xl font-medium text-[#161F36] dark:text-gray-300">
+            Siap mendampingi Anda dalam setiap langkah perjalanan kesehatan
+            mental pasien.
+          </p>
         </div>
 
         {/* Konsultasi Mendatang */}
         <section className="w-full mt-30 mb-40">
-          <h1 className="text-6xl text-[#161F36] font-bold mb-8 text-center">
+          <h1 className="text-6xl text-[#161F36] dark:text-[#E2E2E2] font-bold mb-8 text-center">
             Konsultasi Mendatang
           </h1>
           {!isMobile && (
-            <div className="bg-[#E4DCCC] bg-opacity-90 p-5 rounded-md shadow-lg w-[80%] max-w-7xl mx-auto">
+            <div className="bg-[#E4DCCC] dark:bg-[#1A2947] bg-opacity-90 p-5 rounded-lg shadow-lg w-[80%] max-w-7xl mx-auto">
               <div className="grid grid-cols-1 gap-4">
                 {upcomingSchedule.length === 0 ? (
-                  <div className="text-center text-gray-600 py-10">
+                  <div className="text-center text-gray-600 dark:text[#E2E2E2] py-10">
                     Tidak ada konsultasi mendatang.
                   </div>
                 ) : (
                   upcomingSchedule.map((appointment, index) => (
                     <div key={index} className="flex flex-row">
-                      <div className="text-center w-[8%] bg-[#F9F1E0] pt-4 rounded-xs pb-2 flex flex-col">
-                        <span className="font-medium text-sm sm:text-base md:text-lg text-[#161F36]">
+                      <div className="flex flex-col items-center justify-center rounded-lg p-4 w-21 h-21 mr-4 shadow-sm bg-[#F9F1E0] dark:bg-[#293c63]">
+                        <span className="text-sm font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                           {appointment.day}
                         </span>
-                        <span className="text-5xl sm:text-4xl md:text-6xl font-medium text-[#161F36]">
+                        <span className="text-4xl font-bold text-gray-900 dark:text-[#E6E6E6]">
                           {appointment.date}
                         </span>
                       </div>
-                      <div className="ml-3 w-full bg-[#F9F1E0] rounded-xs grid grid-cols-3">
+                      <div className="ml-3 w-full bg-[#F9F1E0] dark:bg-[#293c63] rounded-lg grid grid-cols-3">
                         <div className="text-2xl grid grid-row ml-3 mt-4">
-                          <span className="font-medium text-[#161F36]">
+                          <span className="text-xl font-semibold text-gray-900 dark:text-[#E6E6E6]">
                             {appointment.patient}
                           </span>
-                          <span className="font-medium text-[#161F36]">
+                          <span className="text-base text-[#161F36] dark:text-[#E6E6E6]">
                             {appointment.appointmentDate}
                           </span>
                         </div>
@@ -766,8 +772,12 @@ const DashboardPsychiatrist: React.FC = () => {
                         <div />
                         {/* Move time and method to rightmost column */}
                         <div className="flex flex-col justify-center items-end mr-20">
-                          <span className="text-2xl">{appointment.time}</span>
-                          <span className="text-lg">{appointment.service}</span>
+                          <span className="text-lg font-semibold">
+                            {appointment.time}
+                          </span>
+                          <span className="text-lg font-semibold">
+                            {appointment.service}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -779,7 +789,7 @@ const DashboardPsychiatrist: React.FC = () => {
 
           {/* Mobile Layout */}
           {isMobile && (
-            <div className="bg-[#E4DCCC] bg-opacity-90 p-5 rounded-md shadow-lg w-[90%] max-w-md mx-auto">
+            <div className="bg-[#E4DCCC] dark:bg-[#1A2947] bg-opacity-90 p-5 rounded-md shadow-lg w-[90%] max-w-md mx-auto">
               {upcomingSchedule.length === 0 ? (
                 <div className="text-center text-gray-600 py-10">
                   Tidak ada konsultasi mendatang.
@@ -788,14 +798,14 @@ const DashboardPsychiatrist: React.FC = () => {
                 upcomingSchedule.map((appointment, index) => (
                   <div
                     key={index}
-                    className="bg-[#F9F1E0] rounded-md p-4 mb-4 shadow-lg"
+                    className="bg-[#F9F1E0] dark:bg-[#293c63] rounded-md p-4 mb-4 shadow-lg"
                   >
                     <div className="text-left flex flex-col">
-                      <span className="font-medium text-[#161F36] text-lg">
+                      <span className="text-xl font-semibold text-gray-900 dark:text-[#E6E6E6]">
                         {appointment.patient}
                       </span>
                       <div className="flex flex-row justify-between items-center mt-1 mb-1">
-                        <span className="text-md">
+                        <span className="text-base text-[#161F36] dark:text-[#E6E6E6]">
                           {appointment.appointmentDate}
                         </span>
                       </div>
@@ -814,32 +824,32 @@ const DashboardPsychiatrist: React.FC = () => {
 
         {/* Upcoming Appointments */}
         <section className=" ml-4 mr-4 mb-30">
-          <h1 className="text-6xl text-[#161F36] font-bold mb-8 text-center ">
+          <h1 className="text-6xl text-[#161F36] dark:text-[#E2E2E2] font-bold mb-8 text-center ">
             Sesi yang sedang Aktif
           </h1>
-          <div className="bg-[#E4DCCC] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-7xl mx-auto">
+          <div className="bg-[#E4DCCC] dark:bg-[#1A2947] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-7xl mx-auto">
             {activeAppointments.length > 0 ? (
               isMobile ? (
                 activeAppointments.map((apt, idx) => (
                   <div
                     key={idx}
-                    className="bg-[#F9F1E0] p-6 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300"
+                    className="bg-[#F9F1E0] dark:bg-[#293c63] p-6 rounded-lg mb-6 shadow-lg transition-shadow duration-300"
                   >
-                    <h2 className="text-2xl font-semibold text-[#161F36]">
+                    <h2 className="text-2xl font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                       {apt.patientName}
                     </h2>
-                    <p className="text-gray-800 text-sm">
+                    <p className="text-gray-800 dark:text-[#E6E6E6] text-sm">
                       Gejala: {apt.symptoms}
                     </p>
-                    <p className="text-gray-800 text-sm">
+                    <p className="text-gray-800 dark:text-[#E6E6E6] text-sm">
                       Metode: {apt.service}
                     </p>
-                    <p className="text-gray-800 text-sm">
+                    <p className="text-gray-800 dark:text-[#E6E6E6] text-sm">
                       {apt.date} {apt.time && `| ${apt.time}`}
                     </p>
                     <div className="mt-4 flex flex-col sm:flex-row gap-4 sm:gap-6">
                       <button
-                        className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#5a7da1] transition-colors duration-300 w-full sm:w-auto"
+                        className="px-6 py-2 bg-[#187DA8] dark:bg-[#006894] text-white rounded-lg font-semibold hover:bg-[#186ca8] dark:hover:bg-[#2c5a96] transition-colors duration-300 w-full sm:w-auto"
                         onClick={() => handleJoinVideoCall(apt.id, apt.time)}
                       >
                         Gabung Sesi
@@ -851,25 +861,25 @@ const DashboardPsychiatrist: React.FC = () => {
                 activeAppointments.map((apt, idx) => (
                   <div
                     key={idx}
-                    className="bg-[#F9F1E0] p-6 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center"
+                    className="bg-[#F9F1E0] dark:bg-[#293c63] p-6 rounded-lg mb-6 shadow-lg hover:shadow-xl transition-shadow duration-300 flex justify-between items-center"
                   >
                     <div className="flex flex-col text-left">
-                      <h2 className="text-2xl font-semibold text-[#161F36]">
+                      <h2 className="text-2xl font-semibold text-[#161F36] dark:text-[#E6E6E6]">
                         {apt.patientName}
                       </h2>
-                      <p className="text-gray-800 text-sm">
+                      <p className="text-gray-800 dark:text-[#E6E6E6] text-sm">
                         Gejala: {apt.symptoms}
                       </p>
-                      <p className="text-gray-800 text-sm">
+                      <p className="text-gray-800 dark:text-[#E6E6E6] text-sm">
                         Metode: {apt.service}
                       </p>
-                      <p className="text-gray-800 text-sm">
+                      <p className="text-gray-800 dark:text-[#E6E6E6] text-sm">
                         {apt.date} {apt.time && `| ${apt.time}`}
                       </p>
                     </div>
                     <div className="flex gap-4">
                       <button
-                        className="px-6 py-2 bg-[#187DA8] text-white rounded-lg font-semibold hover:bg-[#186ca8] transition-colors duration-300 w-auto"
+                        className="px-6 py-2 bg-[#187DA8] dark:bg-[#006894] text-white rounded-lg font-semibold hover:bg-[#186ca8] dark:hover:bg-[#2c5a96] transition-colors duration-300 w-auto"
                         onClick={() => handleJoinVideoCall(apt.id, apt.time)}
                       >
                         Gabung Sesi
@@ -879,7 +889,7 @@ const DashboardPsychiatrist: React.FC = () => {
                 ))
               )
             ) : (
-              <p className="text-gray-700 text-lg">
+              <p className="text-gray-700 dark:text-[#E6E6E6] text-lg">
                 Belum ada janji temu yang sedang berlangsung
               </p>
             )}
@@ -894,17 +904,17 @@ const DashboardPsychiatrist: React.FC = () => {
 
         {/*Messages */}
         <section className="mt-10 ml-15 mr-15 mb-30 ">
-          <h1 className="text-6xl text-[#161F36] font-semibold drop-shadow-md mb-8 text-center">
+          <h1 className="text-6xl text-[#161F36] dark:text-[#E6E6E6] font-semibold drop-shadow-md mb-8 text-center">
             Pesan
           </h1>
-          <div className="bg-[#E4DCCC] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
+          <div className="bg-[#E4DCCC] dark:bg-[#1A2947] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
             {messages.length > 0 ? (
               messages.map((msg, index) => {
                 const chatId = msg.id;
                 return (
                   <div
                     key={index}
-                    className="border-b border-gray-600 py-3 last:border-none hover:bg-[#e9e2d1] cursor-pointer transition"
+                    className="border-b border-gray-600 py-3 last:border-none hover:bg-[#e9e2d1] dark:hover:bg-[#1e2e4e] cursor-pointer transition"
                     onClick={() => handleOpenChat(chatId)}
                   >
                     <div className="flex items-center space-x-4">
@@ -927,13 +937,13 @@ const DashboardPsychiatrist: React.FC = () => {
                               <span className="p-1 rounded-full bg-red-500   mr-2 mx-auto" />
                             )}
                           </div>
-                          <p className="text-gray-600 text-sm">
+                          <p className="text-[#161F36] dark:text-[#E6E6E6] text-sm">
                             {msg.date} WIB
                           </p>
                         </div>
 
                         {/* Message Content */}
-                        <p className="text-black font-medium mt-1">
+                        <p className="text-[#161F36] dark:text-[#E6E6E6] font-medium mt-1">
                           {msg.content}
                         </p>
                       </div>
@@ -942,107 +952,14 @@ const DashboardPsychiatrist: React.FC = () => {
                 );
               })
             ) : (
-              <p className="text-gray-700 text-lg">
+              <p className="text-[#161F36] dark:text-[#E6E6E6] text-lg">
                 Anda tidak memiliki pesan baru.
               </p>
             )}
           </div>
         </section>
 
-        <footer className="bg-[#453A2F] text-white pt-5">
-          <div className="mx-auto ml-20 mr-20 mt-10">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              {/* Left Section*/}
-              <div className="text-left">
-                <h2 className="text-5xl font-bold mb-6">Serenity</h2>
-                <ul className="flex flex-col space-y-6">
-                  <li className="flex items-center space-x-4">
-                    <img
-                      src={Instagram}
-                      alt="Instagram"
-                      className="w-10 h-10"
-                    />
-                    <span>@mentalhealth.id</span>
-                  </li>
-                  <li className="flex items-center space-x-4">
-                    <img src={Whatsapp} alt="Whatsapp" className="w-10 h-10" />
-                    <span>+628529320581</span>
-                  </li>
-                  <li className="flex items-center space-x-4">
-                    <img src={email} alt="email" className="w-10 h-10" />
-                    <span>mentalhealth@serenity.co.id</span>
-                  </li>
-                </ul>
-              </div>
-
-              {/* Middle Section*/}
-              <div className="">
-                <h3 className="text-3xl font-semibold mb-4">
-                  Consumer Complaints Service
-                </h3>
-                <p className="text-sm">
-                  PT Mental Health Corp <br />
-                  Jl. Raya Kb. Jeruk No.27, RT.1/RW.9, Kemanggisan, Kec.
-                  Palmerah, Kota Jakarta Barat, Daerah Khusus Ibukota Jakarta
-                  11530
-                </p>
-              </div>
-
-              {/* Right Section: Site Map */}
-              <div className="text-right">
-                <h3 className="text-3xl font-semibold mb-4">Site Map</h3>
-                <ul className="grid grid-cols-1 md:grid-cols-2">
-                  <li>
-                    <a href="#" className="hover:opacity-75">
-                      FAQ
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:opacity-75">
-                      Blog
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:opacity-75">
-                      Terms & Condition
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:opacity-75">
-                      Privacy
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:opacity-75">
-                      Security
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:opacity-75">
-                      Media
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:opacity-75">
-                      Partnership
-                    </a>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:opacity-75">
-                      Promotions
-                    </a>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-          {/* Bottom Section: Copyright */}
-          <div className="mt-16 text-center bg-[#525252] py-2">
-            <p className="text-sm font-bold">
-              © 2024 - 2025 Mental Health J&D Sp. co.
-            </p>
-          </div>
-        </footer>
+        <Footer />
 
         {/* Add dialog for ended session */}
         {showEndedDialog && (

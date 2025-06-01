@@ -1178,16 +1178,16 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       {/* Show waiting message when caller is waiting for joiner */}
       {isCaller && waitingForJoiner && (
         <div className="absolute inset-0 flex items-center justify-center bg-black/80 z-50">
-          <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-md">
+          <div className="bg-white dark:bg-[#293c63] p-6 rounded-lg shadow-lg text-center max-w-md">
             <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-            <h3 className="text-xl font-medium text-gray-900 mb-2">
+            <h3 className="text-xl font-medium text-gray-900 dark:text-[#E6E6E6] mb-2">
               {!joinerJoined
                 ? "Waiting for participant to join"
                 : !joinerActive
                 ? "Waiting for participant to reconnect"
                 : "Connecting to participant..."}
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-[#E6E6E6]">
               {!joinerJoined
                 ? "Please share the invitation link with your participant. The call will connect automatically once they join."
                 : !joinerActive
@@ -1200,7 +1200,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       {/* Overlay for waiting for remote video - only show when not waiting for caller */}
       {!waitingForCaller && !remoteStream && (
         <div className="absolute left-0 top-0 w-full h-full flex items-center justify-center pointer-events-none select-none z-10">
-          <span className="text-gray-600 bg-white/80 px-4 py-2 rounded">
+          <span className="text-gray-600 dark:text-[#E6E6E6] bg-white/60 px-4 py-2 rounded">
             Menunggu video dari lawan bicara...
           </span>
         </div>
@@ -1220,22 +1220,22 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       </div>
       {/* Status and call link */}
       <div className="absolute top-6 left-8 z-20 flex flex-col items-start">
-        <div className="mb-2 text-lg font-semibold bg-white/80 px-4 py-2 rounded">
+        <div className="mb-2 text-lg font-semibold bg-white/80 dark:bg-black/60 px-4 py-2 rounded">
           {status}
         </div>
       </div>
       {/* Countdown timer */}
       <div className="fixed bottom-32 left-1/2 -translate-x-1/2 z-30 bg-black/40 px-4 py-1 rounded-full">
-        <p className="text-white font-['Josefin_Sans'] text-lg">
+        <p className="text-white dark font-['Josefin_Sans'] text-lg">
           Sesi berakhir dalam: {countdown}
         </p>
       </div>
       {/* Bottom bar with video/mic/leave controls */}
       <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-120">
-        <div className="flex flex-row items-center justify-center gap-8 px-6 py-2 bg-[#F9F6EC] rounded-full border border-[#e6e1d6]">
+        <div className="flex flex-row items-center justify-center gap-8 px-6 py-2 bg-[#F9F6EC] dark:bg-[#293c63] rounded-full border border-[#e6e1d6] dark:border-[#161F36]">
           <button
             onClick={handleToggleVideo}
-            className="w-16 h-16 rounded-full flex items-center justify-center bg-[#BACBD8] hover:bg-[#35648a] transition"
+            className="w-16 h-16 rounded-full flex items-center justify-center bg-[#BACBD8] hover:bg-[#35648a] dark:hover:bg-[#355774] transition"
             title={videoEnabled ? "Matikan Video" : "Nyalakan Video"}
           >
             <img
@@ -1246,7 +1246,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
           </button>
           <button
             onClick={handleToggleAudio}
-            className="w-16 h-16 rounded-full flex items-center justify-center bg-[#BACBD8] hover:bg-[#35648a] transition"
+            className="w-16 h-16 rounded-full flex items-center justify-center bg-[#BACBD8] hover:bg-[#35648a] dark:hover:bg-[#355774] transition"
             title={audioEnabled ? "Matikan Mic" : "Nyalakan Mic"}
           >
             <img
@@ -1257,7 +1257,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
           </button>
           <button
             onClick={handleEndCall}
-            className="w-16 h-16 rounded-full flex items-center justify-center bg-[#BACBD8] hover:bg-[#35648a] transition"
+            className="w-16 h-16 rounded-full flex items-center justify-center bg-[#BACBD8] hover:bg-[#35648a] dark:hover:bg-[#355774] transition"
             title="Keluar"
           >
             <img src={LeaveIcon} alt="Leave" className="w-8 h-8" />

@@ -155,10 +155,10 @@ const VideoCallPage: React.FC = () => {
 
   if (isLoading || waitingForRoom) {
     return (
-      <div className="min-h-screen bg-[#E4DCCC] flex items-center justify-center">
+      <div className="min-h-screen bg-[#E4DCCC] dark:bg-[#293c63] flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#161F36] mx-auto mb-4"></div>
-          <p className="text-[#161F36] text-lg">
+          <p className="text-[#161F36] dark:text-[#E6E6E6] text-lg">
             {waitingForRoom
               ? "Menunggu sesi dimulai oleh psikiater..."
               : "Memvalidasi sesi..."}
