@@ -160,7 +160,7 @@ const VideoCallPage: React.FC = () => {
           <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-[#161F36] mx-auto mb-4"></div>
           <p className="text-[#161F36] dark:text-[#E6E6E6] text-lg">
             {waitingForRoom
-              ? "Menunggu sesi dimulai oleh psikiater..."
+              ? "Menunggu sesi dimulai oleh psikolog..."
               : "Memvalidasi sesi..."}
           </p>
         </div>

@@ -452,7 +452,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
           const openRouterApiKey =
             "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";
           const inputText = adviceMessages.join("\n\n");
-          const prompt = `Berikut adalah pesan-pesan dari psikiater kepada pasien:\n\n${inputText}\n\nBuatlah ringkasan singkat dan jelas dari saran-saran tersebut untuk pasien.`;
+          const prompt = `Berikut adalah pesan-pesan dari Psikolog kepada pasien:\n\n${inputText}\n\nBuatlah ringkasan singkat dan jelas dari saran-saran tersebut untuk pasien.`;
           console.log(prompt);
 
           let summaryText = "";

@@ -155,8 +155,9 @@ const MentalHealthPage: React.FC = () => {
             yang Lebih Baik Dimulai di Sini
           </h1>
           <p className="text-[#4a4a4a] dark:text-gray-300 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-2xl mb-10">
-            Wawasan pribadi, dukungan waktu nyata, <br />
-            dan alat canggih untuk kesejahteraan mental Anda.
+            Selamat datang di Serenity,
+            <br />
+            kami hadir dalam menangani masalah kesehatan mental Anda.
           </p>
           <div className="flex items-center space-x-4">
             <button
@@ -292,7 +293,7 @@ const MentalHealthPage: React.FC = () => {
               Video Call
             </h3>
             <p className="text-gray-600 dark:text-gray-300 text-center">
-              Konsultasi langsung dengan psikiater melalui video call yang aman
+              Konsultasi langsung dengan psikolog melalui video call yang aman
               dan privat.
             </p>
           </div>
@@ -315,15 +316,15 @@ const MentalHealthPage: React.FC = () => {
           <div className="bg-white dark:bg-[#1A2947] rounded-2xl shadow-md p-6 flex flex-col items-center">
             <img
               src="https://img.icons8.com/ios-filled/100/187DA8/doctor-male.png"
-              alt="Rekomendasi Psikiater"
+              alt="Rekomendasi Psikolog"
               className="w-16 h-16 mb-4"
             />
             <h3 className="text-md font-semibold mb-2 text-[#161F36] dark:text-[#BACBD8]">
-              Rekomendasi Psikiater
+              Rekomendasi Psikolog
             </h3>
             <p className="text-gray-600 dark:text-gray-300 text-center">
-              Dapatkan rekomendasi psikiater terbaik yang sesuai dengan
-              kebutuhan dan preferensi Anda.
+              Dapatkan rekomendasi psikolog terbaik yang sesuai dengan kebutuhan
+              dan preferensi Anda.
             </p>
           </div>
           {/* Forum */}
@@ -346,7 +347,7 @@ const MentalHealthPage: React.FC = () => {
       {/* Showcase: List of Psychiatrists as Infinite Carousel */}
       <section className="max-w-5xl mx-auto px-4 mb-16">
         <h2 className="text-2xl font-bold mb-6 text-center text-[#161F36] dark:text-[#BACBD8]">
-          Daftar Psikiater Kami
+          Daftar Psikolog Kami
         </h2>
         <div className="relative w-full overflow-hidden">
           <div
@@ -390,20 +391,6 @@ const MentalHealthPage: React.FC = () => {
             ))}
           </div>
         </div>
-        {psychiatrists.length > 3 && (
-          <div className="flex justify-center mt-4 gap-2">
-            {psychiatrists.map((_, idx) => (
-              <span
-                key={idx}
-                className={`inline-block w-2 h-2 rounded-full ${
-                  idx === carouselIndex
-                    ? "bg-[#187DA8] dark:bg-[#BACBD8]"
-                    : "bg-gray-300"
-                }`}
-              />
-            ))}
-          </div>
-        )}
       </section>
       {/* Footer */}
       <Footer />

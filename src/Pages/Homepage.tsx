@@ -392,7 +392,7 @@ const Homepage: React.FC = () => {
               Video Call Berakhir
             </h2>
             <p className="text-black dark:text-gray-300 mb-6">
-              Psikiater telah mengakhiri sesi video call. Jika ini adalah
+              Psikolog telah mengakhiri sesi video call. Jika ini adalah
               kesalahan, Anda dapat bergabung kembali atau menghubungi customer
               support.
             </p>

@@ -62,7 +62,7 @@ export const useFCMNotifications = () => {
           // Show browser notification even in foreground
           if (Notification.permission === "granted") {
             const notif = new Notification(
-              payload.notification?.title || "Pesan Baru dari Psikiater",
+              payload.notification?.title || "Pesan Baru dari Psikolog",
               {
                 body: payload.notification?.body || "Anda memiliki pesan baru",
                 icon: "/vite.svg",

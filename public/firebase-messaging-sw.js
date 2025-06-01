@@ -31,7 +31,7 @@ messaging.onBackgroundMessage((payload) => {
     payload.notification?.title ||
     (payload.data?.type === "video-reminder"
       ? "Pengingat Sesi Video Call"
-      : "Pesan Baru dari Psikiater");
+      : "Pesan Baru dari Psikolog");
 
   const notificationOptions = {
     body:

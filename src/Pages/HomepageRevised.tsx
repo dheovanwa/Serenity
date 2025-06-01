@@ -756,7 +756,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
       <div className="mt-10 sm:mt-20 ml-0 sm:ml-6 lg:ml-15 text-center sm:text-left">
         <div className="flex justify-center p-4 mt-4 sm:mt-8">
           <p className="text-xl sm:text-2xl font-semibold text-[#161F36] text-center dark:text-[#E6E6E6] max-w-sm sm:max-w-none">
-            Berikut kami pilihkan psikiater pilihan kami
+            Berikut kami pilihkan psikolog pilihan kami
           </p>
         </div>
         <div className="flex justify-center items-center mb-10 px-4 sm:px-0">
@@ -784,7 +784,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
               Video Call Berakhir
             </h2>
             <p className="text-sm sm:text-base text-black dark:text-gray-300 mb-4 sm:mb-6">
-              Psikiater telah mengakhiri sesi video call. Jika ini adalah
+              Psikolog telah mengakhiri sesi video call. Jika ini adalah
               kesalahan, Anda dapat bergabung kembali atau menghubungi customer
               support.
             </p>
