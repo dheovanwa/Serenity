@@ -117,7 +117,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
 
   const handleNotificationClick = (appointmentId: string) => {
     setShowNotifications(false);
-    navigate(`/chat?appointmentId=${appointmentId}`);
+    navigate(`/chat?chatId=${appointmentId}`);
   };
 
   const headerRoundedClasses = `

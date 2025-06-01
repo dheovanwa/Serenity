@@ -102,6 +102,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
     Record<string, string>
   >({});
   const [latestTime, setLatestTime] = useState<Record<string, string>>({});
+  const [latestTimestamp, setLatestTimestamp] = useState<
+    Record<string, number>
+  >({});
   const [searchQuery, setSearchQuery] = useState("");
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
@@ -283,6 +286,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
     if (runningApts.length === 0) {
       setLatestMessages({});
       setLatestTime({});
+      setLatestTimestamp({});
       console.log("No ongoing appointments found.");
       return;
     }
@@ -317,6 +321,13 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
             ...prev,
             [apt.id]: formattedTime,
           }));
+
+          // Store timestamp for sorting
+          const timestamp = d.timeCreated?.toMillis() || Date.now();
+          setLatestTimestamp((prev) => ({
+            ...prev,
+            [apt.id]: timestamp,
+          }));
         } else {
           console.log("No messages found for appointment:", apt.id);
           setLatestMessages((prev) => {
@@ -326,6 +337,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
           });
 
           setLatestTime((prev) => {
+            const updated = { ...prev };
+            delete updated[apt.id];
+            return updated;
+          });
+
+          setLatestTimestamp((prev) => {
             const updated = { ...prev };
             delete updated[apt.id];
             return updated;
@@ -547,6 +564,13 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
       senderRead: true,
       receiverRead: false,
     });
+
+    // Update timestamp for sorting when user sends message
+    setLatestTimestamp((prev) => ({
+      ...prev,
+      [chatId]: Date.now(),
+    }));
+
     setNewMessage("");
   };
 
@@ -1016,26 +1040,48 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
               return nameMatch || messageMatch;
             })
             .sort((a, b) => {
-              if (!searchQuery.trim()) return 0;
+              // First, prioritize ongoing chats over completed ones
+              if (a.status !== b.status) {
+                if (a.status === "Sedang berlangsung" && b.status === "Selesai")
+                  return -1;
+                if (a.status === "Selesai" && b.status === "Sedang berlangsung")
+                  return 1;
+              }
 
-              const query = searchQuery.toLowerCase();
-              const aName =
-                (userType === "user"
-                  ? a.doctorName
-                  : a.patientName
-                )?.toLowerCase() || "";
-              const bName =
-                (userType === "user"
-                  ? b.doctorName
-                  : b.patientName
-                )?.toLowerCase() || "";
+              // If search query exists, prioritize name matches
+              if (searchQuery.trim()) {
+                const query = searchQuery.toLowerCase();
+                const aName =
+                  (userType === "user"
+                    ? a.doctorName
+                    : a.patientName
+                  )?.toLowerCase() || "";
+                const bName =
+                  (userType === "user"
+                    ? b.doctorName
+                    : b.patientName
+                  )?.toLowerCase() || "";
 
-              const aNameMatch = aName.includes(query);
-              const bNameMatch = bName.includes(query);
+                const aNameMatch = aName.includes(query);
+                const bNameMatch = bName.includes(query);
 
-              if (aNameMatch === bNameMatch) return 0;
+                if (aNameMatch !== bNameMatch) {
+                  return aNameMatch ? -1 : 1;
+                }
+              }
 
-              return aNameMatch ? -1 : 1;
+              // Sort by latest message timestamp (most recent first)
+              const aTimestamp = latestTimestamp[a.id] || 0;
+              const bTimestamp = latestTimestamp[b.id] || 0;
+
+              if (aTimestamp !== bTimestamp) {
+                return bTimestamp - aTimestamp; // Most recent first
+              }
+
+              // If no timestamps, fall back to appointment creation time or alphabetical
+              return (a.doctorName || a.patientName || "").localeCompare(
+                b.doctorName || b.patientName || ""
+              );
             })
             .map((apt) => {
               const name =
@@ -1312,7 +1358,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
                     >
                       {msg.sender === "me" && msg.receiverRead && (
                         <span className="text-xs text-blue-600 font-medium mb-1 dark:text-blue-400">
-                          Read
+                          Baca
                         </span>
                       )}
                       <p className="text-xs text-gray-500 dark:text-gray-400">

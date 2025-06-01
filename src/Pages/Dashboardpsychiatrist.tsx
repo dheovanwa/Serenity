@@ -22,6 +22,7 @@ import {
   setDoc,
   addDoc,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "../config/firebase"; // Adjust the import based on your project structure
 import { HomeController } from "../controllers/HomeController";
@@ -136,31 +137,41 @@ const DashboardPsychiatrist: React.FC = () => {
     fetchPsychiatristData();
   }, []);
 
+  // Replace this useEffect:
+  /*
   useEffect(() => {
     const fetchUpcomingAppointments = async () => {
-      try {
-        const documentId = localStorage.getItem("documentId");
-        if (!documentId) return;
+      // ...existing code...
+    };
+    fetchUpcomingAppointments();
+  }, []);
+  */
+  // With this real-time listener:
+  useEffect(() => {
+    const documentId = localStorage.getItem("documentId");
+    if (!documentId) return;
 
-        // Get psychiatrist data (for name)
-        const psychiatristRef = doc(db, "psychiatrists", documentId);
-        const psychiatristSnap = await getDoc(psychiatristRef);
-        let psychiatristName = "";
-        if (psychiatristSnap.exists()) {
-          const data = psychiatristSnap.data();
-          psychiatristName = data.name;
-        }
+    // Get psychiatrist data (for name)
+    let unsubscribe: (() => void) | undefined;
+    let psychiatristName = "";
 
-        // Query appointments for this psychiatrist with status "Terjadwal", ascending order
-        const appointmentsRef = collection(db, "appointments");
-        const q = query(
-          appointmentsRef,
-          where("psychiatristId", "==", documentId),
-          where("status", "==", "Terjadwal"),
-          orderBy("date", "asc")
-        );
-        const appointmentSnap = await getDocs(q);
+    const setupListener = async () => {
+      const psychiatristRef = doc(db, "psychiatrists", documentId);
+      const psychiatristSnap = await getDoc(psychiatristRef);
+      if (psychiatristSnap.exists()) {
+        const data = psychiatristSnap.data();
+        psychiatristName = data.name;
+      }
 
+      const appointmentsRef = collection(db, "appointments");
+      const q = query(
+        appointmentsRef,
+        where("psychiatristId", "==", documentId),
+        where("status", "==", "Terjadwal"),
+        orderBy("date", "asc")
+      );
+
+      unsubscribe = onSnapshot(q, (appointmentSnap) => {
         const appointments = appointmentSnap.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
@@ -171,24 +182,11 @@ const DashboardPsychiatrist: React.FC = () => {
           (apt) => apt.doctorName === psychiatristName
         );
 
-        // Sort: Chat first, then Video (by start time ascending)
+        // Sort only by date ascending (nearest appointment first)
         const sortedAppointments = filteredAppointments.sort((a, b) => {
-          if (a.method === b.method) {
-            if (a.method === "Video" && b.method === "Video") {
-              // Sort by start time (e.g. "09.00 - 10.00")
-              const getStartMinutes = (time: string) => {
-                if (!time) return 0;
-                const [start] = time.split(" - ");
-                const [h, m] = start.split(".").map(Number);
-                return h * 60 + (m || 0);
-              };
-              return getStartMinutes(a.time) - getStartMinutes(b.time);
-            }
-            // If both are Chat, keep original order (by date)
-            return 0;
-          }
-          // Chat comes before Video
-          return a.method === "Chat" ? -1 : 1;
+          const dateA = new Date(a.date);
+          const dateB = new Date(b.date);
+          return dateA.getTime() - dateB.getTime();
         });
 
         // Format for display and limit to 10
@@ -214,18 +212,19 @@ const DashboardPsychiatrist: React.FC = () => {
               })} ${date.getFullYear()}`,
               service: apt.method,
               time,
-              action: "Kelola",
               status: apt.status,
             };
           });
 
         setUpcomingSchedule(formattedAppointments);
-      } catch (error) {
-        console.error("Error fetching upcoming appointments:", error);
-      }
+      });
     };
 
-    fetchUpcomingAppointments();
+    setupListener();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -299,49 +298,105 @@ const DashboardPsychiatrist: React.FC = () => {
 
         setActiveAppointments(formattedAppointments);
 
-        // Fetch latest chat message for each active chat appointment from messages subcollection
-        const chatMessages: any[] = [];
-        for (const apt of filteredAppointments) {
-          if (apt.method === "Chat") {
+        // Set up real-time listener for chat messages
+        const chatAppointments = filteredAppointments.filter(
+          (apt) => apt.method === "Chat"
+        );
+
+        if (chatAppointments.length > 0) {
+          const unsubscribeFunctions: (() => void)[] = [];
+
+          chatAppointments.forEach((apt) => {
             const messagesColRef = collection(db, "chats", apt.id, "messages");
             const qMsg = query(
               messagesColRef,
               orderBy("timeCreated", "desc"),
               limit(1)
             );
-            const msgSnap = await getDocs(qMsg);
-            if (!msgSnap.empty) {
-              const lastMsgDoc = msgSnap.docs[0];
-              const lastMsg = lastMsgDoc.data();
-              let senderDisplayName = lastMsg.senderName;
-              if (
-                lastMsg.senderRole === "doctor" ||
-                (lastMsg.senderName && lastMsg.senderName === psychiatristName)
-              ) {
-                senderDisplayName = "Kamu";
+
+            const unsubscribe = onSnapshot(qMsg, async (snapshot) => {
+              // Fetch user profile picture
+              let userProfilePicture = foto1; // default fallback
+              try {
+                if (apt.patientId) {
+                  const userRef = doc(db, "users", apt.patientId);
+                  const userSnap = await getDoc(userRef);
+                  if (userSnap.exists()) {
+                    const userData = userSnap.data();
+                    userProfilePicture = userData.profilePicture || foto1;
+                  }
+                }
+              } catch (error) {
+                console.error("Error fetching user profile picture:", error);
               }
-              chatMessages.push({
-                id: apt.id,
-                from: apt.patientName,
-                date: lastMsg.time || apt.date,
-                content: `${senderDisplayName}: ${lastMsg.text}`,
-                profileImage: apt.patientProfileImage || foto1,
-                isRead: lastMsg.receiverRead || false,
-              });
-            } else {
-              // If no messages yet, still show the chat session
-              chatMessages.push({
-                id: apt.id,
-                from: apt.patientName,
-                date: new Date().toLocaleDateString(),
-                content: "Sesi chat dimulai",
-                profileImage: apt.patientProfileImage || foto1,
-                isRead: true,
-              });
-            }
-          }
+
+              if (!snapshot.empty) {
+                const lastMsgDoc = snapshot.docs[0];
+                const lastMsg = lastMsgDoc.data();
+                let senderDisplayName = lastMsg.senderName;
+                if (
+                  lastMsg.senderRole === "doctor" ||
+                  (lastMsg.senderName &&
+                    lastMsg.senderName === psychiatristName)
+                ) {
+                  senderDisplayName = "Saya";
+                }
+
+                const newMessage = {
+                  id: apt.id,
+                  from: apt.patientName,
+                  date: lastMsg.time || apt.date,
+                  content: `${lastMsg.text}`,
+                  profileImage: userProfilePicture,
+                  isRead: lastMsg.receiverRead || false,
+                };
+
+                // Update messages state
+                setMessages((prevMessages) => {
+                  const existingIndex = prevMessages.findIndex(
+                    (msg) => msg.id === apt.id
+                  );
+                  if (existingIndex >= 0) {
+                    // Update existing message
+                    const updatedMessages = [...prevMessages];
+                    updatedMessages[existingIndex] = newMessage;
+                    return updatedMessages;
+                  } else {
+                    // Add new message
+                    return [...prevMessages, newMessage];
+                  }
+                });
+              } else {
+                // If no messages yet, still show the chat session
+                const defaultMessage = {
+                  id: apt.id,
+                  from: apt.patientName,
+                  date: new Date().toLocaleDateString(),
+                  content: "Sesi chat dimulai",
+                  profileImage: userProfilePicture,
+                  isRead: true,
+                };
+
+                setMessages((prevMessages) => {
+                  const existingIndex = prevMessages.findIndex(
+                    (msg) => msg.id === apt.id
+                  );
+                  if (existingIndex < 0) {
+                    return [...prevMessages, defaultMessage];
+                  }
+                  return prevMessages;
+                });
+              }
+            });
+
+            unsubscribeFunctions.push(unsubscribe);
+          });
+
+          // Return cleanup function for message listeners
+          return () => {
+            unsubscribeFunctions.forEach((unsub) => unsub());
+          };
         }
-        setMessages(chatMessages);
 
         // Initialize notification scheduler
         await notificationScheduler.restoreScheduledNotifications();
@@ -350,7 +405,7 @@ const DashboardPsychiatrist: React.FC = () => {
       }
     };
 
-    fetchActiveAppointmentsAndChats();
+    const cleanup = fetchActiveAppointmentsAndChats();
 
     // Set up real-time listener for appointment status changes
     const documentId = localStorage.getItem("documentId");
@@ -374,7 +429,12 @@ const DashboardPsychiatrist: React.FC = () => {
         });
       });
 
-      return () => unsubscribe();
+      return () => {
+        unsubscribe();
+        if (cleanup && typeof cleanup.then === "function") {
+          cleanup.then((cleanupFn) => cleanupFn && cleanupFn());
+        }
+      };
     }
   }, []);
 
@@ -702,15 +762,13 @@ const DashboardPsychiatrist: React.FC = () => {
                             {appointment.appointmentDate}
                           </span>
                         </div>
-                        <div className="ml-20 flex flex-col justify-center items-center">
+                        {/* Empty column for spacing */}
+                        <div />
+                        {/* Move time and method to rightmost column */}
+                        <div className="flex flex-col justify-center items-end mr-20">
                           <span className="text-2xl">{appointment.time}</span>
                           <span className="text-lg">{appointment.service}</span>
                         </div>
-                        <button className="text-2xl justify-end items-end text-end mr-20 text-[#161F36] rounded-md">
-                          <span className="hover:cursor-pointer hover:text-[#187DA8] p-2 rounded-md">
-                            {appointment.action}
-                          </span>
-                        </button>
                       </div>
                     </div>
                   ))
@@ -736,20 +794,16 @@ const DashboardPsychiatrist: React.FC = () => {
                       <span className="font-medium text-[#161F36] text-lg">
                         {appointment.patient}
                       </span>
-                      <div className="grid grid-cols-3">
-                        <span className="text-md mt-1 mr-6">
-                          {appointment.service}
+                      <div className="flex flex-row justify-between items-center mt-1 mb-1">
+                        <span className="text-md">
+                          {appointment.appointmentDate}
                         </span>
-                        <span className="text-md">{appointment.time}</span>
-                        <button className="text-xl justify-end items-end text-end mr-1 text-[#161F36] rounded-md">
-                          <span className="hover:cursor-pointer hover:text-[#187DA8] p-2 rounded-md">
-                            {appointment.action}
-                          </span>
-                        </button>
                       </div>
-                      <span className="font-medium text-[#161F36]">
-                        {appointment.appointmentDate}
-                      </span>
+                      {/* Move time and method to the right, no Kelola */}
+                      <div className="flex flex-row justify-end items-center gap-2">
+                        <span className="text-md">{appointment.time}</span>
+                        <span className="text-md">{appointment.service}</span>
+                      </div>
                     </div>
                   </div>
                 ))
@@ -846,14 +900,7 @@ const DashboardPsychiatrist: React.FC = () => {
           <div className="bg-[#E4DCCC] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
             {messages.length > 0 ? (
               messages.map((msg, index) => {
-                // Find the correct appointment for this message by matching patientName, service === "Chat", and appointment date
-                const apt = activeAppointments.find(
-                  (a) =>
-                    a.patientName === msg.from &&
-                    a.service === "Chat" &&
-                    a.id === msg.id
-                );
-                const chatId = apt?.id || "";
+                const chatId = msg.id;
                 return (
                   <div
                     key={index}
@@ -866,6 +913,9 @@ const DashboardPsychiatrist: React.FC = () => {
                           src={msg.profileImage}
                           alt={msg.from}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = foto1;
+                          }}
                         />
                       </div>
 
@@ -874,10 +924,12 @@ const DashboardPsychiatrist: React.FC = () => {
                           <div className="flex items-center space-x-2">
                             <h3 className="text-xl font-bold">{msg.from}</h3>
                             {!msg.isRead && (
-                              <span className="p-2 rounded-full bg-red-500   mr-2 mx-auto" />
+                              <span className="p-1 rounded-full bg-red-500   mr-2 mx-auto" />
                             )}
                           </div>
-                          <p className="text-gray-600 text-sm">{msg.date}</p>
+                          <p className="text-gray-600 text-sm">
+                            {msg.date} WIB
+                          </p>
                         </div>
 
                         {/* Message Content */}
