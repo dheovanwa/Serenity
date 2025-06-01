@@ -287,24 +287,7 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
         <div className="w-full sm:w-[90%] lg:w-[75%] mx-auto flex flex-col gap-3 sm:flex-row sm:justify-between">
           <div className="flex flex-wrap items-center gap-3 sm:w-[60%] lg:w-[70%]">
             {/* Magic Recommendation Button */}
-            <button
-              className="flex items-center justify-center bg-[#BACBD8] text-[#161F36] font-semibold rounded-md h-[45px] px-3
-                         dark:bg-[#1A2947] dark:text-white dark:hover:bg-[#23385F] transition-colors duration-300"
-              style={{ minWidth: 45 }}
-              title="Magic Recommendation"
-              // onClick={handleMagicRecommendation}
-            >
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-[#BACBD8] dark:bg-transparent">
-                {" "}
-                {/* Ubah background lingkaran ikon jika perlu */}
-                <img
-                  src={SparklingIcon}
-                  alt="Magic"
-                  className="w-5 h-5 dark:filter dark:invert"
-                />{" "}
-                {/* Invert ikon jika perlu */}
-              </span>
-            </button>
+            
             <div className="relative flex-grow">
               <input
                 type="text"
@@ -475,10 +458,11 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
             overflowY: "auto",
             scrollbarWidth: "thin",
             scrollbarColor: "#888 transparent",
+            
           }}
         >
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-10 justify-items-center">
               {[1, 2, 3, 4, 5, 6].map((i) => (
                 <div
                   key={i}
@@ -499,7 +483,7 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-10">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-10 justify-items-center">
               {sortedPsychiatrists.map((psychiatrist, index) => (
                 <PsychiatristSearchProfile
                   key={psychiatrist.id || index}
