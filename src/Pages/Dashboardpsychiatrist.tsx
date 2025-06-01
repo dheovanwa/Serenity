@@ -739,7 +739,7 @@ const DashboardPsychiatrist: React.FC = () => {
         {/* Konsultasi Mendatang */}
         <section className="w-full mt-30 mb-40">
           <h1 className="text-6xl text-[#161F36] dark:text-[#E2E2E2] font-bold mb-8 text-center">
-            Konsultasi Mendatang
+            Sesi konsultasi mendatang
           </h1>
           {!isMobile && (
             <div className="bg-[#E4DCCC] dark:bg-[#1A2947] bg-opacity-90 p-5 rounded-lg shadow-lg w-[80%] max-w-7xl mx-auto">
@@ -772,9 +772,11 @@ const DashboardPsychiatrist: React.FC = () => {
                         <div />
                         {/* Move time and method to rightmost column */}
                         <div className="flex flex-col justify-center items-end mr-20">
-                          <span className="text-lg font-semibold">
-                            {appointment.time}
-                          </span>
+                          {appointment.service !== "Chat" && (
+                            <span className="text-lg font-semibold">
+                              {`${appointment.time} WIB`}
+                            </span>
+                          )}
                           <span className="text-lg font-semibold">
                             {appointment.service}
                           </span>
@@ -825,7 +827,7 @@ const DashboardPsychiatrist: React.FC = () => {
         {/* Upcoming Appointments */}
         <section className=" ml-4 mr-4 mb-30">
           <h1 className="text-6xl text-[#161F36] dark:text-[#E2E2E2] font-bold mb-8 text-center ">
-            Sesi yang sedang Aktif
+            Sesi video yang sedang aktif
           </h1>
           <div className="bg-[#E4DCCC] dark:bg-[#1A2947] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-7xl mx-auto">
             {activeAppointments.length > 0 ? (
@@ -905,7 +907,7 @@ const DashboardPsychiatrist: React.FC = () => {
         {/*Messages */}
         <section className="mt-10 ml-15 mr-15 mb-30 ">
           <h1 className="text-6xl text-[#161F36] dark:text-[#E6E6E6] font-semibold drop-shadow-md mb-8 text-center">
-            Pesan
+            Sesi chat yang sedang aktif
           </h1>
           <div className="bg-[#E4DCCC] dark:bg-[#1A2947] bg-opacity-90 p-8 rounded-xl shadow-lg max-w-5xl mx-auto">
             {messages.length > 0 ? (
@@ -959,7 +961,7 @@ const DashboardPsychiatrist: React.FC = () => {
           </div>
         </section>
 
-        <Footer />
+        <Footer isPsychiatrist={true} />
 
         {/* Add dialog for ended session */}
         {showEndedDialog && (

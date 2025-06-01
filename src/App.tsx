@@ -115,16 +115,7 @@ const App: React.FC = () => {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/terms"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <TermsOfService />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/terms" element={<TermsOfService />} />
         <Route
           path="/manage-appointment"
           element={

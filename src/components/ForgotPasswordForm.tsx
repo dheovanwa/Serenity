@@ -115,35 +115,6 @@ const ForgotPasswordForm: React.FC<ForgotPasswordFormProps> = ({
               Masuk
             </a>
           </p>
-
-          {/* Tombol Ganti Warna */}
-          <button
-            onClick={toggleTheme}
-            className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${navSpecificThemeColors.toggleBg}`}
-            aria-label="Toggle theme"
-          >
-            <span
-              className={`absolute top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
-                isDarkMode
-                  ? "translate-x-6 left-0.5 dark:bg-gray-700" // Pastikan warna bola toggle di dark mode
-                  : "translate-x-0.5 left-0.5"
-              }`}
-            >
-              {isDarkMode ? (
-                <img
-                  src={Moon}
-                  alt="Moon Icon"
-                  className="w-4 h-4 m-auto absolute inset-0"
-                />
-              ) : (
-                <img
-                  src={Sun}
-                  alt="Sun Icon"
-                  className="w-4 h-4 m-auto absolute inset-0"
-                />
-              )}
-            </span>
-          </button>
         </div>
       </div>
       {/* Right side with background image */}

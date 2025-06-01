@@ -14,6 +14,7 @@ import chevronDownIcon from "../assets/con1.png";
 import calender from "../assets/Calendar.svg";
 import { Calendar } from "lucide-react";
 import { Separator } from "../components/Seperator";
+import Loading from "./Loading";
 
 const PsychiatristProfile = () => {
   const [userName, setUserName] = useState("Loading...");
@@ -149,7 +150,7 @@ const PsychiatristProfile = () => {
           const now = new Date();
           const year = now.getFullYear() - psyData.tahunPengalaman;
           // Always 21 August
-          practiceYear = `21/08/${year}`;
+          practiceYear = `21-08-${year}`;
         }
 
         if (userDoc.exists()) {
@@ -386,25 +387,7 @@ const PsychiatristProfile = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f2f3d9] text-[#161F36]">
-        <div className="w-1/2 h-2 bg-gray-300 rounded-full overflow-hidden">
-          <div className="h-full bg-[#161F36] animate-loading-bar"></div>
-        </div>
-        <style>
-          {`
-            @keyframes loading-bar {
-              0% { transform: translateX(-100%); }
-              50% { transform: translateX(0); }
-              100% { transform: translateX(100%); }
-            }
-            .animate-loading-bar {
-              animation: loading-bar 1.5s infinite;
-            }
-          `}
-        </style>
-      </div>
-    );
+    return <Loading />;
   }
 
   return (
@@ -733,7 +716,6 @@ const PsychiatristProfile = () => {
             <button
               onClick={handleLogoutClick}
               className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-[#FF5640] text-[18px] lg:text-xl transition-all duration-300"
-
             >
               Keluar dari akun
             </button>
@@ -763,7 +745,6 @@ const PsychiatristProfile = () => {
             <button
               onClick={handleLogoutClick}
               className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-[#FF5640] text-[18px] lg:text-xl transition-all duration-300"
-
             >
               Keluar dari akun
             </button>
@@ -771,38 +752,38 @@ const PsychiatristProfile = () => {
         </div>
       )}
       {isOverlayVisible && (
-          <div className="fixed inset-0 bg-black/50 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
-            <div className="bg-[#F2EDE2] dark:bg-[#161F36] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
-              <h2 className="text-lg font-semibold mb-4">Apakah kamu yakin?</h2>
-              <p className="text-sm mb-4 font-regular">
-                Aksi ini akan mengeluarkanmu dari akunmu <br />
-                dan kamu harus masuk kembali untuk mengaksesnya.
-              </p>
-              <div className="flex flex-wrap justify-end gap-4">
-                <button
-                  onClick={handleCloseOverlay}
-                  className="bg-transparent border-1 font-medium text-sm text-[#161F36] dark:text-[#E6E6E6] border-black dark:border-[#E6E6E6] px-4 py-2 rounded-md w-full sm:w-auto "
-                >
-                  Batalkan
-                </button>
-                <button
-                  onClick={async () => {
-                    try {
-                      await signOut(auth);
-                      localStorage.removeItem("documentId");
-                      navigate("/signin");
-                    } catch (error) {
-                      console.error("Error signing out:", error);
-                    }
-                  }}
-                  className="bg-[#BACBD8] text-[#181818] font-medium px-4 py-2 rounded-md w-full sm:w-auto text-sm "
-                >
-                  Lanjutkan
-                </button>
-              </div>
+        <div className="fixed inset-0 bg-black/50 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
+          <div className="bg-[#F2EDE2] dark:bg-[#161F36] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
+            <h2 className="text-lg font-semibold mb-4">Apakah kamu yakin?</h2>
+            <p className="text-sm mb-4 font-regular">
+              Aksi ini akan mengeluarkanmu dari akunmu <br />
+              dan kamu harus masuk kembali untuk mengaksesnya.
+            </p>
+            <div className="flex flex-wrap justify-end gap-4">
+              <button
+                onClick={handleCloseOverlay}
+                className="bg-transparent border-1 font-medium text-sm text-[#161F36] dark:text-[#E6E6E6] border-black dark:border-[#E6E6E6] px-4 py-2 rounded-md w-full sm:w-auto "
+              >
+                Batalkan
+              </button>
+              <button
+                onClick={async () => {
+                  try {
+                    await signOut(auth);
+                    localStorage.removeItem("documentId");
+                    navigate("/signin");
+                  } catch (error) {
+                    console.error("Error signing out:", error);
+                  }
+                }}
+                className="bg-[#BACBD8] text-[#181818] font-medium px-4 py-2 rounded-md w-full sm:w-auto text-sm "
+              >
+                Lanjutkan
+              </button>
             </div>
           </div>
-        )}
+        </div>
+      )}
     </div>
   );
 };

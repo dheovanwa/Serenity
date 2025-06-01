@@ -105,7 +105,7 @@ const Login = () => {
 
       if (result.success) {
         const userType = localStorage.getItem("userType");
-        navigate(userType === "psychiatrist" ? "/dashboard" : "/");
+        navigate(userType === "psychiatrist" ? "/dashboard" : "/home");
       } else if (result.errors) {
         setErrors(result.errors);
       }
@@ -133,11 +133,19 @@ const Login = () => {
             },
           });
         } else {
-          navigate(userType === "psychiatrist" ? "/dashboard" : "/");
+          navigate(userType === "psychiatrist" ? "/dashboard" : "/home");
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Google login error:", error);
+      // Check specifically for popup closed error
+      if (
+        error.code === "auth/popup-closed-by-user" ||
+        error.code === "auth/cancelled-popup-request" ||
+        error.code === "auth/popup-blocked"
+      ) {
+        console.log("Google sign in was cancelled by the user");
+      }
     } finally {
       setIsAuthenticating(false);
       setIsLoading(false);

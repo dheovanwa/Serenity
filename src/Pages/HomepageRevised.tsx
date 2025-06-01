@@ -734,33 +734,17 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                       {apt.appointmentDate}
                     </p>
                   </div>
-                  <div className="flex flex-col items-center flex-1 text-center mb-2 sm:mb-0">
-                    <p className="text-base sm:text-lg font-semibold text-[#161F36] dark:text-[#E6E6E6]">
-                      {apt.method === "Video" ? apt.time : ""}
-                    </p>
-                    {apt.method === "Video" ? (
+                  <div className="flex justify-end items-center text-right">
+                    <div className="text-right">
+                      {apt.method === "Video" && (
+                        <p className="text-base sm:text-lg font-semibold text-[#161F36] dark:text-[#E6E6E6]">
+                          {apt.time} WIB
+                        </p>
+                      )}
                       <p className="text-sm sm:text-base text-[#161F36] dark:text-[#E6E6E6]">
-                        Video Call
+                        {apt.method}
                       </p>
-                    ) : (
-                      <p className="text-sm sm:text-base text-[#161F36] dark:text-[#E6E6E6] text-center w-full">
-                        Obrolan Chat
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex justify-center sm:justify-end items-center flex-1 w-full sm:w-auto">
-                    <button
-                      className="text-[#161F36] dark:text-[#E6E6E6] font-semibold py-2 px-3 sm:py-3 sm:px-4 text-base sm:text-xl"
-                      onClick={() => {
-                        if (apt.method === "Video") {
-                          // Implement join video call logic here if needed
-                        } else {
-                          navigate(`/chat?chatId=${apt.id}`);
-                        }
-                      }}
-                    >
-                      {apt.action}
-                    </button>
+                    </div>
                   </div>
                 </div>
               </div>

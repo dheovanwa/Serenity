@@ -1,10 +1,23 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import Instagram from "../assets/instagram.png";
 import Whatsapp from "../assets/whatsapp.png";
 import email from "../assets/email.png";
 import SerenityLogo from "../assets/Logo - Dark.png"; // Asumsi: Ini adalah logo 'S'
 
-const Footer: React.FC = () => {
+// Add a prop to identify user type
+interface FooterProps {
+  isPsychiatrist?: boolean;
+}
+
+const Footer: React.FC<FooterProps> = ({ isPsychiatrist = false }) => {
+  // Define routes based on user type
+  const homeRoute = isPsychiatrist ? "/dashboard" : "/home";
+  const appointmentRoute = isPsychiatrist
+    ? "/psy-manage-appointment"
+    : "/manage-appointment";
+  const profileRoute = isPsychiatrist ? "/doctor-profile" : "/profile";
+
   return (
     <footer className="bg-[#0f1629] text-white pt-16">
       <div className="w-full mx-auto px-10 md:px-16 lg:px-24">
@@ -55,37 +68,43 @@ const Footer: React.FC = () => {
             </p>
           </div>
 
-          {/* Kolom 3: Peta Situs (Dorong ke Kanan menggunakan ml-auto) */}
-          {/* Pastikan ini tetap ada untuk mendorongnya ke paling kanan */}
+          {/* Kolom 3: Peta Situs */}
           <div className="text-left md:ml-auto">
-            {" "}
-            {/* <--- Perubahan di sini */}
             <h3 className="text-xl font-semibold mb-6">Peta Situs</h3>
             <ul className="space-y-3 text-base">
               <li>
-                <a href="#" className="hover:opacity-75">
+                <Link to={homeRoute} className="hover:opacity-75">
                   Halaman Utama
-                </a>
+                </Link>
               </li>
+              {/* Only show "Pencarian Psikolog" for regular users */}
+              {!isPsychiatrist && (
+                <li>
+                  <Link to="/Search-psi" className="hover:opacity-75">
+                    Pencarian Psikolog
+                  </Link>
+                </li>
+              )}
               <li>
-                <a href="#" className="hover:opacity-75">
-                  Pencarian Psikiater
-                </a>
-              </li>
-              <li>
-                <a href="#" className="hover:opacity-75">
+                <Link to={appointmentRoute} className="hover:opacity-75">
                   Jadwal Sesi
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:opacity-75">
+                <Link to="/chat" className="hover:opacity-75">
                   Pesan
-                </a>
+                </Link>
+              </li>
+              {/* Add Forum link for both user types */}
+              <li>
+                <Link to="/forum" className="hover:opacity-75">
+                  Forum
+                </Link>
               </li>
               <li>
-                <a href="#" className="hover:opacity-75">
+                <Link to={profileRoute} className="hover:opacity-75">
                   Profil
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

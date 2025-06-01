@@ -8,6 +8,7 @@ import cameraIcon from "../assets/83574.png";
 import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
 import { Calendar } from "lucide-react";
+import Loading from "./Loading";
 
 const UserProfile = () => {
   const [userName, setUserName] = useState("Loading...");
@@ -19,6 +20,7 @@ const UserProfile = () => {
   const [profilePic, setProfilePic] = useState(ProfilePic); // State for profile picture
   const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref for file input
   const [phoneError, setPhoneError] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false); // Add this state if not already present
 
   const [formData, setFormData] = useState({
     firstName: "Elon",
@@ -85,15 +87,28 @@ const UserProfile = () => {
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
+
+          // Format birthOfDate to dd-mm-yyyy
+          let formattedBirthDate = userData.birthOfDate || "";
+          if (formattedBirthDate) {
+            // Handle different date formats
+            const date = new Date(formattedBirthDate);
+            if (!isNaN(date.getTime())) {
+              const day = String(date.getDate()).padStart(2, "0");
+              const month = String(date.getMonth() + 1).padStart(2, "0");
+              const year = date.getFullYear();
+              formattedBirthDate = `${day}-${month}-${year}`;
+            }
+          }
+
           setFormData({
             firstName: userData.firstName || "",
             lastName: userData.lastName || "",
             address: userData.address || "",
             sex: userData.sex || "",
-            birthOfDate: userData.birthOfDate || "",
+            birthOfDate: formattedBirthDate,
             email: userData.email || "",
             phoneNumber: userData.phoneNumber || "",
-            birthOfDate: userData.birthOfDate || "",
           });
           setInitialFormData(userData);
 
@@ -288,25 +303,7 @@ const UserProfile = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f2f3d9] text-[#161F36]">
-        <div className="w-1/2 h-2 bg-gray-300 rounded-full overflow-hidden">
-          <div className="h-full bg-[#161F36] animate-loading-bar"></div>
-        </div>
-        <style>
-          {`
-            @keyframes loading-bar {
-              0% { transform: translateX(-100%); }
-              50% { transform: translateX(0); }
-              100% { transform: translateX(100%); }
-            }
-            .animate-loading-bar {
-              animation: loading-bar 1.5s infinite;
-            }
-          `}
-        </style>
-      </div>
-    );
+    return <Loading isDarkMode={isDarkMode} />;
   }
 
   return (
@@ -643,13 +640,12 @@ const UserProfile = () => {
             <button
               onClick={handleLogoutClick}
               className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-[#FF5640] text-[18px] lg:text-xl transition-all duration-300"
-
             >
               Keluar dari akun
             </button>
           </div>
           {isOverlayVisible && (
-              <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+            <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
               <div className="bg-[#F2EDE2] dark:bg-[#161F36] p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
                 <h2 className="text-xl font-bold mb-4">Apakah kamu yakin?</h2>
                 <p className="text-sm mb-4">

@@ -69,7 +69,7 @@ const CompleteSignUp: React.FC<CompleteSignUpProps> = ({
               console.log(
                 "User already completed profile, redirecting to home"
               );
-              navigate("/");
+              navigate("/home");
             }
           }
         }
@@ -125,7 +125,7 @@ const CompleteSignUp: React.FC<CompleteSignUpProps> = ({
         address,
       });
 
-      navigate("/");
+      navigate("/home");
     } catch (error) {
       console.error("Error updating profile:", error);
     }

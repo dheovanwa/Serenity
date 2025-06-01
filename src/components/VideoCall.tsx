@@ -346,7 +346,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
         (snapshot) => {
           if (!snapshot.exists()) {
             // Call document deleted, end call for joiner
-            navigate("/?callEnded=psychiatrist");
+            navigate("/home?callEnded=psychiatrist");
             return;
           }
           const data = snapshot.data();
@@ -364,7 +364,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
               lastCallerDisconnect: null,
               lastJoinerDisconnect: null,
             });
-            navigate("/?callEnded=psychiatrist");
+            navigate("/home?callEnded=psychiatrist");
           }
         }
       );
