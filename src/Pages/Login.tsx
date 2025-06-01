@@ -170,7 +170,7 @@ const Login = () => {
 
   return (
     <div className="min-h-screen flex flex-col sm:flex-row overflow-hidden">
-      {isLoading && <Loading />}
+      {isLoading && <Loading isDarkMode={isDarkMode} />}
       <div className="absolute top-5 left-4 flex items-center gap-2 z-10">
         <img
           src={isDarkMode ? logoDark : logoLight}

@@ -487,7 +487,7 @@ export function InputWithLabelPassConfirm({
   };
 
   return (
-    <div className="grid w-full max-w-sm items-center gap-1.5 mt-10 text-black">
+    <div className="grid w-full max-w-sm items-center gap-1.5 mt-10 text-black dark:text-white">
       <Label htmlFor="password">Konfirmasi Kata Sandi</Label>
       <div className="relative">
         <Input

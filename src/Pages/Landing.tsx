@@ -17,6 +17,7 @@ import Moon from "../assets/Do not Disturb iOS.svg";
 // import { db } from "../config/firebase";
 // Add import for local JSON
 import psychiatristsData from "../utils/psychiatrists.json";
+import Footer from "../components/Footer";
 
 // Add interface for psychiatrist data
 interface Psychiatrist {
@@ -103,25 +104,25 @@ const MentalHealthPage: React.FC = () => {
 
   return (
     <div
-      className={`bg-[#f0eadf] min-h-screen flex flex-col ${
-        isDarkMode ? "dark" : ""
-      }`}
+      className={`bg-[#f0eadf] min-h-screen flex flex-col dark:bg-[#161F36]`}
     >
       {/* Logo at top left and dark mode toggle at top right */}
       <div className="absolute top-5 left-4 flex items-center gap-2 z-10">
-        <img src={logoLight} alt="Logo" className="w-16 h-16" />
-        <h1 className="text-xl text-[#78716C]">Serenity</h1>
+        <img
+          src={isDarkMode ? logoDark : logoLight}
+          alt="Logo"
+          className="w-16 h-16"
+        />
+        <h1 className="text-xl text-[#78716C] dark:text-[#BACBD8]">Serenity</h1>
       </div>
       <div className="absolute top-5 right-4 z-10">
         <button
           onClick={toggleTheme}
-          className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner ${
-            isDarkMode ? "bg-gray-700" : "bg-gray-300"
-          }`}
+          className={`relative inline-flex items-center h-7 w-12 rounded-full transition-colors duration-300 focus:outline-none shadow-inner bg-gray-300 dark:bg-[#4A4A4A]`}
           aria-label="Toggle theme"
         >
           <span
-            className={`absolute top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 ${
+            className={`absolute top-1/2 -translate-y-1/2 inline-block w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-300 dark:bg-[#161F36] ${
               isDarkMode
                 ? "translate-x-6 left-0.5 dark:bg-gray-700"
                 : "translate-x-0.5 left-0.5"
@@ -145,29 +146,27 @@ const MentalHealthPage: React.FC = () => {
       </div>
       {/* Main content */}
       <div
-        className={`px-4 mt-30 ml-10 flex items-start justify-start gap-8 xl:mt-40 xl:ml-30 lg:mt-40 lg:ml-20 md:mt-30 md:ml-10 sm:mt-30 sm:ml-10 ${
-          isDarkMode ? "text-white" : ""
-        }`}
+        className={`px-4 mt-30 ml-10 flex items-start justify-start gap-8 xl:mt-40 xl:ml-30 lg:mt-40 lg:ml-20 md:mt-30 md:ml-10 sm:mt-30 sm:ml-10 text-black dark:text-[#BACBD8]`}
       >
         <section className=" ">
-          <h1 className="text-[#1a1a1a] font-semibold text-lg md:text-2xl lg:text-3xl xl:text-4xl leading-tight mb-2">
+          <h1 className="text-[#1a1a1a] dark:text-[#BACBD8] font-semibold text-lg md:text-2xl lg:text-3xl xl:text-4xl leading-tight mb-2">
             Perjalanan Anda Menuju Kesehatan Mental
             <br />
             yang Lebih Baik Dimulai di Sini
           </h1>
-          <p className="text-[#4a4a4a] text-base sm:text-lg md:text-xl lg:text-2xl xl:text-2xl mb-10">
+          <p className="text-[#4a4a4a] dark:text-gray-300 text-base sm:text-lg md:text-xl lg:text-2xl xl:text-2xl mb-10">
             Wawasan pribadi, dukungan waktu nyata, <br />
             dan alat canggih untuk kesejahteraan mental Anda.
           </p>
           <div className="flex items-center space-x-4">
             <button
-              className="text-[#1a1a1a] bg-[#a9bbca] text-xs md:text-sm font-normal rounded-full px-4 py-1"
+              className="text-[#1a1a1a] bg-[#a9bbca] dark:bg-[#1A2947] dark:text-[#BACBD8] text-xs md:text-sm font-normal rounded-full px-4 py-1"
               onClick={() => handleNavigate("/signin")}
             >
               Masuk ke Serenity
             </button>
             <button
-              className="text-[#1a1a1a] text-xs md:text-sm font-normal rounded-full border border-[#1a1a1a] px-4 py-1"
+              className="text-[#1a1a1a] dark:text-[#BACBD8] text-xs md:text-sm font-normal rounded-full border border-[#1a1a1a] dark:border-[#BACBD8] px-4 py-1"
               onClick={() => handleNavigate("/signup")}
             >
               Bergabung ke Serenity
@@ -178,25 +177,22 @@ const MentalHealthPage: React.FC = () => {
 
       {/* Cards */}
       <section
-        className={`max-w-[2200px] mx-auto px-4 mt-12 flex flex-col sm:flex-row md:justify-center sm:gap-12 gap-8 mb-12 ${
-          isDarkMode ? "bg-[#23272f]" : ""
-        }`}
+        className={`max-w-[2200px] mx-auto px-4 mt-12 flex flex-col sm:flex-row md:justify-center sm:gap-12 gap-8 mb-12 dark:bg-[#161F36]`}
       >
         {/* Responsive: horizontal scroll on mobile, grid on desktop */}
         <div className="flex flex-col lg:flex-row sm:flex-col gap-8 w-full overflow-x-auto sm:overflow-visible">
           {/* Card 1 */}
           <div
             className={`
-              bg-[#ffe6cc] dark:bg-[#23272f] rounded-3xl p-6 md:p-10 md:max-w-[380px] flex-shrink-0
-              flex ${"flex-row sm:flex-col"} items-center
+              bg-[#ffe6cc] dark:bg-[#1A2947] rounded-3xl p-6 md:p-10 md:max-w-[380px] flex-shrink-0
+              flex flex-row sm:flex-col items-center
               min-w-[320px] sm:min-w-0 w-[90vw] sm:w-auto
+              text-black dark:text-[#BACBD8]
             `}
           >
             <div className="flex-1 flex flex-col justify-center items-start">
-              <h2 className="text-black font-semibold text-xl mb-2 sm:mb-3">
-                KECEMASAN
-              </h2>
-              <p className="text-black font-regular text-sm leading-relaxed mb-0 sm:mb-4">
+              <h2 className="font-semibold text-xl mb-2 sm:mb-3">KECEMASAN</h2>
+              <p className="font-regular text-sm leading-relaxed mb-0 sm:mb-4">
                 Rasa cemas berlebihan bisa mengganggu aktivitas harian.
               </p>
             </div>
@@ -209,16 +205,15 @@ const MentalHealthPage: React.FC = () => {
           {/* Card 2 */}
           <div
             className={`
-              bg-[#ffe6cc] dark:bg-[#23272f] rounded-3xl p-6 md:p-10 md:max-w-[380px] flex-shrink-0
-              flex ${"flex-row sm:flex-col"} items-center
+              bg-[#ffe6cc] dark:bg-[#1A2947] rounded-3xl p-6 md:p-10 md:max-w-[380px] flex-shrink-0
+              flex flex-row sm:flex-col items-center
               min-w-[320px] sm:min-w-0 w-[90vw] sm:w-auto
+              text-black dark:text-[#BACBD8]
             `}
           >
             <div className="flex-1 flex flex-col justify-center items-start">
-              <h2 className="text-black font-semibold text-xl mb-2 sm:mb-3">
-                PTSD
-              </h2>
-              <p className="text-black font-regular text-sm leading-relaxed mb-0 sm:mb-4">
+              <h2 className="font-semibold text-xl mb-2 sm:mb-3">PTSD</h2>
+              <p className="font-regular text-sm leading-relaxed mb-0 sm:mb-4">
                 Trauma masa lalu sering membekas dan memengaruhi kehidupan
                 sekarang.
               </p>
@@ -232,16 +227,15 @@ const MentalHealthPage: React.FC = () => {
           {/* Card 3 */}
           <div
             className={`
-              bg-[#9bd9ff] dark:bg-[#23272f] rounded-3xl p-6 md:p-10 md:max-w-[380px] flex-shrink-0
-              flex ${"flex-row sm:flex-col"} items-center
+              bg-[#ffe6cc] dark:bg-[#1A2947] rounded-3xl p-6 md:p-10 md:max-w-[380px] flex-shrink-0
+              flex flex-row sm:flex-col items-center
               min-w-[320px] sm:min-w-0 w-[90vw] sm:w-auto
+              text-black dark:text-[#BACBD8]
             `}
           >
             <div className="flex-1 flex flex-col justify-center items-start">
-              <h2 className="text-black font-semibold text-xl mb-2 sm:mb-3">
-                DEPRESI
-              </h2>
-              <p className="text-black font-regular text-sm leading-relaxed mb-0 sm:mb-4">
+              <h2 className="font-semibold text-xl mb-2 sm:mb-3">DEPRESI</h2>
+              <p className="font-regular text-sm leading-relaxed mb-0 sm:mb-4">
                 Merasa kosong, lelah, atau tidak bersemangat setiap hari? Anda
                 tidak sendirian.
               </p>
@@ -255,16 +249,17 @@ const MentalHealthPage: React.FC = () => {
           {/* Card 4 */}
           <div
             className={`
-              bg-[#ffe6cc] dark:bg-[#23272f] rounded-3xl p-6 md:p-10 md:max-w-[380px] flex-shrink-0
-              flex ${"flex-row sm:flex-col"} items-center
+              bg-[#ffe6cc] dark:bg-[#1A2947] rounded-3xl p-6 md:p-10 md:max-w-[380px] flex-shrink-0
+              flex flex-row sm:flex-col items-center
               min-w-[320px] sm:min-w-0 w-[90vw] sm:w-auto
+              text-black dark:text-[#BACBD8]
             `}
           >
             <div className="flex-1 flex flex-col justify-center items-start">
-              <h2 className="text-black font-semibold text-xl mb-2 sm:mb-3">
+              <h2 className="font-semibold text-xl mb-2 sm:mb-3">
                 Stres dan Tekanan Hidup
               </h2>
-              <p className="text-black font-regular text-sm leading-relaxed mb-0 sm:mb-4">
+              <p className="font-regular text-sm leading-relaxed mb-0 sm:mb-4">
                 Tuntutan pekerjaan, keluarga, atau kehidupan bisa menumpuk jadi
                 beban mental.
               </p>
@@ -281,85 +276,67 @@ const MentalHealthPage: React.FC = () => {
       {/* Showcasing Features */}
       <section className={`max-w-5xl mx-auto px-4 mb-16`}>
         <h2
-          className={`text-3xl font-bold mb-8 text-center ${
-            isDarkMode ? "text-white" : "text-[#161F36]"
-          }`}
+          className={`text-3xl font-bold mb-8 text-center text-[#161F36] dark:text-[#BACBD8]`}
         >
           Fitur Unggulan Serenity
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Video Call */}
-          <div className="bg-white dark:bg-[#23272f] rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <div className="bg-white dark:bg-[#1A2947] rounded-2xl shadow-md p-6 flex flex-col items-center">
             <img
               src="https://img.icons8.com/ios-filled/100/187DA8/video-call.png"
               alt="Video Call"
               className="w-16 h-16 mb-4"
             />
-            <h3
-              className={`text-xl font-semibold mb-2 ${
-                isDarkMode ? "text-white" : "text-[#161F36]"
-              }`}
-            >
+            <h3 className="text-xl font-semibold mb-2 text-[#161F36] dark:text-[#BACBD8]">
               Video Call
             </h3>
-            <p className={`text-gray-600 dark:text-gray-300 text-center`}>
+            <p className="text-gray-600 dark:text-gray-300 text-center">
               Konsultasi langsung dengan psikiater melalui video call yang aman
               dan privat.
             </p>
           </div>
           {/* Chat */}
-          <div className="bg-white dark:bg-[#23272f] rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <div className="bg-white dark:bg-[#1A2947] rounded-2xl shadow-md p-6 flex flex-col items-center">
             <img
               src="https://img.icons8.com/ios-filled/100/187DA8/chat-message.png"
               alt="Chat"
               className="w-16 h-16 mb-4"
             />
-            <h3
-              className={`text-xl font-semibold mb-2 ${
-                isDarkMode ? "text-white" : "text-[#161F36]"
-              }`}
-            >
+            <h3 className="text-xl font-semibold mb-2 text-[#161F36] dark:text-[#BACBD8]">
               Chat
             </h3>
-            <p className={`text-gray-600 dark:text-gray-300 text-center`}>
+            <p className="text-gray-600 dark:text-gray-300 text-center">
               Fitur chat untuk diskusi cepat dan mudah dengan profesional
               kesehatan mental.
             </p>
           </div>
           {/* Recommendation Psychiatrist */}
-          <div className="bg-white dark:bg-[#23272f] rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <div className="bg-white dark:bg-[#1A2947] rounded-2xl shadow-md p-6 flex flex-col items-center">
             <img
               src="https://img.icons8.com/ios-filled/100/187DA8/doctor-male.png"
               alt="Rekomendasi Psikiater"
               className="w-16 h-16 mb-4"
             />
-            <h3
-              className={`text-xl font-semibold mb-2 ${
-                isDarkMode ? "text-white" : "text-[#161F36]"
-              }`}
-            >
+            <h3 className="text-md font-semibold mb-2 text-[#161F36] dark:text-[#BACBD8]">
               Rekomendasi Psikiater
             </h3>
-            <p className={`text-gray-600 dark:text-gray-300 text-center`}>
+            <p className="text-gray-600 dark:text-gray-300 text-center">
               Dapatkan rekomendasi psikiater terbaik yang sesuai dengan
               kebutuhan dan preferensi Anda.
             </p>
           </div>
           {/* Forum */}
-          <div className="bg-white dark:bg-[#23272f] rounded-2xl shadow-md p-6 flex flex-col items-center">
+          <div className="bg-white dark:bg-[#1A2947] rounded-2xl shadow-md p-6 flex flex-col items-center">
             <img
               src="https://img.icons8.com/ios-filled/100/187DA8/conference-call.png"
               alt="Forum"
               className="w-16 h-16 mb-4"
             />
-            <h3
-              className={`text-xl font-semibold mb-2 ${
-                isDarkMode ? "text-white" : "text-[#161F36]"
-              }`}
-            >
+            <h3 className="text-xl font-semibold mb-2 text-[#161F36] dark:text-[#BACBD8]">
               Forum Diskusi
             </h3>
-            <p className={`text-gray-600 dark:text-gray-300 text-center`}>
+            <p className="text-gray-600 dark:text-gray-300 text-center">
               Bergabunglah dalam komunitas, berbagi pengalaman, dan dapatkan
               dukungan dari sesama pengguna.
             </p>
@@ -368,11 +345,7 @@ const MentalHealthPage: React.FC = () => {
       </section>
       {/* Showcase: List of Psychiatrists as Infinite Carousel */}
       <section className="max-w-5xl mx-auto px-4 mb-16">
-        <h2
-          className={`text-2xl font-bold mb-6 text-center ${
-            isDarkMode ? "text-white" : "text-[#161F36]"
-          }`}
-        >
+        <h2 className="text-2xl font-bold mb-6 text-center text-[#161F36] dark:text-[#BACBD8]">
           Daftar Psikiater Kami
         </h2>
         <div className="relative w-full overflow-hidden">
@@ -392,7 +365,7 @@ const MentalHealthPage: React.FC = () => {
             {getVisiblePsychiatrists().map((psy) => (
               <div
                 key={psy.id}
-                className="bg-white dark:bg-[#23272f] rounded-xl shadow-md p-4 flex flex-col items-center"
+                className="bg-white dark:bg-[#1A2947] rounded-xl shadow-md p-4 flex flex-col items-center"
                 style={{
                   minWidth: "220px",
                   maxWidth: "220px",
@@ -407,16 +380,10 @@ const MentalHealthPage: React.FC = () => {
                     (e.target as HTMLImageElement).src = ProfilePic;
                   }}
                 />
-                <div
-                  className={`text-lg font-semibold mb-1 ${
-                    isDarkMode ? "text-white" : "text-[#161F36]"
-                  }`}
-                >
+                <div className="text-lg font-semibold mb-1 text-[#161F36] dark:text-[#BACBD8]">
                   {psy.name}
                 </div>
-                <div
-                  className={`text-sm text-gray-600 dark:text-gray-300 text-center`}
-                >
+                <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
                   {psy.specialty}
                 </div>
               </div>
@@ -429,7 +396,9 @@ const MentalHealthPage: React.FC = () => {
               <span
                 key={idx}
                 className={`inline-block w-2 h-2 rounded-full ${
-                  idx === carouselIndex ? "bg-[#187DA8]" : "bg-gray-300"
+                  idx === carouselIndex
+                    ? "bg-[#187DA8] dark:bg-[#BACBD8]"
+                    : "bg-gray-300"
                 }`}
               />
             ))}
@@ -437,13 +406,7 @@ const MentalHealthPage: React.FC = () => {
         )}
       </section>
       {/* Footer */}
-      <footer
-        className={`text-center text-[10px] pb-4 select-none ${
-          isDarkMode ? "text-gray-400 bg-[#23272f]" : "text-[#4a4a4a]"
-        }`}
-      >
-        @ 2024 · 2025 Mental Health J&D Sp so.co
-      </footer>
+      <Footer />
     </div>
   );
 };

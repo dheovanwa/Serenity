@@ -14,7 +14,6 @@ import { format } from "date-fns";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater"; // Assuming this is dark mode aware
 import { notificationScheduler } from "../utils/notificationScheduler";
 import ProfilePic from "../assets/default_profile_image.svg"; // Pastikan path benar
-import send from "../assets/send.svg"; // Pastikan path benar
 
 interface Appointment {
   id?: string;

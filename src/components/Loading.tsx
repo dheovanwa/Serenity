@@ -15,7 +15,7 @@ const Loading: React.FC<LoadingProps> = ({ isDarkMode }) => {
       >
         {" "}
         <img
-          src={isDarkMode ? logoLight : logoDark}
+          src={isDarkMode ? logoDark : logoLight}
           alt="Logo"
           className="w-20 h-20 animate-bounce"
         />

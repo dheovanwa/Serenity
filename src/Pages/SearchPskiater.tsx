@@ -15,6 +15,7 @@ import { getAuth, onAuthStateChanged } from "firebase/auth";
 // Import logo dark dan light untuk komponen ini jika perlu
 import logoLight from "../assets/Logo - Light.png"; // Contoh, jika logo muncul di sini
 import logoDark from "../assets/Logo - Dark.png"; // Contoh, jika logo muncul di sini
+import Footer from "../components/Footer";
 
 interface Psychiatrist {
   id?: string;
@@ -284,18 +285,18 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
       className="min-h-screen w-full bg-[#F2EDE2] dark:bg-[#161F36] flex flex-col overflow-x-hidden transition-colors duration-300" // Background utama halaman
     >
       <div className="max-w-6xl mt-10 flex flex-col justify-start items-start sm:ml-5 md:ml-6 lg:ml-30 xl:ml-35 2xl:ml-53 mb-8 px-4 sm:px-8 md:px-12">
-  <h1 className="text-4xl font-bold text-[#161F36] dark:text-white text-center sm:text-left">
-    Cari Psikolog
-  </h1>
-  <p className="text-gray-600 dark:text-gray-300 text-center sm:text-left">
-    Temukan psikolog terbaik kami disini
-  </p>
-</div>
+        <h1 className="text-4xl font-bold text-[#161F36] dark:text-white text-center sm:text-left">
+          Cari Psikolog
+        </h1>
+        <p className="text-gray-600 dark:text-gray-300 text-center sm:text-left">
+          Temukan psikolog terbaik kami disini
+        </p>
+      </div>
       <div className="mt-10 pt-6 px-2 sm:px-4 md:px-6 lg:px-8">
         <div className="w-full sm:w-[90%] lg:w-[75%] mx-auto flex flex-col gap-3 sm:flex-row sm:justify-between">
           <div className="flex flex-wrap items-center gap-3 sm:w-[60%] lg:w-[70%]">
             {/* Magic Recommendation Button */}
-            
+
             <div className="relative flex-grow">
               <input
                 type="text"
@@ -466,7 +467,6 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
             overflowY: "auto",
             scrollbarWidth: "thin",
             scrollbarColor: "#888 transparent",
-            
           }}
         >
           {isLoading ? (
@@ -510,6 +510,7 @@ const SearchPsikiater: React.FC<SearchPsikiaterProps> = ({ isDarkMode }) => {
           )}
         </div>
       </div>
+      <Footer />
     </div>
   );
 };
