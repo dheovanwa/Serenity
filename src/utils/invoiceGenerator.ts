@@ -64,7 +64,7 @@ export const generateInvoicePDF = (appointmentData: InvoiceData) => {
   const finalY = (doc as any).lastAutoTable.finalY + 20;
 
   // Add footer
-  doc.text("Status Pembayaran:", 20, finalY);
+  doc.text("Status:", 20, finalY);
   doc.setTextColor(0, 150, 0);
   doc.text(appointmentData.status, 20, finalY + 10);
 

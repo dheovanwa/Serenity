@@ -46,6 +46,11 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
     {}
   );
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  // Filter states
+  const [statusFilter, setStatusFilter] = useState<string>("Semua");
+  const [methodFilter, setMethodFilter] = useState<string>("Semua");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [search, setSearch] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [isPaymentLoading, setIsPaymentLoading] = useState(false);
   const [statusUpdateLoading, setStatusUpdateLoading] = useState(false);
@@ -78,14 +83,106 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
     handleCloseModal();
   };
 
+  // Helper: status rank
+  const statusRank = (status: string) => {
+    switch (status) {
+      case "Menunggu pembayaran":
+        return 1;
+      case "Sedang berlangsung":
+        return 2;
+      case "Terjadwal":
+        return 3;
+      case "Selesai":
+      case "Dibatalkan":
+        return 4;
+      default:
+        return 5;
+    }
+  };
+
+  // Helper: sort function for appointments
+  const sortAppointments = (a: Appointment, b: Appointment) => {
+    const rankA = statusRank(a.status);
+    const rankB = statusRank(b.status);
+
+    if (rankA !== rankB) {
+      return rankA - rankB;
+    }
+
+    // If same rank, apply further sorting
+    // 1. Menunggu pembayaran: nearest date
+    if (rankA === 1) {
+      return Number(a.date) - Number(b.date);
+    }
+
+    // 2. Sedang berlangsung: prioritize Video, then nearest date
+    if (rankA === 2) {
+      if (a.method !== b.method) {
+        if (a.method === "Video") return -1;
+        if (b.method === "Video") return 1;
+      }
+      return Number(a.date) - Number(b.date);
+    }
+
+    // 3. Terjadwal: nearest date
+    if (rankA === 3) {
+      return Number(a.date) - Number(b.date);
+    }
+
+    // 4. Selesai/Dibatalkan: nearest date
+    if (rankA === 4) {
+      return Number(a.date) - Number(b.date);
+    }
+
+    return 0;
+  };
+
+  // Filtered, searched, and sorted appointments
+  const filteredAppointments = appointments
+    .filter((apt) =>
+      statusFilter === "Semua" ? true : apt.status === statusFilter
+    )
+    .filter((apt) =>
+      methodFilter === "Semua" ? true : apt.method === methodFilter
+    )
+    .filter((apt) => {
+      if (!search.trim()) return true;
+      const s = search.toLowerCase();
+      // Search by date (formatted), method, psychiatrist name, and status
+      const dateStr = formatAppointmentDate(apt).toLowerCase();
+      return (
+        apt.doctorName.toLowerCase().includes(s) ||
+        apt.method.toLowerCase().includes(s) ||
+        apt.status.toLowerCase().includes(s) ||
+        dateStr.includes(s)
+      );
+    })
+    .sort((a, b) => {
+      // Use prioritization sort, then apply date sort order
+      const prioritization = sortAppointments(a, b);
+      if (
+        statusFilter === "Semua" &&
+        methodFilter === "Semua" &&
+        !search.trim()
+      ) {
+        // Default: prioritization
+        return prioritization;
+      }
+      // If filtered, sort by date
+      if (Number(a.date) === Number(b.date)) return 0;
+      return sortOrder === "asc"
+        ? Number(a.date) - Number(b.date)
+        : Number(b.date) - Number(a.date);
+    });
+
   const indexOfLastAppointment = currentPage * ITEMS_PER_PAGE;
   const indexOfFirstAppointment = indexOfLastAppointment - ITEMS_PER_PAGE;
-  const currentAppointments = appointments.slice(
+  const currentAppointments = filteredAppointments.slice(
     indexOfFirstAppointment,
     indexOfLastAppointment
   );
 
-  const totalPages = Math.ceil(appointments.length / ITEMS_PER_PAGE);
+  const totalPages = Math.ceil(filteredAppointments.length / ITEMS_PER_PAGE);
 
   const updateAppointmentStatus = useCallback(async () => {
     const params = new URLSearchParams(location.search);
@@ -139,6 +236,15 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
     }
   }, [location.search]);
 
+  // Pagination and filtering logic
+  const handleNextPage = () => {
+    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
+  };
+
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => Math.max(prev - 1, 1));
+  };
+
   useEffect(() => {
     const fetchAppointments = async () => {
       try {
@@ -160,7 +266,8 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
             ...(doc.data() as Appointment),
           });
         });
-        setAppointments(fetchedAppointments);
+        // Sort appointments according to prioritization
+        setAppointments(fetchedAppointments.sort(sortAppointments));
       } catch (error) {
         console.error("Error fetching appointments:", error);
       } finally {
@@ -170,6 +277,11 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
 
     fetchAppointments();
   }, []);
+
+  // Also sort appointments after any update (e.g. after cancel, payment, etc)
+  useEffect(() => {
+    setAppointments((prev) => [...prev].sort(sortAppointments));
+  }, [appointments.length]);
 
   useEffect(() => {
     if (location.search) {
@@ -424,7 +536,10 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
       patientName: appointment.patientName,
       doctorName: appointment.doctorName,
       method: appointment.method,
-      time: appointment.time,
+      time:
+        appointment.method === "Chat"
+          ? "Sepanjang hari"
+          : `${appointment.time} WIB`,
       price: appointment.price,
       status: appointment.status,
     };
@@ -715,14 +830,6 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
     );
   };
 
-  const handleNextPage = () => {
-    setCurrentPage((prev) => Math.min(prev + 1, totalPages));
-  };
-
-  const handlePrevPage = () => {
-    setCurrentPage((prev) => Math.max(prev - 1, 1));
-  };
-
   return (
     <div className="min-h-screen bg-[#f5eee3] flex flex-col items-center justify-start px-6 py-10 dark:bg-[#161F36] transition-colors duration-300">
       {" "}
@@ -732,11 +839,72 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
       <div className="w-full max-w-screen-xl mb-4 sm:mr-60">
         <h1 className="text-4xl font-bold text-[#5a4a2f] dark:text-white">
           Jadwal Sesi
-        </h1>{" "}
+        </h1>
         <h2 className="text-xl mt-3">
           Kelola jadwal janji temu bersama psikolog disini
         </h2>
-        {/* Title */}
+        {/* Filter/sort bar */}
+        <div className="mt-4 flex flex-wrap gap-2 items-center">
+          {/* Status filter */}
+          <select
+            className="bg-[#BACBD8] px-6 py-2 rounded text-[#161F36] font-semibold"
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="Semua">Pilih Status</option>
+            <option value="Menunggu pembayaran">Menunggu pembayaran</option>
+            <option value="Sedang berlangsung">Sedang berlangsung</option>
+            <option value="Terjadwal">Terjadwal</option>
+            <option value="Selesai">Selesai</option>
+            <option value="Dibatalkan">Dibatalkan</option>
+          </select>
+          {/* Method filter */}
+          <select
+            className="bg-[#BACBD8] px-6 py-2 rounded text-[#161F36] font-semibold"
+            value={methodFilter}
+            onChange={(e) => {
+              setMethodFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+          >
+            <option value="Semua">Pilih Spesialisasi</option>
+            <option value="Chat">Chat</option>
+            <option value="Video">Video</option>
+          </select>
+          {/* Sort direction icon */}
+          <button
+            className="bg-[#BACBD8] px-3 py-2 rounded text-[#161F36] font-semibold"
+            onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+            title="Urutkan"
+            type="button"
+          >
+            <span
+              className="inline-block transition-transform duration-200"
+              style={{
+                transform:
+                  sortOrder === "asc" ? "rotate(0deg)" : "rotate(180deg)",
+              }}
+            >
+              <svg
+                width="18"
+                height="18"
+                fill="none"
+                stroke="#161F36"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  d="M12 5v14M19 12l-7 7-7-7"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+            </span>
+          </button>
+        </div>
       </div>
       {loading ? (
         <div className="text-center text-gray-600 dark:text-gray-300">
@@ -750,7 +918,7 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
         <>
           {/* Mobile View */}
           <div className="w-full max-w-screen-xl block md:hidden">
-            {appointments.map((item) => {
+            {filteredAppointments.map((item) => {
               const isCanceled = item.status === "Dibatalkan";
               const isDone = item.status === "Selesai";
               const isScheduled = item.status === "Menunggu pembayaran";
