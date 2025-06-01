@@ -484,20 +484,17 @@ const UserProfile = () => {
           </div>
 
           {isOverlayVisible && (
-            <div className="fixed inset-0 bg-white bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
-              <div className="bg-[#F2EDE2] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
-                <h2 className="text-lg font-semibold mb-4">
-                  Apakah kamu yakin?
-                </h2>
-                <p className="text-sm mb-4 font-regular">
-                  Aksi ini akan mengubah data dirimu dan tidak bisa diubah{" "}
-                  <br />
-                  kembali ke semula apabila kamu melanjutkan.
+            <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+              <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
+                <h2 className="text-xl font-bold mb-4">Apakah kamu yakin?</h2>
+                <p className="text-sm mb-4">
+                  Aksi ini akan mengeluarkanmu dari akunmu <br />
+                  dan kamu harus masuk kembali untuk mengaksesnya.
                 </p>
                 <div className="flex flex-wrap justify-end gap-4">
                   <button
                     onClick={handleCloseOverlay}
-                    className="bg-transparent border-1 font-medium text-sm text-[#161F36] border-black px-4 py-2 rounded-md w-full sm:w-auto "
+                    className="bg-transparent border-2 text-[#161F36] px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
                   >
                     Batalkan
                   </button>
@@ -511,7 +508,7 @@ const UserProfile = () => {
                         console.error("Error signing out:", error);
                       }
                     }}
-                    className="bg-[#BACBD8] text-[#181818] font-medium px-4 py-2 rounded-md w-full sm:w-auto text-sm "
+                    className="bg-[#BACBD8] text-[#161F36] px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
                   >
                     Lanjutkan
                   </button>
@@ -645,7 +642,7 @@ const UserProfile = () => {
             </div>
           </div>
           {isOverlayVisible && (
-            <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
               <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
                 <h2 className="text-xl font-bold mb-4">Apakah kamu yakin?</h2>
                 <p className="text-sm mb-4">

@@ -503,15 +503,7 @@ const PsychiatristProfile = () => {
 
               {/* Tombol Keluar di bawah kiri */}
               <button
-                onClick={async () => {
-                  try {
-                    await signOut(auth);
-                  } catch (error) {
-                    console.error("Error signing out:", error);
-                  }
-                  localStorage.removeItem("documentId");
-                  navigate("/signin");
-                }}
+                onClick={() => setIsOverlayVisible(true)}
                 className="text-[#FF5640] text-sm lg:text-xl text-left mt-auto lg:ml-3 md:ml-12 sm:ml-15 self-start w-full lg:w-full transition-all duration-300 mb-3 cursor-pointer"
                 style={{ cursor: "pointer" }}
               >
@@ -644,15 +636,14 @@ const PsychiatristProfile = () => {
             </div>
           </div>
           {isOverlayVisible && (
-            <div className="fixed inset-0 bg-transparent bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
+            <div className="fixed inset-0 bg-white bg-opacity-10 backdrop-brightness-10 backdrop-opacity-40 z-50 flex justify-center items-center">
               <div className="bg-[#F2EDE2] p-6 rounded-[8px] border-1 border-black shadow-lg w-11/12 sm:w-1/3">
                 <h2 className="text-lg font-semibold mb-4">
                   Apakah kamu yakin?
                 </h2>
                 <p className="text-sm mb-4 font-regular">
-                  Aksi ini akan mengubah data dirimu dan tidak bisa diubah{" "}
-                  <br />
-                  kembali ke semula apabila kamu melanjutkan.
+                  Aksi ini akan mengeluarkanmu dari akunmu <br />
+                  dan kamu harus masuk kembali untuk mengaksesnya.
                 </p>
                 <div className="flex flex-wrap justify-end gap-4">
                   <button
@@ -662,9 +653,14 @@ const PsychiatristProfile = () => {
                     Batalkan
                   </button>
                   <button
-                    onClick={() => {
-                      localStorage.removeItem("documentId");
-                      window.location.href = "/signin";
+                    onClick={async () => {
+                      try {
+                        await signOut(auth);
+                        localStorage.removeItem("documentId");
+                        navigate("/signin");
+                      } catch (error) {
+                        console.error("Error signing out:", error);
+                      }
                     }}
                     className="bg-[#BACBD8] text-[#181818] font-medium px-4 py-2 rounded-md w-full sm:w-auto text-sm "
                   >

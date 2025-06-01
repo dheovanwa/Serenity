@@ -18,6 +18,7 @@ import {
   orderBy,
 } from "firebase/firestore";
 import ProfilePic from "../assets/default_profile_image.svg";
+import starIcon from "../assets/star.svg";
 
 // Import type yang sudah kita definisikan
 import { Psikolog, UserProfile, UserPreferences } from "../models/types";
@@ -203,35 +204,16 @@ export function CarouselDemo() {
                   <p className="text-lg text-gray-500">
                     {psychiatrist.specialty}
                   </p>
-                  {/* Gaya Interaksi */}
-                  {psychiatrist.gaya_interaksi &&
-                    psychiatrist.gaya_interaksi.length > 0 && (
-                      <p className="text-md text-gray-600">
-                        Gaya: {psychiatrist.gaya_interaksi.join(", ")}
-                      </p>
-                    )}
                   {/* Rating */}
                   {psychiatrist.rating !== undefined && (
-                    <p className="text-md text-gray-600">
-                      Rating: {psychiatrist.rating} ⭐
-                    </p>
-                  )}
-                  {/* Harga */}
-                  {psychiatrist.price !== undefined && (
-                    <p className="text-md text-gray-600">
-                      Harga: Rp{psychiatrist.price.toLocaleString("id-ID")}
-                    </p>
-                  )}
-                  {/* Lokasi (jika ada) */}
-                  {psychiatrist.location && (
-                    <p className="text-md text-gray-600">
-                      Lokasi: {psychiatrist.location}
-                    </p>
-                  )}
-                  {/* Debugging Score (opsional, bisa dihapus di produksi) */}
-                  {psychiatrist.score !== undefined && (
-                    <p className="text-sm text-gray-400">
-                      Skor: {psychiatrist.score.toFixed(2)}
+                    <p className="text-md text-gray-600 flex items-center gap-1">
+                      Rating:{" "}
+                      {parseFloat(psychiatrist.rating as any).toFixed(1)}
+                      <img
+                        src={starIcon}
+                        alt="star"
+                        className="w-5 h-5 inline-block"
+                      />
                     </p>
                   )}
                 </CardContent>

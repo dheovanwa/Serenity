@@ -53,7 +53,7 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
 
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 6;
   const [loadingAppointmentId, setLoadingAppointmentId] = useState<
     string | null
   >(null);

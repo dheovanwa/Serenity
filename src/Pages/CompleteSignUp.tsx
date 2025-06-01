@@ -52,9 +52,15 @@ const CompleteSignUp = () => {
         if (docId) {
           const userDocRef = doc(db, "users", docId);
           const userDoc = await getDoc(userDocRef);
-          if (userDoc.exists() && userDoc.data().birthOfDate) {
-            console.log("User already completed profile, redirecting to home");
-            navigate("/");
+          // Only redirect to home if birthOfDate exists and is not empty/null
+          if (userDoc.exists()) {
+            const birthOfDate = userDoc.data().birthOfDate;
+            if (birthOfDate && birthOfDate !== "") {
+              console.log(
+                "User already completed profile, redirecting to home"
+              );
+              navigate("/");
+            }
           }
         }
       }
@@ -154,7 +160,12 @@ const CompleteSignUp = () => {
           <div>
             <InputWithLabelGender
               value={gender}
-              onChange={(e) => setGender(e.target.value)}
+              // Fix: handle both event and direct value
+              onChange={(e: any) => {
+                // If e is an event, use e.target.value; if it's a string, use it directly
+                const value = e && e.target ? e.target.value : e;
+                setGender(value);
+              }}
             />
             {errors.gender && (
               <p className="text-red-500 text-sm mt-1">{errors.gender}</p>

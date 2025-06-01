@@ -47,9 +47,9 @@ const App: React.FC = () => {
         <Route
           path="/complete-register"
           element={
-            <ProtectedRoute>
-              <SignUpComplete />
-            </ProtectedRoute>
+            // <ProtectedRoute>
+            <SignUpComplete />
+            // </ProtectedRoute>
           }
         />
         <Route
