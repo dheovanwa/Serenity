@@ -178,15 +178,17 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
               )}
             </button>
 
-            {/* Notification Popup */}
             {showNotifications && (
               <div
-                className={`absolute top-full right-0 mt-2 w-80 max-w-[90vw] ${navSpecificThemeColors.bgNav} border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg z-50 max-h-96 overflow-hidden`}
+                className={`absolute top-full mt-2 w-80 max-w-[90vw]
+                  left-1/2 -translate-x-[calc(50%+70px)]
+                  md:left-auto md:right-0 md:translate-x-0
+                  ${navSpecificThemeColors.bgNav}
+                  border border-gray-300 dark:border-gray-600
+                  rounded-lg shadow-lg z-50 max-h-96 overflow-hidden`}
               >
                 <div className="p-3 border-b border-gray-300 dark:border-gray-600">
-                  <h3
-                    className={`font-semibold ${navSpecificThemeColors.textNav}`}
-                  >
+                  <h3 className={`font-semibold ${navSpecificThemeColors.textNav}`}>
                     Notifikasi
                   </h3>
                 </div>

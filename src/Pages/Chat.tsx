@@ -29,6 +29,7 @@ import axios from "axios";
 import { useSearchParams } from "react-router-dom";
 import ProfilePic from "../assets/default_profile_image.svg"; // Asumsi ini gelap dan perlu di-invert
 import { notificationScheduler } from "../utils/notificationScheduler";
+import Layout from "../components/Layout";
 
 interface Message {
   id: string;
@@ -956,13 +957,15 @@ const ChatPage: React.FC<ChatPageProps> = ({ isDarkMode, toggleTheme }) => {
     }
   }, [activeAppointment]);
 
+
   return (
     <div
-      className={`flex h-screen font-sans relative overflow-hidden ${
-        isDarkMode ? "dark:bg-gray-900 dark:text-white" : "bg-[#FDFBF6]"
+      className={`flex h-screen font-sans overflow-hidden${
+      isDarkMode ? "dark:bg-gray-900 dark:text-white" : "bg-[#FDFBF6]"
       }`}
-      style={{ fontFamily: '"Josefin Sans", sans-serif' }}
-    >
+      style={{ fontFamily: '"Josefin Sans", sans-serif' 
+      }}
+    > 
       {isMobile && isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}

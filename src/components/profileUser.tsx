@@ -640,10 +640,17 @@ const UserProfile = () => {
                 )}
               </div>
             </div>
+            <button
+              onClick={handleLogoutClick}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-[#FF5640] text-[18px] lg:text-xl transition-all duration-300"
+
+            >
+              Keluar dari akun
+            </button>
           </div>
           {isOverlayVisible && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
-              <div className="bg-white p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
+              <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+              <div className="bg-[#F2EDE2] dark:bg-[#161F36] p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
                 <h2 className="text-xl font-bold mb-4">Apakah kamu yakin?</h2>
                 <p className="text-sm mb-4">
                   Aksi ini akan mengubah data dirimu dan tidak bisa diubah{" "}

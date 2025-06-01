@@ -724,7 +724,7 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#f5eee3] flex flex-col items-center justify-center px-6 py-10 dark:bg-[#161F36] transition-colors duration-300">
+    <div className="min-h-screen bg-[#f5eee3] flex flex-col items-center justify-start px-6 py-10 dark:bg-[#161F36] transition-colors duration-300">
       {" "}
       {/* Main background */}
       <AppointmentStatusUpdater />
@@ -733,6 +733,9 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
         <h1 className="text-4xl font-bold text-[#5a4a2f] dark:text-white">
           Jadwal Sesi
         </h1>{" "}
+        <h2 className="text-xl mt-3">
+          Kelola jadwal janji temu bersama psikolog disini
+        </h2>
         {/* Title */}
       </div>
       {loading ? (
