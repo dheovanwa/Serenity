@@ -35,7 +35,7 @@ const App: React.FC = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         <Route path="/forgot-password/*" element={<ForgotPassword />} />
-        <Route path="/Landing" element={<Landing />} />
+        <Route path="/" element={<Landing />} />
         {/* Routes with navbar */}
         <Route
           path="/home"
