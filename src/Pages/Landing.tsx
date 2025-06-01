@@ -368,9 +368,9 @@ const MentalHealthPage: React.FC = () => {
                 key={psy.id}
                 className="bg-white dark:bg-[#1A2947] rounded-xl shadow-md p-4 flex flex-col items-center"
                 style={{
-                  minWidth: "220px",
-                  maxWidth: "220px",
-                  width: "220px",
+                  minWidth: "300px",
+                  maxWidth: "300px",
+                  width: "300px",
                 }}
               >
                 <img
