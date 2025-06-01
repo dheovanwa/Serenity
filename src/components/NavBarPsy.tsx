@@ -146,7 +146,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
           <NavItem label="Halaman Utama" path="/dashboard" icon={Home} />
           <NavItem
             label="Janji Temu"
-            path="/manage-appointment"
+            path="/psy-manage-appointment"
             icon={Calendar}
           />
           <NavItem label="Chat" path="/chat" icon={MessageSquare} />
@@ -187,7 +187,9 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
                   rounded-lg shadow-lg z-50 max-h-96 overflow-hidden`}
               >
                 <div className="p-3 border-b border-gray-300 dark:border-gray-600">
-                  <h3 className={`font-semibold ${navSpecificThemeColors.textNav}`}>
+                  <h3
+                    className={`font-semibold ${navSpecificThemeColors.textNav}`}
+                  >
                     Notifikasi
                   </h3>
                 </div>

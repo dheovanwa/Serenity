@@ -13,7 +13,7 @@ const UserProfile: React.FC = () => {
       navigate("/signin");
     },
 
-    onNavBack: () => navigate("/"),
+    onNavBack: () => navigate("/home"),
 
     loadUserData: async () => {
       const documentId = localStorage.getItem("documentId");

@@ -38,7 +38,7 @@ const App: React.FC = () => {
         <Route path="/Landing" element={<Landing />} />
         {/* Routes with navbar */}
         <Route
-          path="/"
+          path="/home"
           element={
             <ProtectedRoute>
               <Layout>

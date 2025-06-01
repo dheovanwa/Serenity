@@ -143,7 +143,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
         </div>
 
         <nav className="hidden md:flex flex-grow justify-center gap-5">
-          <NavItem label="Halaman Utama" path="/" icon={Home} />
+          <NavItem label="Halaman Utama" path="/home" icon={Home} />
           <NavItem label="Cari Ahli" path="/Search-psi" icon={Search} />
           <NavItem
             label="Janji Temu"
@@ -188,7 +188,9 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
                   rounded-lg shadow-lg z-50 max-h-96 overflow-hidden`}
               >
                 <div className="p-3 border-b border-gray-300 dark:border-gray-600">
-                  <h3 className={`font-semibold ${navSpecificThemeColors.textNav}`}>
+                  <h3
+                    className={`font-semibold ${navSpecificThemeColors.textNav}`}
+                  >
                     Notifikasi
                   </h3>
                 </div>
@@ -301,7 +303,7 @@ const NavBar: React.FC<NavBarProps> = ({ isDarkMode, toggleTheme }) => {
           <nav className="flex flex-col space-y-2 items-center">
             <NavItem
               label="Halaman Utama"
-              path="/"
+              path="/home"
               icon={Home}
               onClick={() => setIsMobileMenuOpen(false)}
             />

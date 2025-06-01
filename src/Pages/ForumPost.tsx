@@ -19,6 +19,7 @@ import {
 import { db } from "../config/firebase";
 import { containsProfanity } from "../utils/profanityFilter";
 import defaultProfileImage from "../assets/default_profile_image.svg";
+import Loading from "../components/Loading";
 
 interface ForumPost {
   id: string;
@@ -96,7 +97,9 @@ const ForumPost: React.FC<ForumPostPageProps> = ({ isDarkMode }) => {
     } else {
       if (author?.gender && author?.birthDate) {
         const age = calculateAge(author.birthDate);
-        const gender = author.gender === "male" ? "Laki-laki" : "Perempuan";
+        const gender =
+          author.gender === "Laki-laki" ? "Laki-laki" : "Perempuan";
+        console.log(gender);
         return `${gender}, ${age}`;
       }
       return "Pengguna";
@@ -348,6 +351,7 @@ const ForumPost: React.FC<ForumPostPageProps> = ({ isDarkMode }) => {
         content: newReply,
         likeCount: 0,
         timeCreated: serverTimestamp(),
+        readByCreator: false,
       };
 
       await addDoc(collection(db, "forum", forumId, "reply"), replyData);
@@ -522,12 +526,10 @@ const ForumPost: React.FC<ForumPostPageProps> = ({ isDarkMode }) => {
     }
   };
 
-  if (loading)
-    return (
-      <div className="text-center p-6 dark:text-white dark:bg-gray-900 min-h-screen">
-        Loading...
-      </div>
-    );
+  if (loading) {
+    return <Loading isDarkMode={isDarkMode} />;
+  }
+
   if (!post)
     return (
       <div className="text-center p-6 dark:text-white dark:bg-gray-900 min-h-screen">

@@ -164,7 +164,7 @@ const SignUp = () => {
             },
           });
         } else {
-          navigate("/");
+          navigate("/home");
         }
       }
     } catch (error) {

@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { collection, query, where, getDocs, orderBy } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  getDocs,
+  orderBy,
+} from "firebase/firestore";
 import { db } from "../config/firebase";
 import Loading from "./Loading"; // Assuming this is dark mode aware
 import { format } from "date-fns";
@@ -39,7 +47,7 @@ const ManageAppointmentPsy: React.FC<ManageAppointmentPsyProps> = ({
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 5;
+  const ITEMS_PER_PAGE = 6;
 
   // Pagination
   const indexOfLastAppointment = currentPage * ITEMS_PER_PAGE;
@@ -258,10 +266,9 @@ const ManageAppointmentPsy: React.FC<ManageAppointmentPsyProps> = ({
                       className="text-lg font-medium border-b border-black text-[#5a4a2f] dark:border-gray-700 dark:text-gray-300" // Table row
                     >
                       <td className="py-4">{formatAppointmentDate(item)}</td>
-                      <td className="py-4"></td>
+                      <td className="py-4">{item.patientName}</td>
                       <td className="py-4">{item.method}</td>
                       <td className="py-4">{item.status}</td>
-                      {/* <td className="py-4 text-center">Aksi Buttons</td> Jika Anda ingin kolom aksi juga */}
                     </tr>
                   ))}
                 </tbody>

@@ -175,7 +175,8 @@ const ForumPostCard: React.FC<ForumPostCardProps> = ({ post, isDarkMode }) => {
     } else {
       if (post.authorGender && post.authorBirthDate) {
         const age = calculateAge(post.authorBirthDate);
-        const gender = post.authorGender === "male" ? "Laki-laki" : "Perempuan";
+        const gender =
+          post.authorGender === "Laki-laki" ? "Laki-laki" : "Perempuan";
         return `${gender}, ${age}`;
       }
       return "Pengguna";

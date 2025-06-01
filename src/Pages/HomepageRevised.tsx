@@ -21,6 +21,7 @@ import {
 import ProfilePic from "../assets/default_profile_image.svg";
 import { notificationScheduler } from "../utils/notificationScheduler";
 import VideoRatingDialog from "../components/VideoRatingDialog";
+import Loading from "../components/Loading";
 
 const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   const [userName, setUserName] = useState<string>("Loading...");
@@ -31,7 +32,8 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   const [loadingUpcoming, setLoadingUpcoming] = useState(true);
   const [activeSessions, setActiveSessions] = useState<any[]>([]);
   const [loadingSessions, setLoadingSessions] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingRecommended, setLoadingRecommended] = useState(true);
   const [showVideoRatingDialog, setShowVideoRatingDialog] = useState(false);
   const [pendingVideoRating, setPendingVideoRating] = useState<{
     id: string;
@@ -67,14 +69,31 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
           setFirstName("Pengguna");
         }
       }
-      setIsLoading(false);
 
       // Initialize notification scheduler
       await notificationScheduler.restoreScheduledNotifications();
+
+      // Set recommended loading to false after a delay to simulate psychiatrist data loading
+      setTimeout(() => {
+        setLoadingRecommended(false);
+      }, 1000);
     };
 
     checkAuthAndLoadData();
   }, [navigate]);
+
+  // Check if all data has finished loading
+  const isAllDataLoaded =
+    !loadingChats &&
+    !loadingUpcoming &&
+    !loadingSessions &&
+    !loadingRecommended &&
+    firstName !== "Loading...";
+
+  // Update isLoading based on all data loading states
+  useEffect(() => {
+    setIsLoading(!isAllDataLoaded);
+  }, [isAllDataLoaded]);
 
   // Fetch active chat sessions for the user
   useEffect(() => {
@@ -500,6 +519,11 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   };
 
   AppointmentStatusUpdater();
+
+  // Show loading screen while any data is still loading
+  if (isLoading) {
+    return <Loading isDarkMode={isDarkMode} />;
+  }
 
   return (
     <div

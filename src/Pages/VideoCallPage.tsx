@@ -28,7 +28,7 @@ const VideoCallPage: React.FC = () => {
       console.log("user id:", userId);
 
       if (!userId || !userType) {
-        navigate("/");
+        navigate("/home");
         return;
       }
 

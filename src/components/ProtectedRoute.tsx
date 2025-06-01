@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "../config/firebase";
 import Loading from "./Loading";
@@ -12,30 +12,43 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [shouldCompleteSignUp, setShouldCompleteSignUp] = useState(false);
+  const [userRole, setUserRole] = useState<"user" | "psychiatrist" | null>(
+    null
+  );
+  const location = useLocation();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setIsAuthenticated(!!user);
       setIsLoading(false);
 
-      // Only check for user (not psychiatrist)
       if (user) {
         const documentId = localStorage.getItem("documentId");
         if (documentId) {
-          // Check if user exists in 'users' collection
           try {
             const { getDoc, doc } = await import("firebase/firestore");
             const { db } = await import("../config/firebase");
+            // Check user role
             const userDocRef = doc(db, "users", documentId);
             const userDoc = await getDoc(userDocRef);
             if (userDoc.exists()) {
+              setUserRole("user");
               const data = userDoc.data();
               if (!data.birthOfDate || data.birthOfDate === "") {
                 setShouldCompleteSignUp(true);
               }
+              return;
             }
+            // If not user, check psychiatrist
+            const psyDocRef = doc(db, "psychiatrists", documentId);
+            const psyDoc = await getDoc(psyDocRef);
+            if (psyDoc.exists()) {
+              setUserRole("psychiatrist");
+              return;
+            }
+            setUserRole(null);
           } catch (e) {
-            // ignore error, fallback to normal flow
+            setUserRole(null);
           }
         }
       }
@@ -43,6 +56,23 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
 
     return () => unsubscribe();
   }, []);
+
+  // Route protection logic
+  const path = location.pathname;
+
+  // User cannot access these routes
+  const userBlockedRoutes = [
+    "/dashboard",
+    "/psy-manage-appointment",
+    "/doctor-profile",
+  ];
+  // Psychiatrist cannot access these routes
+  const psychiatristBlockedRoutes = [
+    "/home",
+    "/Search-psi",
+    "/manage-appointment",
+    "/profile",
+  ];
 
   if (isLoading) {
     return <Loading isDarkMode={false} />;
@@ -52,9 +82,18 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return <Navigate to="/signin" replace />;
   }
 
-  if (shouldCompleteSignUp) {
-    // Ensure the route matches your actual registration completion page
+  if (shouldCompleteSignUp && userRole === "user") {
     return <Navigate to="/complete-register" replace />;
+  }
+
+  // User: block access to certain routes
+  if (userRole === "user" && userBlockedRoutes.includes(path)) {
+    return <Navigate to="/home" replace />;
+  }
+
+  // Psychiatrist: block access to certain routes
+  if (userRole === "psychiatrist" && psychiatristBlockedRoutes.includes(path)) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

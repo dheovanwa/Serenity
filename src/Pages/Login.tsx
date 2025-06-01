@@ -85,7 +85,7 @@ const Login = () => {
         const userData = await controller.getUserData(user.uid);
         if (userData?.docId) {
           localStorage.setItem("documentId", userData.docId);
-          navigate("/");
+          navigate("/home");
         }
       }
       setIsLoading(false);

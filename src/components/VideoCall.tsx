@@ -916,7 +916,7 @@ const VideoCall: React.FC<VideoCallProps> = ({ callId, isCaller, onEnd }) => {
       } else if (userType === "psychiatrist") {
         navigate("/dashboard");
       } else {
-        navigate("/");
+        navigate("/home");
       }
     }, 100);
   };

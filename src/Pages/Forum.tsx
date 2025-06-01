@@ -13,9 +13,10 @@ import {
   getDoc,
   where,
 } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { auth, db } from "../config/firebase";
 import CreatePostModal from "../components/CreatePostModal";
-import { ChevronDown } from "lucide-react"; // Import ChevronDown dari lucide-react
+import { ChevronDown } from "lucide-react";
+import Loading from "../components/Loading";
 
 interface ForumPost {
   id: string;
@@ -107,7 +108,8 @@ const Forum: React.FC<ForumProps> = ({ isDarkMode }) => {
                   authorName = userData.firstName
                     ? `${userData.firstName} ${userData.lastName || ""}`.trim()
                     : "User";
-                  authorGender = userData.sex || "";
+                  authorGender = userData.sex || "Anonymous";
+                  console.log(authorGender);
                   authorBirthDate = userData.birthOfDate || "";
                 }
               }
@@ -407,7 +409,7 @@ const Forum: React.FC<ForumProps> = ({ isDarkMode }) => {
                   authorName = userData.firstName
                     ? `${userData.firstName} ${userData.lastName || ""}`.trim()
                     : "User";
-                  authorGender = userData.sex || "";
+                  authorGender = userData.sex || "Anonymous";
                   authorBirthDate = userData.birthOfDate || "";
                 }
               }
@@ -495,6 +497,11 @@ const Forum: React.FC<ForumProps> = ({ isDarkMode }) => {
       }
     };
   }, [handleUserPostsObserver, loadMoreUserPostsRef]);
+
+  // Show loading screen while data is being fetched
+  if (loading) {
+    return <Loading isDarkMode={isDarkMode} />;
+  }
 
   return (
     <div
