@@ -150,12 +150,12 @@ const MentalHealthPage: React.FC = () => {
         }`}
       >
         <section className=" ">
-          <h1 className="text-[#1a1a1a] font-semibold text-4xl leading-tight mb-2">
+          <h1 className="text-[#1a1a1a] font-semibold text-lg md:text-2xl lg:text-3xl xl:text-4xl leading-tight mb-2">
             Perjalanan Anda Menuju Kesehatan Mental
             <br />
             yang Lebih Baik Dimulai di Sini
           </h1>
-          <p className="text-[#4a4a4a] text-xl mb-10">
+          <p className="text-[#4a4a4a] text-base sm:text-lg md:text-xl lg:text-2xl xl:text-2xl mb-10">
             Wawasan pribadi, dukungan waktu nyata, <br />
             dan alat canggih untuk kesejahteraan mental Anda.
           </p>
@@ -183,7 +183,7 @@ const MentalHealthPage: React.FC = () => {
         }`}
       >
         {/* Responsive: horizontal scroll on mobile, grid on desktop */}
-        <div className="flex flex-col sm:flex-row gap-8 w-full overflow-x-auto sm:overflow-visible">
+        <div className="flex flex-col lg:flex-row sm:flex-col gap-8 w-full overflow-x-auto sm:overflow-visible">
           {/* Card 1 */}
           <div
             className={`
@@ -203,7 +203,7 @@ const MentalHealthPage: React.FC = () => {
             <img
               src={dep3}
               alt="depresi"
-              className="w-28 h-28 sm:w-auto sm:h-auto ml-4 sm:ml-0"
+              className="w-25 h-35 sm:w-auto sm:h-auto ml-4 sm:ml-0"
             />
           </div>
           {/* Card 2 */}
@@ -226,7 +226,7 @@ const MentalHealthPage: React.FC = () => {
             <img
               src={dep4}
               alt="depresi"
-              className="w-28 h-28 sm:w-auto sm:h-auto ml-4 sm:ml-0"
+              className="w-25 h-35 sm:w-auto sm:h-auto ml-4 sm:ml-0"
             />
           </div>
           {/* Card 3 */}
@@ -249,7 +249,7 @@ const MentalHealthPage: React.FC = () => {
             <img
               src={dep2}
               alt="depre"
-              className="w-28 h-28 sm:w-auto sm:h-auto ml-4 sm:ml-0"
+              className="w-25 h-35 sm:w-auto sm:h-auto ml-4 sm:ml-0"
             />
           </div>
           {/* Card 4 */}
@@ -272,7 +272,7 @@ const MentalHealthPage: React.FC = () => {
             <img
               src={dep1}
               alt="dep"
-              className="w-28 h-28 sm:w-auto sm:h-auto ml-4 sm:ml-0"
+              className="w-25 h-35 sm:w-auto sm:h-auto ml-4 sm:ml-0"
             />
           </div>
         </div>
