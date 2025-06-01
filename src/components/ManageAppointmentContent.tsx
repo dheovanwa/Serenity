@@ -543,7 +543,7 @@ const ManageAppointmentContent = ({
       {" "}
       {/* Main page background */}
       <h1 className="w-full max-w-[1200px] text-left text-4xl sm:text-5xl font-bold text-[#161F36] mb-6 mt-6 dark:text-white">
-        Manage Appointment
+        Pesan janji konsultasi
       </h1>
       <div
         className="relative z-1 rounded-3xl shadow-xl p-6 sm:p-10 lg:p-16 flex flex-col lg:flex-row gap-8 w-full max-w-[1200px] mb-10
