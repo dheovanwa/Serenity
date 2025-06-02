@@ -158,6 +158,43 @@ const AppointmentStatusUpdater = () => {
             );
           }
         }
+
+        // --- NEW: Check "Sedang berlangsung" video appointments for end time ---
+        const ongoingVideoQuery = query(
+          appointmentsRef,
+          where("status", "==", "Sedang berlangsung"),
+          where("method", "==", "Video")
+        );
+        const ongoingVideoSnapshot = await getDocs(ongoingVideoQuery);
+
+        for (const docSnap of ongoingVideoSnapshot.docs) {
+          const appointment = docSnap.data();
+          const appointmentDate = new Date(appointment.date);
+          // appointment.time expected format: "HH.MM - HH.MM"
+          if (appointment.time && appointment.time.includes(" - ")) {
+            const [, endTime] = appointment.time.split(" - ");
+            if (endTime) {
+              const [endHour, endMinute] = endTime.split(".").map(Number);
+              const endDate = new Date(appointmentDate);
+              endDate.setHours(endHour, endMinute || 0, 0, 0);
+
+              if (now > endDate) {
+                // Cancel notification if any
+                await notificationScheduler.cancelScheduledNotification(
+                  docSnap.id
+                );
+                // Update to "Selesai"
+                await updateDoc(doc(db, "appointments", docSnap.id), {
+                  status: "Selesai",
+                });
+                console.log(
+                  `Updated ongoing video appointment ${docSnap.id} to "Selesai" (end time passed)`
+                );
+              }
+            }
+          }
+        }
+        // --- END NEW ---
       } catch (error) {
         console.error(
           "Error checking and updating appointment statuses:",

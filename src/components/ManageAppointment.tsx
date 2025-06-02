@@ -870,7 +870,6 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#161F36] pointer-events-none"
             />
           </div>
-
           {/* Method filter */}
           <div className="relative">
             <select
@@ -890,8 +889,7 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
               className="absolute right-3 top-1/2 -translate-y-1/2 text-[#161F36] pointer-events-none"
             />
           </div>
-
-          {/* Sort button */}
+          {/* Sort button
           <button
             className="relative flex items-center gap-2 bg-[#BACBD8] px-4 py-[15px] rounded-lg text-[#161F36] font-semibold"
             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
@@ -904,7 +902,7 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
                 sortOrder === "asc" ? "rotate-0" : "rotate-180"
               }`}
             />
-          </button>
+          </button> */}
         </div>
       </div>
       {loading ? (
