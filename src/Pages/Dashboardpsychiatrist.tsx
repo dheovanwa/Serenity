@@ -60,16 +60,6 @@ const DashboardPsychiatrist: React.FC = () => {
 
       const name = await controller.fetchUserName(documentId);
       setUserName(name);
-
-      const schedule = await controller.fetchTodaySchedule(documentId);
-      const appointments = await controller.fetchUpcomingAppointments(
-        documentId
-      );
-      const userMessages = await controller.fetchMessages(documentId);
-
-      setTodaySchedule(schedule || []);
-      setUpcomingAppointments(appointments || []);
-      setMessages(userMessages || []);
     };
 
     checkAuth();

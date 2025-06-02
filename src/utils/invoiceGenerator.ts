@@ -40,7 +40,7 @@ export const generateInvoicePDF = (appointmentData: InvoiceData) => {
   // Add patient and doctor details
   doc.text("Detail Konsultasi:", 20, 80);
   doc.text(`Nama Pasien: ${appointmentData.patientName}`, 20, 90);
-  doc.text(`Nama Dokter: ${appointmentData.doctorName}`, 20, 100);
+  doc.text(`Nama Psikolog: ${appointmentData.doctorName}`, 20, 100);
   doc.text(`Metode: ${appointmentData.method}`, 20, 110);
   doc.text(`Waktu: ${appointmentData.time}`, 20, 120);
 

@@ -45,6 +45,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
   );
   const [searchParams, setSearchParams] = useSearchParams();
   const [showCallEndedDialog, setShowCallEndedDialog] = useState(false);
+  const [showMobileWarningDialog, setShowMobileWarningDialog] = useState(false);
 
   // Add ref at component level
   const navigatedCalls = useRef<Set<string>>(new Set());
@@ -518,12 +519,34 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
     setShowCallEndedDialog(false);
   };
 
+  const handleCloseMobileWarningDialog = () => {
+    setShowMobileWarningDialog(false);
+  };
+
   AppointmentStatusUpdater();
 
   // Show loading screen while any data is still loading
   if (isLoading) {
     return <Loading isDarkMode={isDarkMode} />;
   }
+
+  // Add function to detect mobile devices
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    );
+  };
+
+  // Handle joining video call with mobile check
+  const handleJoinVideoCall = (sessionId: string) => {
+    if (isMobileDevice()) {
+      setShowMobileWarningDialog(true);
+    } else {
+      // Store the appointmentId before navigating
+      localStorage.setItem("currentAppointmentId", sessionId);
+      navigate(`/video-call`);
+    }
+  };
 
   return (
     <div
@@ -566,9 +589,7 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                 key={session.id}
                 className="flex flex-col sm:flex-row items-center pb-4 sm:pb-6 mb-4 sm:mb-6 border-b last:border-b-0 last:mb-0 last:pb-0 cursor-pointer hover:bg-[#e9e3d6] transition dark:hover:bg-[#161F36]"
                 onClick={() => {
-                  // Store the appointmentId before navigating
-                  localStorage.setItem("currentAppointmentId", session.id);
-                  navigate(`/video-call`);
+                  handleJoinVideoCall(session.id);
                 }}
                 tabIndex={0}
                 role="button"
@@ -794,6 +815,28 @@ const Homepage: React.FC<HomepageProps> = ({ isDarkMode }) => {
                 onClick={handleCloseCallEndedDialog}
               >
                 Saya Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Mobile Warning Dialog */}
+      {showMobileWarningDialog && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-sm sm:max-w-md">
+            <h2 className="text-lg sm:text-xl font-semibold text-black dark:text-white mb-3 sm:mb-4">
+              Perangkat Tidak Didukung
+            </h2>
+            <p className="text-sm sm:text-base text-black dark:text-gray-300 mb-4 sm:mb-6">
+              Video call hanya dapat diakses melalui perangkat desktop. Silakan
+              gunakan laptop atau komputer untuk mengakses fitur ini.
+            </p>
+            <div className="flex justify-center">
+              <button
+                className="px-4 py-2 sm:px-6 sm:py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm sm:text-base"
+                onClick={handleCloseMobileWarningDialog}
+              >
+                Ya, saya mengerti
               </button>
             </div>
           </div>

@@ -95,7 +95,7 @@ const VideoCallPage: React.FC = () => {
             if (!appointmentId) {
               console.error("No appointment ID found in localStorage");
               // Instead of throwing error, redirect to home
-              navigate("/");
+              navigate("/home");
               return;
             }
 
@@ -131,7 +131,7 @@ const VideoCallPage: React.FC = () => {
               if (waitingForRoom) {
                 console.log("Timeout waiting for psychiatrist to start call");
                 unsubscribeCalls();
-                navigate("/");
+                navigate("/home");
               }
             }, 120000); // 2 minutes timeout
 
@@ -142,7 +142,7 @@ const VideoCallPage: React.FC = () => {
         }
       } catch (error) {
         console.error("Session validation error:", error);
-        navigate("/");
+        navigate("/home");
       } finally {
         if (!waitingForRoom) {
           setIsLoading(false);
@@ -183,7 +183,7 @@ const VideoCallPage: React.FC = () => {
       <VideoCall
         callId={callId}
         isCaller={isCaller}
-        onEnd={() => navigate("/")}
+        onEnd={() => navigate("/home")}
       />
     </div>
   );

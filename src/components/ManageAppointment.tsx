@@ -17,6 +17,7 @@ import { generateInvoicePDF } from "../utils/invoiceGenerator";
 import { format } from "date-fns";
 import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater"; // Assuming this component is dark mode aware
 import { notificationScheduler } from "../utils/notificationScheduler";
+import { ArrowDown } from "lucide-react";
 
 interface Appointment {
   id?: string;
@@ -592,7 +593,9 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
     }, [appointment.createdAt, onExpire]);
 
     return hasExpired ? null : (
-      <span className="text-red-500">Bayar dalam: {timeLeft}</span>
+      <span className="inline-block w-[120px] text-red-500 whitespace-nowrap text-[15px]">
+        Bayar dalam: {timeLeft}
+      </span>
     );
   };
 
@@ -846,63 +849,61 @@ const ManageAppointment = ({ isDarkMode }: ManageAppointmentProps) => {
         {/* Filter/sort bar */}
         <div className="mt-4 flex flex-wrap gap-2 items-center">
           {/* Status filter */}
-          <select
-            className="bg-[#BACBD8] px-6 py-2 rounded text-[#161F36] font-semibold"
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="Semua">Pilih Status</option>
-            <option value="Menunggu pembayaran">Menunggu pembayaran</option>
-            <option value="Sedang berlangsung">Sedang berlangsung</option>
-            <option value="Terjadwal">Terjadwal</option>
-            <option value="Selesai">Selesai</option>
-            <option value="Dibatalkan">Dibatalkan</option>
-          </select>
+          <div className="relative">
+            <select
+              className="appearance-none pr-10 pl-4 py-3 bg-[#BACBD8] rounded-lg text-[#161F36] font-semibold"
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="Semua">Pilih Status</option>
+              <option value="Menunggu pembayaran">Menunggu pembayaran</option>
+              <option value="Sedang berlangsung">Sedang berlangsung</option>
+              <option value="Terjadwal">Terjadwal</option>
+              <option value="Selesai">Selesai</option>
+              <option value="Dibatalkan">Dibatalkan</option>
+            </select>
+            <ArrowDown
+              size={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#161F36] pointer-events-none"
+            />
+          </div>
+
           {/* Method filter */}
-          <select
-            className="bg-[#BACBD8] px-6 py-2 rounded text-[#161F36] font-semibold"
-            value={methodFilter}
-            onChange={(e) => {
-              setMethodFilter(e.target.value);
-              setCurrentPage(1);
-            }}
-          >
-            <option value="Semua">Pilih Spesialisasi</option>
-            <option value="Chat">Chat</option>
-            <option value="Video">Video</option>
-          </select>
-          {/* Sort direction icon */}
+          <div className="relative">
+            <select
+              className="appearance-none pr-10 pl-4 py-3 bg-[#BACBD8] rounded-lg text-[#161F36] font-semibold"
+              value={methodFilter}
+              onChange={(e) => {
+                setMethodFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+            >
+              <option value="Semua">Pilih Spesialisasi</option>
+              <option value="Chat">Chat</option>
+              <option value="Video">Video</option>
+            </select>
+            <ArrowDown
+              size={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-[#161F36] pointer-events-none"
+            />
+          </div>
+
+          {/* Sort button */}
           <button
-            className="bg-[#BACBD8] px-3 py-2 rounded text-[#161F36] font-semibold"
+            className="relative flex items-center gap-2 bg-[#BACBD8] px-4 py-[15px] rounded-lg text-[#161F36] font-semibold"
             onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
             title="Urutkan"
             type="button"
           >
-            <span
-              className="inline-block transition-transform duration-200"
-              style={{
-                transform:
-                  sortOrder === "asc" ? "rotate(0deg)" : "rotate(180deg)",
-              }}
-            >
-              <svg
-                width="18"
-                height="18"
-                fill="none"
-                stroke="#161F36"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  d="M12 5v14M19 12l-7 7-7-7"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            </span>
+            <ArrowDown
+              size={18}
+              className={`transition-transform duration-200 text-[#161F36] ${
+                sortOrder === "asc" ? "rotate-0" : "rotate-180"
+              }`}
+            />
           </button>
         </div>
       </div>
