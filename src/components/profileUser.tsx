@@ -496,14 +496,18 @@ const UserProfile = () => {
                     Batalkan
                   </button>
                   <button
-                    onClick={async () => {
-                      try {
-                        await signOut(auth);
-                        localStorage.removeItem("documentId");
-                        navigate("/signin");
-                      } catch (error) {
-                        console.error("Error signing out:", error);
-                      }
+                    onClick={() => {
+                      console.log("User logged out");
+                      // Remove documentId and sign out from Firebase Auth
+                      localStorage.removeItem("documentId");
+                      signOut(auth)
+                        .then(() => {
+                          navigate("/signin");
+                        })
+                        .catch((error) => {
+                          console.error("Error signing out:", error);
+                          navigate("/signin");
+                        });
                     }}
                     className="bg-[#BACBD8] text-[#161F36] px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
                   >
@@ -656,14 +660,22 @@ const UserProfile = () => {
                 <div className="flex flex-wrap justify-end gap-4">
                   <button
                     onClick={handleCloseOverlay}
-                    className="bg-transparent border-2 text-[#161F36] px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
+                    className="bg-transparent border-2 text-[#161F36] px-4 dark:text-white py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
                   >
                     Batalkan
                   </button>
                   <button
                     onClick={() => {
+                      // Remove documentId and sign out from Firebase Auth (MOBILE)
                       localStorage.removeItem("documentId");
-                      window.location.href = "/signin";
+                      signOut(auth)
+                        .then(() => {
+                          navigate("/signin");
+                        })
+                        .catch((error) => {
+                          console.error("Error signing out:", error);
+                          navigate("/signin");
+                        });
                     }}
                     className="bg-[#BACBD8] text-[#161F36] px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
                   >
