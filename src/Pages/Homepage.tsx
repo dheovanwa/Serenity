@@ -1,147 +1,166 @@
-import React, { useState, useEffect } from "react";
-import logo from "../assets/LogoIconWhite.png";
-import searchLogo from "../assets/MagnifyingGlass.png";
-// import avatar from "../assets/avatar.png";
+import React, { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { collection, query, where, onSnapshot } from "firebase/firestore";
+import { db } from "../config/firebase";
+import { HomeController } from "../controllers/HomeController";
+import backgroundImage from "../assets/Master Background11.png";
 import Instagram from "../assets/instagram.png";
 import Whatsapp from "../assets/whatsapp.png";
 import email from "../assets/email.png";
 import { LineCharts } from "../components/Chart";
 import { CarouselDemo } from "../components/RecommendedPsychiatrist";
 import RadarChart from "../components/RadarChart";
-import { ChevronDown } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
-import backgroundImage from "../assets/Master Background11.png";
-import {
-  collection,
-  doc,
-  getDocs,
-  query,
-  orderBy,
-  limit,
-  getDoc,
-} from "firebase/firestore";
-import { db } from "../config/firebase";
 import TopBar from "../components/TopBar";
+import type { RadarDataPoint, ChartData } from "../models/HomeModel";
+import AppointmentStatusUpdater from "../components/AppointmentStatusUpdater";
 
 const Homepage: React.FC = () => {
-  const [userName, setUserName] = useState("Loading..."); // Default to "Loading..."
-  const [radarData, setRadarData] = useState([
+  const [userName, setUserName] = useState<string>("Loading...");
+  const [radarData, setRadarData] = useState<RadarDataPoint[]>([
     { Health: "Mood & Energy", Percentage: 0 },
     { Health: "Mental Calmness", Percentage: 0 },
     { Health: "Emotional Wellbeing", Percentage: 0 },
     { Health: "Social Support", Percentage: 0 },
     { Health: "Coping Mechanisms", Percentage: 0 },
   ]);
-  const [lineChartData, setLineChartData] = useState({
+  const [lineChartData, setLineChartData] = useState<{
+    who5: ChartData[];
+    gad7: ChartData[];
+    phq9: ChartData[];
+    mspss: ChartData[];
+    cope: ChartData[];
+  }>({
     who5: [],
     gad7: [],
     phq9: [],
     mspss: [],
     cope: [],
   });
-  const navigate = useNavigate(); // Hook for navigation
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showCallEndedDialog, setShowCallEndedDialog] = useState(false);
+
+  const navigate = useNavigate();
+  const controller = new HomeController();
 
   useEffect(() => {
-    const checkAuthentication = () => {
+    const checkAuth = async () => {
       const documentId = localStorage.getItem("documentId");
-      if (!documentId) {
-        navigate("/signin"); // Redirect to signin if not logged in
+      const isAuthenticated = await controller.checkAuthentication(documentId);
+
+      if (!isAuthenticated) {
+        navigate("/signin");
+        return;
       }
+
+      const name = await controller.fetchUserName(documentId);
+      setUserName(name);
+
+      const { radarData: radar, lineChartData: lineData } =
+        await controller.fetchChartData(documentId);
+
+      setRadarData(radar);
+      setLineChartData(lineData);
     };
 
-    checkAuthentication();
+    checkAuth();
   }, [navigate]);
 
   useEffect(() => {
-    const fetchUserName = async () => {
-      const documentId = localStorage.getItem("documentId");
-      if (!documentId) return;
+    // Check if user was redirected due to psychiatrist ending the call
+    if (searchParams.get("callEnded") === "psychiatrist") {
+      setShowCallEndedDialog(true);
+      // Remove the query parameter from URL
+      searchParams.delete("callEnded");
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
-      try {
-        const userDocRef = doc(db, "users", documentId);
-        const userDoc = await getDoc(userDocRef);
-
-        if (userDoc.exists()) {
-          const userData = userDoc.data();
-          setUserName(
-            `${userData.firstName || ""} ${userData.lastName || ""}`.trim()
-          );
-        }
-      } catch (error) {
-        console.error("Error fetching user name:", error);
-        setUserName("User"); // Fallback if there's an error
-      }
-    };
-
-    fetchUserName();
-  }, []);
-
+  // Add useEffect to listen for calls with matching appointmentId
   useEffect(() => {
-    const fetchLatestData = async () => {
-      const documentId = localStorage.getItem("documentId");
-      if (!documentId) return;
+    const documentId = localStorage.getItem("documentId");
+    if (!documentId) return;
 
+    let unsubscribe: (() => void) | undefined;
+
+    const setupCallListener = async () => {
       try {
-        const userDocRef = doc(db, "users", documentId);
-        const historyCollectionRef = collection(userDocRef, "history_stress");
-        const latestQuery = query(
-          historyCollectionRef,
-          orderBy("timestamp", "desc"),
-          limit(7)
+        // Get user's active appointments
+        const userAppointmentsQuery = query(
+          collection(db, "appointments"),
+          where("patientId", "==", documentId),
+          where("status", "in", ["Sedang berlangsung"])
         );
-        const querySnapshot = await getDocs(latestQuery);
+        console.log("Listening for user appointments...");
 
-        if (!querySnapshot.empty) {
-          const documents = querySnapshot.docs.map((doc) => ({
-            ...doc.data(),
-            timestamp: new Date(doc.data().timestamp).toLocaleDateString(),
-          }));
+        // Listen for user appointments to get appointmentIds
+        const unsubAppointments = onSnapshot(
+          userAppointmentsQuery,
+          (appointmentSnapshot) => {
+            const appointmentIds = appointmentSnapshot.docs.map(
+              (doc) => doc.id
+            );
 
-          setRadarData([
-            { Health: "Mood & Energy", Percentage: documents[0].who5 || 0 },
-            { Health: "Mental Calmness", Percentage: documents[0].gad7 || 0 },
-            {
-              Health: "Emotional Wellbeing",
-              Percentage: documents[0].phq9 || 0,
-            },
-            { Health: "Social Support", Percentage: documents[0].mspss || 0 },
-            { Health: "Coping Mechanisms", Percentage: documents[0].cope || 0 },
-          ]);
+            console.log("Active appointmentIds:", appointmentIds);
 
-          setLineChartData({
-            who5: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.who5 || 0,
-            })),
-            gad7: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.gad7 || 0,
-            })),
-            phq9: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.phq9 || 0,
-            })),
-            mspss: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.mspss || 0,
-            })),
-            cope: documents.map((doc) => ({
-              x: doc.timestamp,
-              y: doc.cope || 0,
-            })),
-          });
-        }
+            if (appointmentIds.length === 0) return;
+
+            // Listen for calls with matching appointmentIds
+            const callsQuery = query(
+              collection(db, "calls"),
+              where("appointmentId", "in", appointmentIds)
+            );
+
+            if (unsubscribe) {
+              unsubscribe();
+            }
+
+            unsubscribe = onSnapshot(callsQuery, (callSnapshot) => {
+              callSnapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                  const callDoc = change.doc;
+                  const callData = callDoc.data();
+
+                  // Navigate to the video call
+                  console.log(
+                    `Found matching call for appointmentId: ${callData.appointmentId}`
+                  );
+                  navigate(`/video-call/${callDoc.id}`);
+                }
+              });
+            });
+          }
+        );
+
+        // Return cleanup function for appointments listener
+        return () => {
+          unsubAppointments();
+          if (unsubscribe) {
+            unsubscribe();
+          }
+        };
       } catch (error) {
-        console.error("Error fetching data from Firestore:", error);
+        console.error("Error setting up call listener:", error);
       }
     };
 
-    fetchLatestData();
-  }, []);
+    setupCallListener();
+
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
+      }
+    };
+  }, [navigate]);
+
+  AppointmentStatusUpdater();
 
   const handleLogout = () => {
-    localStorage.removeItem("documentId"); // Clear user data from localStorage
-    navigate("/signin"); // Redirect to login page
+    controller.handleLogout();
+    navigate("/signin");
+  };
+
+  const handleCloseCallEndedDialog = () => {
+    setShowCallEndedDialog(false);
   };
 
   return (
@@ -261,7 +280,10 @@ const Homepage: React.FC = () => {
 
       {/* Recommended Psychiatrists */}
       <div className="mt-30 ml-6 sm:ml-15">
-        <h1 className="text-5xl text-white font-semibold drop-shadow-md mb-10">
+        <h1
+          className="text-5xl text-white font-semibold mb-10"
+          style={{ textShadow: "0px 2px 2px rgba(0, 0, 0, 0.25)" }}
+        >
           Recommended Psychiatrists
         </h1>
         <div className="flex justify-center items-center mb-10">
@@ -361,6 +383,30 @@ const Homepage: React.FC = () => {
           </p>
         </div>
       </footer>
+
+      {/* Call Ended Dialog */}
+      {showCallEndedDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg w-[300px] sm:w-[400px] max-w-md mx-4">
+            <h2 className="text-xl font-semibold text-black dark:text-white mb-4">
+              Video Call Berakhir
+            </h2>
+            <p className="text-black dark:text-gray-300 mb-6">
+              Psikolog telah mengakhiri sesi video call. Jika ini adalah
+              kesalahan, Anda dapat bergabung kembali atau menghubungi customer
+              support.
+            </p>
+            <div className="flex justify-center">
+              <button
+                className="px-6 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
+                onClick={handleCloseCallEndedDialog}
+              >
+                Saya Mengerti
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

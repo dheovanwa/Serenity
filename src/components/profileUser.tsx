@@ -1,32 +1,35 @@
-import TopBar from "../components/TopBar";
 import InputField from "../components/inputField";
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { doc, getDoc, updateDoc } from "firebase/firestore";
-import { db } from "../config/firebase";
+import { db, auth } from "../config/firebase";
+import { signOut } from "firebase/auth";
 import cameraIcon from "../assets/83574.png";
-import ProfilePic from "../assets/Logo.jpg";
+import ProfilePic from "../assets/default_profile_image.svg";
 import Compressor from "compressorjs";
+import { Calendar } from "lucide-react";
+import Loading from "./Loading";
 
 const UserProfile = () => {
   const [userName, setUserName] = useState("Loading...");
   const [isEditing, setIsEditing] = useState(false);
-  const [isLoading, setIsLoading] = useState(true); // Loading state
+  const [isLoading, setIsLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
   const [errorFirstName, setErrorFirstName] = useState(false);
   const [isFormValid, setIsFormValid] = useState(true);
   const [profilePic, setProfilePic] = useState(ProfilePic); // State for profile picture
   const fileInputRef = useRef<HTMLInputElement | null>(null); // Ref for file input
+  const [phoneError, setPhoneError] = useState(false);
+  const [isDarkMode, setIsDarkMode] = useState(false); // Add this state if not already present
 
   const [formData, setFormData] = useState({
     firstName: "Elon",
     lastName: "Musk",
     address: "Jl. Anggrek No. 5",
-    sex: "",
-    education: "Bachelor, Master, etc",
+    sex: "Pria",
     email: "elon@example.com",
+    birthOfDate: "01/01/2001",
     phoneNumber: "",
-    country: "Indonesia",
-    city: "Jakarta",
   });
   const [initialFormData, setInitialFormData] = useState({
     firstName: "",
@@ -34,13 +37,42 @@ const UserProfile = () => {
     address: "",
     sex: "",
     education: "",
+    birthOfDate: "",
     email: "",
     phoneNumber: "",
     country: "",
     city: "",
   });
-  const navigate = useNavigate();
 
+  const [isProfileClicked, setIsProfileClicked] = useState(false);
+  const [isSettingsClicked, setIsSettingsClicked] = useState(false);
+  const navigate = useNavigate();
+  const [isOverlayVisible, setIsOverlayVisible] = useState(false);
+  const handleLogoutClick = async () => {
+    setIsOverlayVisible(true);
+  };
+
+  const handleCloseOverlay = () => {
+    setIsOverlayVisible(false);
+  };
+  const [isGenderDropdownOpen, setIsGenderDropdownOpen] = useState(false);
+
+  const handleGenderChange = (gender: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      sex: gender,
+    }));
+    setIsGenderDropdownOpen(false);
+  };
+  const handleProfileClick = () => {
+    setIsProfileClicked(true);
+    setIsSettingsClicked(false);
+  };
+
+  const handleSettingsClick = () => {
+    setIsSettingsClicked(true);
+    setIsProfileClicked(false);
+  };
   useEffect(() => {
     const fetchUserData = async () => {
       const documentId = localStorage.getItem("documentId");
@@ -55,16 +87,28 @@ const UserProfile = () => {
 
         if (userDoc.exists()) {
           const userData = userDoc.data();
+
+          // Format birthOfDate to dd-mm-yyyy
+          let formattedBirthDate = userData.birthOfDate || "";
+          if (formattedBirthDate) {
+            // Handle different date formats
+            const date = new Date(formattedBirthDate);
+            if (!isNaN(date.getTime())) {
+              const day = String(date.getDate()).padStart(2, "0");
+              const month = String(date.getMonth() + 1).padStart(2, "0");
+              const year = date.getFullYear();
+              formattedBirthDate = `${day}-${month}-${year}`;
+            }
+          }
+
           setFormData({
             firstName: userData.firstName || "",
             lastName: userData.lastName || "",
             address: userData.address || "",
             sex: userData.sex || "",
-            education: userData.education || "",
+            birthOfDate: formattedBirthDate,
             email: userData.email || "",
             phoneNumber: userData.phoneNumber || "",
-            country: userData.country || "",
-            city: userData.city || "",
           });
           setInitialFormData(userData);
 
@@ -85,6 +129,15 @@ const UserProfile = () => {
 
     fetchUserData();
   }, [navigate]);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 720);
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   useEffect(() => {
     const fetchUserName = async () => {
@@ -118,10 +171,29 @@ const UserProfile = () => {
   const handleCancelEdit = () => {
     setIsEditing(false);
     setFormData(initialFormData);
+    setPhoneError(false);
+    setErrorFirstName(false);
+    setIsFormValid(true);
+    if (initialFormData.profilePicture) {
+      setProfilePic(initialFormData.profilePicture);
+    } else {
+      setProfilePic(ProfilePic);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+
+    if (name === "phoneNumber") {
+      if (/[^0-9]/.test(value) || value.length > 13) {
+        return;
+      }
+      if ((value && !value.startsWith("08")) || value.length < 6) {
+        setPhoneError(true);
+      } else {
+        setPhoneError(false);
+      }
+    }
 
     if (
       (name === "firstName" ||
@@ -135,12 +207,6 @@ const UserProfile = () => {
 
     if (name === "nationalCode") {
       if (/[^0-9]/.test(value) || value.length > 16) {
-        return;
-      }
-    }
-
-    if (name === "phoneNumber") {
-      if (/[^0-9]/.test(value) || value.length > 13) {
         return;
       }
     }
@@ -162,6 +228,14 @@ const UserProfile = () => {
       return;
     }
 
+    if (
+      !formData.phoneNumber.startsWith("08") ||
+      formData.phoneNumber.length < 6
+    ) {
+      setPhoneError(true);
+      return;
+    }
+
     setErrorFirstName(false);
     const documentId = localStorage.getItem("documentId");
     if (!documentId) {
@@ -176,11 +250,7 @@ const UserProfile = () => {
         firstName: formData.firstName,
         lastName: formData.lastName,
         address: formData.address,
-        sex: formData.sex,
-        education: formData.education, // Corrected key
         phoneNumber: formData.phoneNumber,
-        country: formData.country,
-        city: formData.city,
       });
 
       console.log("User data updated successfully.");
@@ -233,53 +303,25 @@ const UserProfile = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-[#f2f3d9] text-[#2a3d23]">
-        <div className="w-1/2 h-2 bg-gray-300 rounded-full overflow-hidden">
-          <div className="h-full bg-[#32481F] animate-loading-bar"></div>
-        </div>
-        <style>
-          {`
-            @keyframes loading-bar {
-              0% { transform: translateX(-100%); }
-              50% { transform: translateX(0); }
-              100% { transform: translateX(100%); }
-            }
-            .animate-loading-bar {
-              animation: loading-bar 1.5s infinite;
-            }
-          `}
-        </style>
-      </div>
-    );
+    return <Loading isDarkMode={isDarkMode} />;
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFFDB] text-[#2a3d23] flex flex-col">
-      <TopBar userName={userName} onLogout={handleLogout} />
-      <div className="w-full px-6 py-4">
-        <button
-          onClick={() => navigate("/")}
-          className="bg-[#32481F] text-white py-2 px-4 rounded-md hover:bg-[#1f3019] transition font-semibold cursor-pointer"
-        >
-          ← Back to Home
-        </button>
-      </div>
-
-      <div className="w-full px-6 py-15 bg-[#FFFFDB]">
-        <div className="flex items-center gap-6 flex-col sm:flex-row">
-          <div className="relative w-24 h-24 sm:w-45 sm:h-45 rounded-full overflow-hidden group">
+    <div className="w-full h-screen flex flex-col">
+      <div className="w-full items-center justify-center mt-40 mb-2">
+        <div className="flex items-center justify-center">
+          <div className="relative w-24 h-24 sm:w-55 sm:h-55 rounded-full overflow-hidden">
             <img
               src={profilePic}
               alt="Profile"
-              className={`w-full h-full object-cover transition duration-300 
-                  ${isEditing ? "opacity-70 group-hover:opacity-50" : ""}`}
+              className={`w-full h-full object-cover transition duration-300 ${
+                isEditing ? "opacity-70 group-hover:opacity-50" : ""
+              }`}
             />
-
             {isEditing && (
               <div
                 onClick={triggerFileInput}
-                className="absolute inset-0 flex items-center justify-center transition duration-300 cursor-pointer"
+                className="absolute inset-0 flex justify-center items-center transition duration-300 cursor-pointer"
               >
                 <img
                   src={cameraIcon}
@@ -296,60 +338,46 @@ const UserProfile = () => {
               onChange={handleProfilePicChange}
             />
           </div>
+        </div>
 
-          <div className="text-center sm:text-left">
-            <h1 className="text-3xl sm:text-5xl font-extrabold mb-2">
-              {formData.firstName} {formData.lastName}
-            </h1>
-            <p className="text-lg sm:text-2xl font-bold">
-              Your account is ready, you can now apply for advice.
-            </p>
-
-            <button
-              onClick={() => {
-                if (isEditing) {
-                  handleCancelEdit();
-                } else {
-                  setIsEditing(true);
-                }
-              }}
-              className="mt-4 bg-[#32481F] text-white py-2 px-6 rounded-md hover:bg-[#1f3019] transition font-semibold cursor-pointer"
-            >
-              {isEditing ? "Cancel Edit" : "Edit Profile"}
-            </button>
-          </div>
+        <div className="flex text-[#161F36] text-center items-center justify-center sm:text-left mt-6">
+          <h1 className="text-2xl sm:text-4xl font-medium dark:text-white">
+            {formData.firstName} {formData.lastName}
+          </h1>
+        </div>
+        <div className="flex justify-center text-lg items-center text-[#161F36] font-light dark:text-white">
+          {formData.email}
         </div>
       </div>
 
-      <div className="bg-[#688F5E] flex-1">
-        <div className="max-w-6xl mx-auto pt-10 py-10 px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-white">
-                Personal
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+      {/*DESKTOP*/}
+      {!isMobile && (
+        <div className=" bg-[#F2EDE2] flex h-screen dark:bg-[#151515]">
+          <div className="relative z-1 flex flex-col lg:flex-row gap-8 w-full ">
+            {/*middle */}
+            <div className="grid grid-cols-2 lg:w-full col-span-4 pl-60 pr-60">
+              <div className="grid grid-cols-1 w-full gap-4 text-[#161F36] mt-10 ml-5">
+                <div className="md:col-span-2">
                   <InputField
-                    label="First Name"
+                    label="Nama depan"
                     type="text"
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleChange}
                     readOnly={!isEditing}
                     className={
-                      errorFirstName ? "border-red-500" : "border-gray-300"
+                      errorFirstName ? "border-red-500" : "border-gray-900"
                     }
                   />
                   {errorFirstName && (
                     <p className="text-red-500 text-sm mt-2">
-                      First Name cannot be empty
+                      Nama depan tidak boleh kosong
                     </p>
                   )}
                 </div>
-                <div>
+                <div className="md:col-span-2 ">
                   <InputField
-                    label="Last Name"
+                    label="Nama belakang"
                     type="text"
                     name="lastName"
                     value={formData.lastName}
@@ -357,110 +385,308 @@ const UserProfile = () => {
                     readOnly={!isEditing}
                   />
                 </div>
-                <div className="md:col-span-2">
+                <div className="md:col-span-2 ">
                   <InputField
-                    label="Sex"
+                    label="Jenis Kelamin"
                     type="text"
                     name="sex"
                     value={formData.sex}
                     onChange={handleChange}
-                    readOnly={!isEditing}
-                    placeholder="Male or Female"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Address"
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    readOnly={!isEditing}
-                    placeholder="Your address"
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <InputField
-                    label="Education Level"
-                    type="text"
-                    name="education" // Corrected key
-                    value={formData.education} // Corrected key
-                    onChange={handleChange}
-                    readOnly={!isEditing}
-                    placeholder="Bachelor, Master, etc"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <h2 className="text-xl font-semibold mb-4 text-white">Contact</h2>
-              <div className="grid grid-cols-1 gap-4">
-                <div>
-                  <InputField
-                    label="Email"
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
                     readOnly={true}
                   />
                 </div>
-
+              </div>
+              <div className="grid grid-cols-1 w-full gap-4 mt-10 ml-20">
+                <div>
+                  <InputField
+                    icon={<Calendar />}
+                    iconPosition="left"
+                    label="Tanggal Lahir"
+                    type="text"
+                    name="tanggal_lahir"
+                    value={formData.birthOfDate}
+                    onChange={handleChange}
+                    readOnly={true}
+                    className="pl-12 "
+                  />
+                </div>
                 <div className="flex gap-2 items-stretch">
                   <div className="flex-grow">
                     <InputField
-                      label="Phone Number"
+                      label="Alamat"
                       type="text"
-                      name="phoneNumber"
-                      value={formData.phoneNumber}
+                      name="address"
+                      value={formData.address}
                       onChange={handleChange}
                       readOnly={!isEditing}
-                      placeholder="08xxxxxxx"
+                      placeholder=""
                     />
                   </div>
                 </div>
                 <div>
                   <InputField
-                    label="Country"
+                    label="Nomor Telepon"
                     type="text"
-                    name="country"
-                    value={formData.country}
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
                     onChange={handleChange}
                     readOnly={!isEditing}
-                    placeholder="Your country"
+                    placeholder=""
+                    className={
+                      phoneError ? "border-red-500" : "border-gray-900"
+                    }
                   />
+                  {phoneError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Nomor Telepon harus dimulai dengan 08 dan dalam format
+                      yang benar
+                    </p>
+                  )}
                 </div>
-                <div>
-                  <InputField
-                    label="City"
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    readOnly={!isEditing}
-                    placeholder="Your city"
-                  />
+              </div>
+              <div className="flex justify-center items-center w-full gap-6 lg:gap-10  mb-20 mt-20 lg:-mr-7 col-span-2">
+                <button
+                  onClick={() => {
+                    if (isEditing) {
+                      handleCancelEdit();
+                    } else {
+                      setIsEditing(true);
+                    }
+                  }}
+                  className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer dark:bg-[#1A2947] dark:text-white"
+                >
+                  {isEditing ? "Batal" : "Ubah"}
+                </button>
+                {isEditing && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleSave}
+                      className={`bg-[#BACBD8] dark:bg-[#1A2947] text-lg text-[#161F36]  dark:text-[#E6E6E6] py-4 px-13 rounded-md hover:bg-[#87b4fb] transition font-medium ${
+                        !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={!isFormValid}
+                    >
+                      Simpan
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={handleLogoutClick}
+              className="absolute bottom-4 left-4 text-[#FF5640] text-sm lg:text-xl text-left self-start transition-all duration-300"
+            >
+              Keluar dari akun
+            </button>
+          </div>
+
+          {isOverlayVisible && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+              <div className="bg-[#F2EDE2] dark:bg-[#161F36] p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
+                <h2 className="text-xl font-bold mb-4">Apakah kamu yakin?</h2>
+                <p className="text-sm mb-4">
+                  Aksi ini akan mengeluarkanmu dari akunmu <br />
+                  dan kamu harus masuk kembali untuk mengaksesnya.
+                </p>
+                <div className="flex flex-wrap justify-end gap-4">
+                  <button
+                    onClick={handleCloseOverlay}
+                    className="bg-transparent border-2 border-gray-400 text-[#161F36] dark:text-white px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
+                  >
+                    Batalkan
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log("User logged out");
+                      // Remove documentId and sign out from Firebase Auth
+                      localStorage.removeItem("documentId");
+                      signOut(auth)
+                        .then(() => {
+                          navigate("/signin");
+                        })
+                        .catch((error) => {
+                          console.error("Error signing out:", error);
+                          navigate("/signin");
+                        });
+                    }}
+                    className="bg-[#BACBD8] text-[#161F36] px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
+                  >
+                    Lanjutkan
+                  </button>
                 </div>
               </div>
             </div>
-          </div>
+          )}
+        </div>
+      )}
 
-          {isEditing && (
-            <div className="flex justify-center">
-              <button
-                onClick={handleSave}
-                className={`bg-[#32481F] text-white py-4 px-20 rounded-md hover:bg-[#1f3019] transition font-bold text-xl ${
-                  !isFormValid ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-                disabled={!isFormValid}
-              >
-                Save
-              </button>
+      {/*MOBILE*/}
+      {isMobile && (
+        <div className="bg-[#F2EDE2] dark:bg-[#151515] flex h-screen w-full px-4 ml-2">
+          <div className="relative z-1 flex flex-col w-full max-w-screen-sm mx-auto overflow-hidden">
+            {/*middle */}
+            <div className="flex flex-col">
+              <div className=" grid grid-cols-1 w-full text-[#161F36] gap-3 mt-5 pl-5">
+                <div className="md:col-span-2">
+                  <InputField
+                    label="Nama depan"
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    className={
+                      errorFirstName ? "border-red-500" : "border-gray-900"
+                    }
+                  />
+                  {errorFirstName && (
+                    <p className="text-red-500 text-sm mt-2">
+                      Nama depan tidak dapat kosong
+                    </p>
+                  )}
+                </div>
+                <div className="md:col-span-2 ">
+                  <InputField
+                    label="Nama belakang"
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                  />
+                </div>
+                <div className="md:col-span-2 ">
+                  <InputField
+                    label="Jenis Kelamin"
+                    type="text"
+                    name="sex"
+                    value={formData.sex}
+                    onChange={handleChange}
+                    readOnly={true}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 gap-3 mt-3 pl-5">
+                <div>
+                  <InputField
+                    icon={<Calendar />}
+                    iconPosition="left"
+                    label="Tanggal Lahir"
+                    type="text"
+                    name="tanggal_lahir"
+                    value={formData.birthOfDate}
+                    onChange={handleChange}
+                    readOnly={true}
+                    className="pl-12 "
+                  />
+                </div>
+                <div className="flex gap-2 items-stretch">
+                  <div className="flex-grow">
+                    <InputField
+                      label="Alamat"
+                      type="text"
+                      name="address"
+                      value={formData.address}
+                      onChange={handleChange}
+                      readOnly={!isEditing}
+                      placeholder="Your address"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <InputField
+                    label="Nomor Telepon"
+                    type="text"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    readOnly={!isEditing}
+                    placeholder=""
+                    className={
+                      phoneError ? "border-red-500" : "border-gray-900"
+                    }
+                  />
+                  {phoneError && (
+                    <p className="text-red-500 text-sm mt-1">
+                      Nomor Telepon harus dimulai dengan 08
+                    </p>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-center items-center w-full gap-6 lg:gap-10  mb-20 mt-20 lg:-ml-20 col-span-2">
+                <button
+                  onClick={() => {
+                    if (isEditing) {
+                      handleCancelEdit();
+                    } else {
+                      setIsEditing(true);
+                    }
+                  }}
+                  className=" bg-[#BACBD8] text-[#161F36] text-center flex justify-center items-center py-4 px-13 text-lg rounded-md hover:bg-[#87b4fb] transition font-medium cursor-pointer"
+                >
+                  {isEditing ? "Batal" : "Ubah"}
+                </button>
+                {isEditing && (
+                  <div className="flex justify-center">
+                    <button
+                      onClick={handleSave}
+                      className={`bg-[#BACBD8] text-lg text-[#161F36] py-4 px-13 rounded-md hover:bg-[#87b4fb] transition font-medium ${
+                        !isFormValid ? "opacity-50 cursor-not-allowed" : ""
+                      }`}
+                      disabled={!isFormValid}
+                    >
+                      Simpan
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <button
+              onClick={handleLogoutClick}
+              className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center text-[#FF5640] text-[18px] lg:text-xl transition-all duration-300"
+            >
+              Keluar dari akun
+            </button>
+          </div>
+          {isOverlayVisible && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center">
+              <div className="bg-[#F2EDE2] dark:bg-[#161F36] p-6 rounded-lg shadow-lg w-11/12 sm:w-1/3">
+                <h2 className="text-xl font-bold mb-4">Apakah kamu yakin?</h2>
+                <p className="text-sm mb-4">
+                  Aksi ini akan mengubah data dirimu dan tidak bisa diubah{" "}
+                  <br />
+                  kembali ke semula apabila kamu melanjutkan.
+                </p>
+                <div className="flex flex-wrap justify-end gap-4">
+                  <button
+                    onClick={handleCloseOverlay}
+                    className="bg-transparent border-2 text-[#161F36] px-4 dark:text-white py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
+                  >
+                    Batalkan
+                  </button>
+                  <button
+                    onClick={() => {
+                      // Remove documentId and sign out from Firebase Auth (MOBILE)
+                      localStorage.removeItem("documentId");
+                      signOut(auth)
+                        .then(() => {
+                          navigate("/signin");
+                        })
+                        .catch((error) => {
+                          console.error("Error signing out:", error);
+                          navigate("/signin");
+                        });
+                    }}
+                    className="bg-[#BACBD8] text-[#161F36] px-4 py-2 rounded-md w-full sm:w-auto text-sm sm:text-base"
+                  >
+                    Lanjutkan
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>
-      </div>
+      )}
     </div>
   );
 };

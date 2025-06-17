@@ -1,0 +1,16 @@
+{
+  "appointments": [
+    {
+      "id": "1",
+      "psychiatristId": "psy-001",
+      "patientId": "patient-001",
+      "gejala": "anxiety",
+      "method": "Video",
+      "date": "2023-10-01",
+      "startTime": "10:00",
+      "price": 20000.0,
+      "duration": 60,
+      "status": "menunggu pembayaran"
+    }
+  ]
+}

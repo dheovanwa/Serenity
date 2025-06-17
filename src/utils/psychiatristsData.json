@@ -1,0 +1,553 @@
+{
+  "psychiatrists": [
+    {
+      "name": "Budi Santoso",
+      "specialty": "Psikolog Klinis",
+      "alumnus": "Universitas Indonesia",
+      "str": "1101202300000001",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "CBT (Cognitive Behavioral Therapy)",
+        "Mindfulness-Based Therapy"
+      ],
+      "gaya_interaksi": [
+        "Suportif dan Empatik",
+        "Kolaboratif dan Partisipatif"
+      ],
+      "price": 45000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.8,
+      "tahunPengalaman": 7,
+      "image": "",
+      "basePrice": 45000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 600, "end": 1080 },
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": { "start": 480, "end": 960 },
+        "sabtu": null,
+        "minggu": null
+      }
+    },
+    {
+      "name": "Agus Setiawan",
+      "specialty": "Psikolog Anak & Remaja",
+      "alumnus": "Universitas Gadjah Mada",
+      "str": "1202202200000002",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": ["Terapi Bermain", "Humanistik-Eksistensial"],
+      "gaya_interaksi": ["Hangat dan Ramah", "Mengedukasi dan Informatif"],
+      "price": 35000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.9,
+      "tahunPengalaman": 5,
+      "image": "",
+      "basePrice": 35000.0,
+      "jadwal": {
+        "senin": null,
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 540, "end": 1020 },
+        "kamis": { "start": 600, "end": 1080 },
+        "jumat": { "start": 540, "end": 1020 },
+        "sabtu": { "start": 480, "end": 960 },
+        "minggu": null
+      }
+    },
+    {
+      "name": "Eko Pratama",
+      "specialty": "Psikolog Industri dan Organisasi",
+      "alumnus": "Universitas Padjadjaran",
+      "str": "1303202100000003",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Terapi Berpusat pada Solusi (SFBT)",
+        "Konseling Karir"
+      ],
+      "gaya_interaksi": ["Direktif dan Terstruktur", "Analitis dan Mendalam"],
+      "price": 50000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.7,
+      "tahunPengalaman": 10,
+      "image": "",
+      "basePrice": 50000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": { "start": 600, "end": 1080 },
+        "rabu": { "start": 540, "end": 1020 },
+        "kamis": null,
+        "jumat": { "start": 540, "end": 1020 },
+        "sabtu": { "start": 480, "end": 960 },
+        "minggu": null
+      }
+    },
+    {
+      "name": "Adi Nugroho",
+      "specialty": "Psikolog Pendidikan",
+      "alumnus": "Universitas Airlangga",
+      "str": "1404202000000004",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "CBT (Cognitive Behavioral Therapy)",
+        "Behavioral Therapy"
+      ],
+      "gaya_interaksi": ["Mengedukasi dan Informatif", "Suportif dan Empatik"],
+      "price": 30000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.6,
+      "tahunPengalaman": 3,
+      "image": "",
+      "basePrice": 30000.0,
+      "jadwal": {
+        "senin": { "start": 480, "end": 960 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": null,
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": { "start": 600, "end": 1080 },
+        "sabtu": null,
+        "minggu": { "start": 540, "end": 960 }
+      }
+    },
+    {
+      "name": "Putra Hidayat",
+      "specialty": "Konselor Pernikahan dan Keluarga",
+      "alumnus": "Universitas Diponegoro",
+      "str": "1505201900000005",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Terapi Keluarga Sistemik",
+        "Emotionally Focused Therapy (EFT)"
+      ],
+      "gaya_interaksi": [
+        "Kolaboratif dan Partisipatif",
+        "Reflektif dan Mendengarkan Aktif"
+      ],
+      "price": 48000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.9,
+      "tahunPengalaman": 8,
+      "image": "",
+      "basePrice": 48000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": null,
+        "rabu": { "start": 540, "end": 1020 },
+        "kamis": { "start": 480, "end": 960 },
+        "jumat": { "start": 540, "end": 1020 },
+        "sabtu": null,
+        "minggu": { "start": 600, "end": 1080 }
+      }
+    },
+    {
+      "name": "Rizky Kusuma",
+      "specialty": "Konselor Adiksi",
+      "alumnus": "Universitas Brawijaya",
+      "str": "1606201800000006",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Motivational Interviewing",
+        "CBT (Cognitive Behavioral Therapy)"
+      ],
+      "gaya_interaksi": ["Direktif dan Terstruktur", "Suportif dan Empatik"],
+      "price": 40000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.7,
+      "tahunPengalaman": 6,
+      "image": "",
+      "basePrice": 40000.0,
+      "jadwal": {
+        "senin": { "start": 600, "end": 1080 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 480, "end": 960 },
+        "kamis": null,
+        "jumat": null,
+        "sabtu": { "start": 540, "end": 1020 },
+        "minggu": { "start": 540, "end": 1020 }
+      }
+    },
+    {
+      "name": "Farhan Lesmana",
+      "specialty": "Terapis / Konselor Umum",
+      "alumnus": "Universitas Atma Jaya",
+      "str": "1707201700000007",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Humanistik-Eksistensial",
+        "Terapi Penerimaan dan Komitmen (ACT)"
+      ],
+      "gaya_interaksi": [
+        "Reflektif dan Mendengarkan Aktif",
+        "Kolaboratif dan Partisipatif"
+      ],
+      "price": 28000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.5,
+      "tahunPengalaman": 2,
+      "image": "",
+      "basePrice": 28000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 540, "end": 1020 },
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": null,
+        "sabtu": { "start": 600, "end": 1080 },
+        "minggu": null
+      }
+    },
+    {
+      "name": "Gilang Gunawan",
+      "specialty": "Psikolog Klinis",
+      "alumnus": "Universitas Tarumanagara",
+      "str": "1808201600000008",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": ["Psikodinamik", "Mindfulness-Based Therapy"],
+      "gaya_interaksi": ["Analitis dan Mendalam", "Hangat dan Ramah"],
+      "price": 49000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.8,
+      "tahunPengalaman": 9,
+      "image": "",
+      "basePrice": 49000.0,
+      "jadwal": {
+        "senin": null,
+        "selasa": null,
+        "rabu": { "start": 480, "end": 960 },
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": { "start": 600, "end": 1080 },
+        "sabtu": { "start": 540, "end": 1020 },
+        "minggu": { "start": 540, "end": 1020 }
+      }
+    },
+    {
+      "name": "Daffa Permana",
+      "specialty": "Psikolog Anak & Remaja",
+      "alumnus": "Universitas Kristen Maranatha",
+      "str": "1909201500000009",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "CBT (Cognitive Behavioral Therapy)",
+        "Terapi Seni"
+      ],
+      "gaya_interaksi": ["Mengedukasi dan Informatif", "Suportif dan Empatik"],
+      "price": 38000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.9,
+      "tahunPengalaman": 4,
+      "image": "",
+      "basePrice": 38000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": { "start": 480, "end": 960 },
+        "rabu": { "start": 540, "end": 1020 },
+        "kamis": { "start": 600, "end": 1080 },
+        "jumat": null,
+        "sabtu": null,
+        "minggu": { "start": 540, "end": 1020 }
+      }
+    },
+    {
+      "name": "Fajar Ramadhan",
+      "specialty": "Konselor Pernikahan dan Keluarga",
+      "alumnus": "Universitas Indonesia",
+      "str": "2010201400000010",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": ["Terapi Keluarga Sistemik", "Konseling Naratif"],
+      "gaya_interaksi": ["Kolaboratif dan Partisipatif", "Hangat dan Ramah"],
+      "price": 42000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.7,
+      "tahunPengalaman": 11,
+      "image": "",
+      "basePrice": 42000.0,
+      "jadwal": {
+        "senin": { "start": 480, "end": 960 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 600, "end": 1080 },
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": { "start": 480, "end": 960 },
+        "sabtu": null,
+        "minggu": null
+      }
+    },
+    {
+      "name": "Siti Lestari",
+      "specialty": "Psikolog Klinis",
+      "alumnus": "Universitas Gadjah Mada",
+      "str": "2101202300000011",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Psikodinamik",
+        "Terapi Penerimaan dan Komitmen (ACT)"
+      ],
+      "gaya_interaksi": [
+        "Analitis dan Mendalam",
+        "Reflektif dan Mendengarkan Aktif"
+      ],
+      "price": 47000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.9,
+      "tahunPengalaman": 6,
+      "image": "",
+      "basePrice": 47000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": null,
+        "rabu": { "start": 540, "end": 1020 },
+        "kamis": { "start": 600, "end": 1080 },
+        "jumat": { "start": 480, "end": 960 },
+        "sabtu": null,
+        "minggu": { "start": 540, "end": 1020 }
+      }
+    },
+    {
+      "name": "Ani Anggraini",
+      "specialty": "Psikolog Anak & Remaja",
+      "alumnus": "Universitas Padjadjaran",
+      "str": "2202202200000012",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Terapi Bermain",
+        "CBT (Cognitive Behavioral Therapy)"
+      ],
+      "gaya_interaksi": ["Hangat dan Ramah", "Mengedukasi dan Informatif"],
+      "price": 36000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.8,
+      "tahunPengalaman": 4,
+      "image": "",
+      "basePrice": 36000.0,
+      "jadwal": {
+        "senin": { "start": 480, "end": 960 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 600, "end": 1080 },
+        "kamis": null,
+        "jumat": { "start": 540, "end": 1020 },
+        "sabtu": { "start": 540, "end": 1020 },
+        "minggu": null
+      }
+    },
+    {
+      "name": "Dewi Handayani",
+      "specialty": "Psikolog Industri dan Organisasi",
+      "alumnus": "Universitas Airlangga",
+      "str": "2303202100000013",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Konseling Karir",
+        "Terapi Berpusat pada Solusi (SFBT)"
+      ],
+      "gaya_interaksi": ["Direktif dan Terstruktur", "Analitis dan Mendalam"],
+      "price": 49000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.6,
+      "tahunPengalaman": 12,
+      "image": "",
+      "basePrice": 49000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": { "start": 600, "end": 1080 },
+        "rabu": null,
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": { "start": 480, "end": 960 },
+        "sabtu": null,
+        "minggu": { "start": 540, "end": 1020 }
+      }
+    },
+    {
+      "name": "Rina Puspita",
+      "specialty": "Psikolog Pendidikan",
+      "alumnus": "Universitas Diponegoro",
+      "str": "2404202000000014",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": ["Behavioral Therapy", "Mindfulness-Based Therapy"],
+      "gaya_interaksi": ["Mengedukasi dan Informatif", "Suportif dan Empatik"],
+      "price": 32000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.7,
+      "tahunPengalaman": 3,
+      "image": "",
+      "basePrice": 32000.0,
+      "jadwal": {
+        "senin": null,
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 480, "end": 960 },
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": { "start": 600, "end": 1080 },
+        "sabtu": { "start": 540, "end": 1020 },
+        "minggu": null
+      }
+    },
+    {
+      "name": "Lia Utami",
+      "specialty": "Konselor Pernikahan dan Keluarga",
+      "alumnus": "Universitas Brawijaya",
+      "str": "2505201900000015",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Emotionally Focused Therapy (EFT)",
+        "Terapi Keluarga Sistemik"
+      ],
+      "gaya_interaksi": [
+        "Kolaboratif dan Partisipatif",
+        "Reflektif dan Mendengarkan Aktif"
+      ],
+      "price": 46000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.9,
+      "tahunPengalaman": 7,
+      "image": "",
+      "basePrice": 46000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": { "start": 480, "end": 960 },
+        "rabu": { "start": 540, "end": 1020 },
+        "kamis": { "start": 600, "end": 1080 },
+        "jumat": null,
+        "sabtu": { "start": 540, "end": 1020 },
+        "minggu": null
+      }
+    },
+    {
+      "name": "Maya Wulandari",
+      "specialty": "Konselor Adiksi",
+      "alumnus": "Universitas Atma Jaya",
+      "str": "2606201800000016",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "CBT (Cognitive Behavioral Therapy)",
+        "Motivational Interviewing"
+      ],
+      "gaya_interaksi": ["Direktif dan Terstruktur", "Suportif dan Empatik"],
+      "price": 41000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.8,
+      "tahunPengalaman": 5,
+      "image": "",
+      "basePrice": 41000.0,
+      "jadwal": {
+        "senin": { "start": 600, "end": 1080 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": null,
+        "kamis": { "start": 480, "end": 960 },
+        "jumat": { "start": 540, "end": 1020 },
+        "sabtu": null,
+        "minggu": { "start": 540, "end": 1020 }
+      }
+    },
+    {
+      "name": "Putri Ningsih",
+      "specialty": "Terapis / Konselor Umum",
+      "alumnus": "Universitas Tarumanagara",
+      "str": "2707201700000017",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Terapi Penerimaan dan Komitmen (ACT)",
+        "Humanistik-Eksistensial"
+      ],
+      "gaya_interaksi": [
+        "Reflektif dan Mendengarkan Aktif",
+        "Kolaboratif dan Partisipatif"
+      ],
+      "price": 29000.0,
+      "chatPatientQuota": 15,
+      "rating": 4.5,
+      "tahunPengalaman": 1,
+      "image": "",
+      "basePrice": 29000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 480, "end": 960 },
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": { "start": 600, "end": 1080 },
+        "sabtu": null,
+        "minggu": null
+      }
+    },
+    {
+      "name": "Anisa Rahayu",
+      "specialty": "Psikolog Klinis",
+      "alumnus": "Universitas Kristen Maranatha",
+      "str": "2808201600000018",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": ["Mindfulness-Based Therapy", "Psikodinamik"],
+      "gaya_interaksi": ["Analitis dan Mendalam", "Hangat dan Ramah"],
+      "price": 49500.0,
+      "chatPatientQuota": 5,
+      "rating": 4.9,
+      "tahunPengalaman": 8,
+      "image": "",
+      "basePrice": 49500.0,
+      "jadwal": {
+        "senin": null,
+        "selasa": { "start": 480, "end": 960 },
+        "rabu": { "start": 540, "end": 1020 },
+        "kamis": { "start": 600, "end": 1080 },
+        "jumat": { "start": 540, "end": 1020 },
+        "sabtu": { "start": 540, "end": 1020 },
+        "minggu": null
+      }
+    },
+    {
+      "name": "Dian Susanti",
+      "specialty": "Psikolog Anak & Remaja",
+      "alumnus": "Universitas Indonesia",
+      "str": "2909201500000019",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": ["Terapi Seni", "Terapi Bermain", "CBT"],
+      "gaya_interaksi": [
+        "Mengedukasi dan Informatif",
+        "Suportif dan Empatik",
+        "Hangat dan Ramah"
+      ],
+      "price": 37000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.8,
+      "tahunPengalaman": 5,
+      "image": "",
+      "basePrice": 37000.0,
+      "jadwal": {
+        "senin": { "start": 540, "end": 1020 },
+        "selasa": null,
+        "rabu": { "start": 480, "end": 960 },
+        "kamis": { "start": 540, "end": 1020 },
+        "jumat": { "start": 600, "end": 1080 },
+        "sabtu": null,
+        "minggu": { "start": 540, "end": 1020 }
+      }
+    },
+    {
+      "name": "Intan Kartika",
+      "specialty": "Konselor Pernikahan dan Keluarga",
+      "alumnus": "Universitas Gadjah Mada",
+      "str": "3010201400000020",
+      "metode": "Chat atau Video",
+      "pendekatan_terapi": [
+        "Konseling Naratif",
+        "Terapi Keluarga Sistemik",
+        "Emotionally Focused Therapy (EFT)"
+      ],
+      "gaya_interaksi": [
+        "Kolaboratif dan Partisipatif",
+        "Hangat dan Ramah",
+        "Reflektif dan Mendengarkan Aktif"
+      ],
+      "price": 44000.0,
+      "chatPatientQuota": 5,
+      "rating": 4.9,
+      "tahunPengalaman": 10,
+      "image": "",
+      "basePrice": 44000.0,
+      "jadwal": {
+        "senin": { "start": 480, "end": 960 },
+        "selasa": { "start": 540, "end": 1020 },
+        "rabu": { "start": 600, "end": 1080 },
+        "kamis": null,
+        "jumat": { "start": 540, "end": 1020 },
+        "sabtu": { "start": 480, "end": 960 },
+        "minggu": null
+      }
+    }
+  ]
+}
