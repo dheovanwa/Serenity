@@ -105,7 +105,7 @@ npm run dev
 
 ### Login to Psychologist Account
 
-If you want to test the features completely, then you need to login to a psychologist account. The email template is `[firstname].[lastname]@serenity.com` and the password is the same for all account which is `12345678`. The `firstname` and `lastname` need to correspond to the designated psychologist account you want to login. Example, if you want to login to Maya Wulandari account then her email is `maya.wulandari@serenity.com` and her password is `12345678`.
+If you want to test the features completely, then you need to login to a psychologist account. The email template is `[firstname].[lastname]@serenity.com` and the password is the same for all account which is `12345678`. The `firstname` and `lastname` need to correspond to the designated psychologist account you want to login. For example, if you want to login to Maya Wulandari account then her email is `maya.wulandari@serenity.com` and her password is `12345678`.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 <!-- CONTRIBUTING -->
