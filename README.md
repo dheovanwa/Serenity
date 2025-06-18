@@ -54,7 +54,7 @@
 Many individuals, especially the younger generation, are increasingly vulnerable to mental disorders due to social and academic pressures and excessive use of social media, but often find it difficult to obtain easily accessible and affordable psychological support. With Serenity, we aim to simplify the process of making an appointment with psychologists by accomodating online meeting. We provide an affordable and easy to use features for the user to use. These are the names who built this:
 
 1. [Dheovan Winata Alvian](https://www.linkedin.com/in/dheovan-wa/)
-2. Jefferson Darren Cendres
+2. [Jefferson Darren Cendres](https://www.linkedin.com/in/jeff-darren-9bb5ba292/)
 3. [Jonathan Hopi Pranata](https://www.linkedin.com/in/jonathan-hopi-pranata/)
 4. [Yohanes Wenanta](https://www.linkedin.com/in/yohanes-wenanta-2965a01ba/)
 
