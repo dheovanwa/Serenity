@@ -8,7 +8,7 @@
   </a>
 
   <br/>
-  <!-- <h3  align="center">Serenity</h3> -->
+  <!-- <h3 align="center">Serenity</h3> -->
 
 [![MiT License][license-shield]][license-url]
 
