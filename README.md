@@ -14,7 +14,7 @@
 
   <p align="center">
     Mental health web application that facilitates the user and psychologists
-    <br />
+    <br  />
     <a href="https://github.com/dheovanwa/Serenity"><strong>Explore the docs »</strong></a>
     <br />
     <br />
